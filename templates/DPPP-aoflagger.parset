@@ -1,0 +1,9 @@
+msin =
+msin.datacolumn = DATA
+msout = .
+
+steps = [flag,count]
+flag.type = aoflag
+flag.strategy = Nenufar64C1S.lua
+ 
+
