@@ -142,4 +142,4 @@ def check_flow(dir_to_check):
             exo_pipe(unprocessed_data)
 
 if __name__ == "__main__":
-    check_flow.serve(name="check-flow")
+    check_flow.serve(name="check-flow", interval=10800)
