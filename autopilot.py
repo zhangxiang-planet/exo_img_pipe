@@ -6,6 +6,8 @@ import os, argparse, glob
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from datetime import datetime
 
+###### Initial settings ######
+
 # Set file locations
 watch_dir = "/databf/nenufar-nri/LT02/2023/03/"
 
@@ -22,6 +24,8 @@ chunk_num = 12
 
 # How many channels per SB
 chan_per_SB = 12
+
+###### Here are the tasks (aka functions doing the job) ######
 
 # Task 0. Find un-processed data directories
 
@@ -132,14 +136,10 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
         # Construct the command string with the msin argument and the msout argument
         cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
-        
-        # Run the command using subprocess
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
         cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
-
-        # Run the command using subprocess
         subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
@@ -205,20 +205,14 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
             flag_file.write(modified_flag_content)
 
         cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin=[{SB_str}] msout={MSB_filename}"
-        
-        # Run the command using subprocess
         subprocess.run(cmd_flagMA, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
         cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin={MSB_filename}"
-        
-        # Run the command using subprocess
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
         cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
-
-        # Run the command using subprocess
         subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
@@ -243,7 +237,62 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         cmd_remo_table = f"rm -rf {MSB_filename}/table.*"
         subprocess.run(cmd_remo_table, shell=True, check=True)
 
+# Task 4. Apply A-team calibration solution to target
 
+@task
+def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
+    # Step 1: Set the environment
+    cmd = "use DP3"
+    subprocess.run(cmd, shell=True, check=True)
+
+    # Step 2: Run DP3 DPPP-aoflagger.parset command
+    exo_SB = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
+    exo_SB.sort()
+
+    # Determine the number of full chunks of chunk_num we can form
+    num_chunks = len(exo_SB) // chunk_num
+
+    for i in range(num_chunks):
+        # Extract the ith chunk of chunk_num file names
+        chunk = exo_SB[i * chunk_num: (i + 1) * chunk_num]
+
+        # Create the msin string by joining the chunk with commas
+        SB_str = ", ".join(chunk)
+
+        # Construct the output file name using the loop index (i+1)
+        MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS"
+
+        # Flag the bad MAs
+        with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
+            flag_content = template_flag.read()
+
+        modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
+
+        # Write the modified content to a new file
+        with open(f'{postprocess_dir}/{exo_dir}/DPPP-flagant.parset', 'w') as flag_file:
+            flag_file.write(modified_flag_content)
+
+        cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin=[{SB_str}] msout={MSB_filename}"
+        subprocess.run(cmd_flagMA, shell=True, check=True)
+
+        # Construct the command string with the msin argument and the msout argument
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin={MSB_filename}"
+        subprocess.run(cmd_flagchan, shell=True, check=True)
+
+        # Construct the command string with the msin argument and the msout argument
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
+        subprocess.run(cmd_aoflagger, shell=True, check=True)
+
+        # Copy calibration solution
+        cmd_copy_solution = f'cp {postprocess_dir}/{cal_dir}/{MSB_filename}/instrument_ddecal.h5 {MSB_filename}/instrument_dical.h5'
+        subprocess.run(cmd_copy_solution, shell=True, check=True)
+
+        # apply solution
+        cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_filename}'
+        subprocess.run(cmd_apply_solution, shell=True, check=True)
+
+
+###### Here come the flows (functions calling the tasks) #######
 
 @flow(name="EXO_IMG PIPELINE", log_prints=True)
 def exo_pipe(exo_dir):
@@ -252,7 +301,7 @@ def exo_pipe(exo_dir):
 
     cal, cal_dir, cali_check = copy_astronomical_data(exo_dir)
 
-    # Has calibrator been processed already?
+    # Has calibrator been processed already? If not, find bad MA and do A-team calibration
     if cali_check == False:
         bad_MAs = identify_bad_mini_arrays(cal, cal_dir)
         calibration_Ateam(cal, cal_dir, bad_MAs)

@@ -1,0 +1,123 @@
+steps = ['restore_flags', 'apply_cal']
+
+[worker]
+nodes = 'localhost'
+max_concurrent = 4
+env_file = ''
+debug = false
+dry_run = false
+run_on_file_host = false
+run_on_file_host_pattern = ''
+
+[data_handler]
+config_file = ''
+data_level = 'L2'
+
+[flagger]
+do_aoflagger = false
+aoflagger.strategy = 'nenufar_1s1c'
+do_ssins = false
+ssins.seetings = 'default'
+do_badbaselines = false
+badbaselines.nsigma_stations = 5
+badbaselines.nsigma_baselines = 8
+do_baselinesflag = true
+baselinesflag.baselines = 'MR066NEN&&*'
+do_scans_flagging = false
+scans_flagging.nsigma_scans = 5
+do_flagfreq = false
+flagfreq.fmhz_range = [0, 200]
+
+[sky_model]
+int_sky_model = 'CygA_gasperin.skymodel'
+
+[build_sky_model]
+catalog_radius = 20
+min_flux = 0.5
+min_flux_path = 15
+add_ateam = false
+
+[multims_smooth_sol]
+parmdb_in = 'instrument_init.h5'
+parmdb_out = 'instrument_smooth.h5'
+plot_dir = 'smooth_sol'
+
+[restore_flags]
+flag_name = 'pre_cal_flags.h5'
+
+[ddecal]
+col_in = 'DATA'
+directions = 'all'
+avg.time = 1
+avg.freq = 1
+cal.parmdb = 'instrument_ddecal.h5'
+cal.sol_int = 4
+cal.mode = 'fulljones'
+cal.uvlambdamin = 15
+cal.smoothnessconstraint = 2e6
+cal.extra = {}
+do_smooth_sol = true
+plot_sol = true
+smooth_sol.time_min = 15
+smooth_sol.freq_mhz = 1
+smooth_sol.main_time_min = 20
+smooth_sol.main_freq_mhz = 4
+smooth_sol.clip_nsigma = 4
+
+[subtract_ateam]
+type = 'subtract'
+col_out = 'SUBTRACTED_DATA'
+directions = ['CygA', 'CasA', 'TauA', 'VirgoA']
+cal.parmdb = 'instrument_ddecal.h5'
+cal.mode = 'fulljones'
+
+[apply_cal]
+drection = 'Main'
+col_in = 'DATA'
+col_out = 'DI_DATA'
+cal.parmdb = 'instrument_dical.h5'
+cal.mode = 'fulljones'
+
+[peel]
+ms_postfix = 'PEEL'
+init.parmdb = 'instrument_dde.h5'
+init.mode = 'diagonal'
+cal.sol_int_flux_per_slot_per_sec = 75000
+cal.sol_int_min = 2
+cal.sol_int_max = 120
+cal.mode = 'diagonal'
+cal.uv_min = 10
+cal.extra = {}
+do_phase_shift = true
+phase_shift.time_avg = 4
+phase_shift.freq_avg = 1
+do_smooth_sol = true
+smooth_sol.time_min = 15
+smooth_sol.freq_mhz = 2
+
+[subtract]
+col_in = 'DATA'
+col_out = 'CORRECTED_DATA'
+directions = '!Main'
+cal.parmdb = 'instrument_dde.h5'
+cal.mode = 'diagonal'
+
+[predict]
+col_out = 'DATA'
+directions = 'Main'
+cal.parmdb = ''
+cal.mode = 'diagonal'
+
+[wsclean]
+name = 'img'
+pol = 'I,Q,U,V'
+weight = 'briggs 0'
+data-column = 'CORRECTED_DATA'
+umin=15
+umax=1000
+scale='3amin'
+size="1000 1000"
+niter=100000
+mgain=0.6
+auto-mask=6
+auto-threshold=5
