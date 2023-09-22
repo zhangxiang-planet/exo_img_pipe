@@ -114,8 +114,8 @@ def copy_astronomical_data(exo_dir: str):
 @task
 def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     # Step 1: Set the environment
-    cmd = "use DP3"
-    subprocess.run(cmd, shell=True, check=True)
+    # cmd = "use DP3"
+    # subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     cali_SB = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
@@ -174,8 +174,8 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 @task
 def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     # Step 1: Set the environment
-    cmd = "use DP3"
-    subprocess.run(cmd, shell=True, check=True)
+    # cmd = "use DP3"
+    # subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     cali_SB = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
@@ -242,8 +242,8 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
 @task
 def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     # Step 1: Set the environment
-    cmd = "use DP3"
-    subprocess.run(cmd, shell=True, check=True)
+    # cmd = "use DP3"
+    # subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     exo_SB = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
@@ -291,6 +291,13 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_filename}'
         subprocess.run(cmd_apply_solution, shell=True, check=True)
 
+# Task 5. Subtract A-team from field
+
+@task
+def subtract_Ateam(exo_dir: str):
+    # Step 1: Set the environment
+    cmd = "singularity shell -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
+    subprocess.run(cmd, shell=True, check=True)
 
 ###### Here come the flows (functions calling the tasks) #######
 
