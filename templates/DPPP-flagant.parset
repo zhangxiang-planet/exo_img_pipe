@@ -12,7 +12,7 @@ preflagstep.type=preflagger    # use preflagger step to manually flag specific a
 #preflagstep.baseline=MR001NEN&&*  # will flag all cross (and auto)correlation involving MR001NEN
 #preflagstep.baseline=MR001NEN,MR002NEN&&* # same but for MR001NEN with all, and MR002NEN with all
 
-preflagstep.baseline=MR064NEN,MR072NEN,MR075NEN,MR102NEN&&*
+preflagstep.baseline=MA_TO_FLAG&&*
 
 # preflagstep.freqrange=[16.12..16.31MHz,26.17..26.38MHz,35.84..36.03MHz]
 

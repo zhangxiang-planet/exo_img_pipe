@@ -136,7 +136,7 @@ def find_bad_MAs(path_to_base_dir):
     for i in bad_antennas:
         print(f"Antenna {ant[i].decode()}: Median Ratio = {medians[0, i, 0]:.6f}, MAD = {mads[0, i, 0]:.6f}")
 
-    with open('bad_MA.txt', 'w') as file:
+    with open(f'{path_to_base_dir}/bad_MA.txt', 'w') as file:
         print(','.join([ant_name.decode() for ant_name in ant[bad_antennas]]), file=file)
 
 
