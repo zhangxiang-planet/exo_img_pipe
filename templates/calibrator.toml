@@ -1,4 +1,4 @@
-steps = ['restore_flags', 'build_sky_model', 'ddecal', 'apply_cal']
+steps = ['restore_flags', 'build_sky_model', 'ddecal']
 
 [worker]
 nodes = 'localhost'
@@ -29,7 +29,7 @@ do_flagfreq = false
 flagfreq.fmhz_range = [0, 200]
 
 [sky_model]
-int_sky_model = 'CygA_lcs.skymodel'
+int_sky_model = 'CALI_MODEL'
 
 [build_sky_model]
 catalog_radius = 20
@@ -49,7 +49,7 @@ flag_name = 'pre_cal_flags.h5'
 col_in = 'DATA'
 directions = 'all'
 avg.time = 1
-avg.freq = 24
+avg.freq = CHAN_PER_SB
 cal.parmdb = 'instrument_ddecal.h5'
 cal.sol_int = 0
 cal.mode = 'fulljones'

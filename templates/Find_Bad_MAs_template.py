@@ -166,8 +166,8 @@ def find_bad_MAs(path_to_base_dir):
     # plot_sol(phase_val, ant, freq, pol, 'PHASE', 'phase_sol.png')
     # plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', 'ratio_sol.png', show_legend=False, log_scale=True)
 
-    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', 'amp_sol_highlighted.png', show_legend=True, highlight_antennas=bad_antennas)
-    plot_sol(phase_val, ant, freq, pol, 'PHASE', 'phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
-    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', 'ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas, log_y=True)
+    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=bad_antennas)
+    plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas, log_y=True)
 
     return bad_antennas

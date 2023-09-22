@@ -11,10 +11,17 @@ watch_dir = "/databf/nenufar-nri/LT02/2023/03/"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
+pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
 
 # Calibrators
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
+
+# How many SB per processing chunk
+chunk_num = 12
+
+# How many channels per SB
+chan_per_SB = 12
 
 # Task 0. Find un-processed data directories
 
@@ -107,11 +114,54 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
-    cmd = "DP3 DPPP-aoflagger.parset"
-    subprocess.run(cmd, shell=True, check=True)
+    cali_SB = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
+    cali_SB.sort()
+
+    # Determine the number of full chunks of chunk_num we can form
+    num_chunks = len(cali_SB) // chunk_num
+
+    for i in range(num_chunks):
+        # Extract the ith chunk of chunk_num file names
+        chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
+
+        # Create the msin string by joining the chunk with commas
+        SB_str = ", ".join(chunk)
+
+        # Construct the output file name using the loop index (i+1)
+        MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
+
+        # Construct the command string with the msin argument and the msout argument
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        
+        # Run the command using subprocess
+        subprocess.run(cmd_flagchan, shell=True, check=True)
+
+        # Construct the command string with the msin argument and the msout argument
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
+
+        # Run the command using subprocess
+        subprocess.run(cmd_aoflagger, shell=True, check=True)
+        
+        # Read the template file
+        with open(f'{pipe_dir}/templates/calibrator.toml', 'r') as template_file:
+            template_content = template_file.read()
+
+        # Perform the replacements
+        cali_model = f'{pipe_dir}/cal_models/{cal}_lcs.skymodel'
+
+        # Replace placeholders in the template content
+        modified_content = template_content.replace('CALI_MODEL', cali_model)
+        modified_content = modified_content.replace('CHAN_PER_SB', str(chan_per_SB))
+
+        # Write the modified content to a new file
+        with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
+            cali_file.write(modified_content)
+
+        cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
+        subprocess.run(cmd_cali, shell=True, check=True)
 
     # Step 3: Call the imported function directly
-    bad_MAs = find_bad_MAs()
+    bad_MAs = find_bad_MAs(f"{postprocess_dir}/{cal_dir}/")
 
     return bad_MAs
 
