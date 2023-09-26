@@ -26,6 +26,11 @@ chunk_num = 12
 # How many channels per SB
 chan_per_SB = 12
 
+###### Lock the flow runs when data processing is ongoing ######
+
+class LockExitException(Exception):
+    pass
+
 ###### Here are the tasks (aka functions doing the job) ######
 
 # Task 0. Find un-processed data directories
@@ -385,7 +390,7 @@ def exo_pipe(exo_dir):
 @flow(name='Check Flow', log_prints=True)
 def check_flow():
     if os.path.exists(lockfile):
-        exit()
+        raise LockExitException("Exiting due to existence of lockfile")
 
     new_data = check_new_data(watch_dir, postprocess_dir)
 
