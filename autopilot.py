@@ -30,7 +30,7 @@ chan_per_SB = 12
 
 # Task 0. Find un-processed data directories
 
-@task
+@task(log_prints=True)
 def check_new_data(watch_dir: str, postprocess_dir: str) -> list:
     avai_dir = glob.glob(watch_dir + "*")
     avai_data = [f.split('/')[-1] for f in avai_dir]
@@ -112,7 +112,7 @@ def copy_astronomical_data(exo_dir: str):
 
 # Task 2. Do a testing round of calibration to find the bad Mini Arrays
 
-@task
+@task(log_prints=True)
 def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     # Step 1: Set the environment
     # cmd = "use DP3"
@@ -130,7 +130,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
 
         # Create the msin string by joining the chunk with commas
-        SB_str = ", ".join(chunk)
+        SB_str = ",".join(chunk)
 
         # Construct the output file name using the loop index (i+1)
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
@@ -172,7 +172,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
 # Task 3. Calibration with A team
 
-@task
+@task(log_prints=True)
 def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     # Step 1: Set the environment
     # cmd = "use DP3"
@@ -190,7 +190,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
 
         # Create the msin string by joining the chunk with commas
-        SB_str = ", ".join(chunk)
+        SB_str = ",".join(chunk)
 
         # Construct the output file name using the loop index (i+1)
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
@@ -240,7 +240,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
 
 # Task 4. Apply A-team calibration solution to target
 
-@task
+@task(log_prints=True)
 def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     # Step 1: Set the environment
     # cmd = "use DP3"
@@ -258,7 +258,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         chunk = exo_SB[i * chunk_num: (i + 1) * chunk_num]
 
         # Create the msin string by joining the chunk with commas
-        SB_str = ", ".join(chunk)
+        SB_str = ",".join(chunk)
 
         # Construct the output file name using the loop index (i+1)
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS"
@@ -294,7 +294,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 
 # Task 5. Subtract A-team from field
 
-@task
+@task(log_prints=True)
 def subtract_Ateam(exo_dir: str):
     # Step 1: Set the environment
     singularity_command = "singularity shell -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
@@ -322,7 +322,7 @@ def subtract_Ateam(exo_dir: str):
 
 # Task 6. DynspecMS
 
-@task
+@task(log_prints=True)
 def dynspec(exo_dir: str):
     singularity_command = "singularity shell -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
 
