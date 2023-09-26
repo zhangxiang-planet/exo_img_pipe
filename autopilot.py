@@ -2,9 +2,10 @@
 
 from prefect import flow, task
 import subprocess
-import os, argparse, glob
+import os, glob
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from datetime import datetime
+from templates.Make_Target_List_template import make_target_list
 
 ###### Initial settings ######
 
@@ -344,11 +345,11 @@ def dynspec(exo_dir: str):
     else:
         target_name = target_str
 
-    
+    make_target_list(target_name, postprocess_dir, exo_dir)
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}/{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 5 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}/{exo_dir}/target.txt --noff -1 --NCPU 50 --TChunkHours 1 --OutDirName dynamic_spec'
+        f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}/{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName dynamic_spec'
     )
 
     combined_dynspec = f"{singularity_command} -c '{cmd_dynspec}'"
