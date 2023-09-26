@@ -383,7 +383,7 @@ def exo_pipe(exo_dir):
     os.remove(lockfile)
 
 @flow(name='Check Flow', log_prints=True)
-def check_flow(dir_to_check):
+def check_flow():
     if os.path.exists(lockfile):
         exit()
 
@@ -395,4 +395,4 @@ def check_flow(dir_to_check):
             exo_pipe(unprocessed_data)
 
 if __name__ == "__main__":
-    check_flow.serve(name="check-flow", interval=10800)
+    check_flow.serve(name="check-flow", interval=3600)
