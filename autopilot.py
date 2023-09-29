@@ -145,7 +145,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
@@ -218,7 +218,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
@@ -286,7 +286,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename}"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
 
         # Copy calibration solution
