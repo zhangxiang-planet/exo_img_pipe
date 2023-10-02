@@ -8,7 +8,7 @@ def simbad_coor(star_name):
     # Create a Simbad object
     simbad_query = Simbad()
 
-    if star_name.startswith('B') and any(char.isdigit() for char in star_name):
+    if star_name.startswith('B') and len(star_name) > 1 and star_name[1].isdigit():
         star_name = 'PSR ' + star_name
 
     # Query Simbad for the star
