@@ -178,4 +178,6 @@ def find_bad_MAs(path_to_base_dir):
     plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
     plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas, log_y=True)
 
-    return bad_antennas
+    bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
+
+    return bad_MA_names
