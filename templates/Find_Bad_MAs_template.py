@@ -107,13 +107,13 @@ def find_bad_MAs(path_to_base_dir):
 
     # Print the results
     # print("Antenna\tStandard Deviation\tMean Ratio")
-    print("Antenna\tMAD\tMedian Ratio")
+    print("Antenna\t\tMAD\tZ score")
     print("---------------------------------------------")
     # for i, (std_dev, mean) in enumerate(zip(std_devs[0, :, 0], means[0, :, 0])):
     #     print(f"{ant[i].decode()}\t{std_dev:.6f}\t\t{mean:.6f}")
 
-    for i, (mad, median) in enumerate(zip(mads[0, :, 0], medians[0, :, 0])):
-        print(f"{ant[i].decode()}\t{mad:.6f}\t\t{median:.6f}")
+    for i, (mad, modified_z_score) in enumerate(zip(mads[0, :, 0], modified_z_scores[0, :, 0])):
+        print(f"{ant[i].decode()}\t{mad:.6f}\t\t{modified_z_score:.6f}")
 
     # Define thresholds
     # mean_threshold = 0.7  # Antennas with mean ratio outside (1 - mean_threshold, 1 + mean_threshold) will be considered bad
