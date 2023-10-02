@@ -49,7 +49,7 @@ def calculate_ratio(amplitude_val, pol):
 
 def plot_sol(val, ant, freq, pol, ylabel, output_filename, show_legend=True, highlight_antennas=None, log_y=False):
     n_ant = len(ant)
-    n_pol = len(pol)
+    # n_pol = len(pol)
 
     fig, axs = plt.subplots(int(np.ceil(n_ant/10)), 10, figsize=(20, 2 * int(np.ceil(n_ant/10))), constrained_layout=True, sharey=True)
 
@@ -58,7 +58,7 @@ def plot_sol(val, ant, freq, pol, ylabel, output_filename, show_legend=True, hig
     markers = ['o', 'x', '^', 'v']
 
     for i, ax in enumerate(axs.flat[:n_ant]):
-        if i in highlight_antennas:
+        if np.isin(i, highlight_antennas):
             ax.set_facecolor((1, 0, 0, 0.1))
 
         for p, pol_value in enumerate(pol):
