@@ -1,4 +1,4 @@
-steps = ['restore_flags', 'ddecal']
+steps = ['restore_flags', 'build_sky_model', 'ddecal']
 
 [worker]
 nodes = 'localhost'

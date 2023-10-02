@@ -130,6 +130,9 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     # Determine the number of full chunks of chunk_num we can form
     num_chunks = len(cali_SB) // chunk_num
 
+    cmd_sky_dir = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/"
+    subprocess.run(cmd_sky_dir, shell=True, check=True)
+
     for i in range(num_chunks):
         # Extract the ith chunk of chunk_num file names
         chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
@@ -149,7 +152,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
-        with open(f'{pipe_dir}/templates/calibrator.toml', 'r') as template_file:
+        with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
             template_content = template_file.read()
 
         # Perform the replacements
@@ -165,6 +168,12 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
         cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
         subprocess.run(cmd_cali, shell=True, check=True)
+
+        cmd_makesky = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/"
+        subprocess.run(cmd_makesky, shell=True, check=True)
+
+        cmd_movesky = f"mv {MSB_filename}/sky_model {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/"
+        subprocess.run(cmd_movesky, shell=True, check=True)
 
     # Step 3: Call the imported function directly
     bad_MAs = find_bad_MAs(f"{postprocess_dir}/{cal_dir}/")
@@ -235,6 +244,9 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         # Write the modified content to a new file
         with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
             cali_file.write(modified_content)
+
+        cmd_copysky = f"cp -rf {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/sky_model {MSB_filename}/"
+        subprocess.run(cmd_copysky, shell=True, check=True)
 
         cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
         subprocess.run(cmd_cali, shell=True, check=True)
