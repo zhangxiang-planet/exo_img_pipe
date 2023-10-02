@@ -2,8 +2,8 @@ import os,glob
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm
-from scipy.stats import norm, lognorm, gamma
+# from matplotlib import cm
+# from scipy.stats import norm, lognorm, gamma
 
 def read_multiple_h5_files(base_dir):
     combined_amplitude_val = None
@@ -96,24 +96,30 @@ def find_bad_MAs(path_to_base_dir):
     # Replace 'path_to_base_dir' with the path to the base directory containing the SBxxx.MS folders
     # path_to_base_dir = './'
     amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
-    ratio_val = calculate_ratio(amplitude_val, pol)
+    ratio_val = calculate_ratio(amplitude_val, pol)[0,:,:,0]
 
     # Compute the standard deviation and mean along the frequency axis
-    medians = np.median(ratio_val, axis=1)
-    mads = np.median(np.abs(ratio_val - medians), axis=1)
-    modified_z_scores = 0.6745 * (ratio_val - medians) / mads
+    # medians = np.median(ratio_val, axis=0)
+    # mads = np.median(np.abs(ratio_val - medians), axis=0)
+    # modified_z_scores = np.where(mads != 0, 0.6745 * (ratio_val - medians) / mads, 0)
     # std_devs = np.std(ratio_val, axis=1)
     # means = np.mean(ratio_val, axis=1)
 
+    global_median = np.median(ratio_val)
+    global_mad = np.median(np.abs(ratio_val - global_median))
+    z_scores = np.where(global_mad != 0, 0.6745 * (ratio_val - global_median) / global_mad, 0)
+
+    counts = np.sum(np.abs(z_scores) > 3.5, axis=0)
+
     # Print the results
     # print("Antenna\tStandard Deviation\tMean Ratio")
-    print("Antenna\t\tMAD\tZ score")
-    print("---------------------------------------------")
+    # print("Antenna\t\tMAD\tZ score")
+    # print("---------------------------------------------")
     # for i, (std_dev, mean) in enumerate(zip(std_devs[0, :, 0], means[0, :, 0])):
     #     print(f"{ant[i].decode()}\t{std_dev:.6f}\t\t{mean:.6f}")
 
-    for i, (mad, modified_z_score) in enumerate(zip(mads[0, :, 0], modified_z_scores[0, :, 0])):
-        print(f"{ant[i].decode()}\t{mad:.6f}\t\t{modified_z_score:.6f}")
+    # for i, (mad, modified_z_score) in enumerate(zip(mads[0, :, 0], modified_z_scores[0, :, 0])):
+    #     print(f"{ant[i].decode()}\t{mad:.6f}\t\t{modified_z_score:.6f}")
 
     # Define thresholds
     # mean_threshold = 0.7  # Antennas with mean ratio outside (1 - mean_threshold, 1 + mean_threshold) will be considered bad
@@ -125,18 +131,18 @@ def find_bad_MAs(path_to_base_dir):
 
     # Combine the bad antennas found by both criteria
     # bad_antennas = np.unique(np.concatenate((bad_antennas_mean, bad_antennas_std)))
-    bad_antennas = np.where(np.abs(modified_z_scores) > 3.5)
+    bad_antennas = np.where(counts > 0.1 * ratio_val.shape[0])
 
-    print(bad_antennas)
+    # print(bad_antennas)
 
     # Print the bad antennas
     # print("Bad Antennas:")
     # for i in bad_antennas:
     #     print(f"Antenna {ant[i].decode()}: Mean Ratio = {means[0, i, 0]:.6f}, Standard Deviation = {std_devs[0, i, 0]:.6f}")
 
-    print("Bad Antennas:")
-    for i in bad_antennas:
-        print(f"Antenna {ant[i].decode()}: Median Ratio = {medians[0, i, 0]:.6f}, MAD = {mads[0, i, 0]:.6f}")
+    # print("Bad Antennas:")
+    # for i in bad_antennas:
+    #     print(f"Antenna {ant[i].decode()}: Median Ratio = {medians[0, i, 0]:.6f}, MAD = {mads[0, i, 0]:.6f}")
 
     with open(f'{path_to_base_dir}/bad_MA.txt', 'w') as file:
         print(','.join([ant_name.decode() for ant_name in ant[bad_antennas]]), file=file)
