@@ -353,7 +353,7 @@ def dynspec(exo_dir: str):
         '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
     )
 
-    combined_ddf = f"{singularity_command} '{cmd_ddf}'"
+    combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
 
     target_str = exo_dir.split("_")[4:-1]
@@ -369,7 +369,7 @@ def dynspec(exo_dir: str):
         f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}/{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName dynamic_spec'
     )
 
-    combined_dynspec = f"{singularity_command} -c '{cmd_dynspec}'"
+    combined_dynspec = f"{singularity_command} {cmd_dynspec}"
     subprocess.run(combined_dynspec, shell=True, check=True)
 
 
