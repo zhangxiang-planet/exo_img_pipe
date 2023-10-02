@@ -314,46 +314,46 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 @task(log_prints=True)
 def subtract_Ateam(exo_dir: str):
     # Step 1: Set the environment
-    singularity_command = "singularity shell -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
+    singularity_command = "singularity exec -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
 
     exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
     num_MSB = len(exo_MSB)
 
     for i in range(num_MSB):
         cmd_ddf = (
-            f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS --Data-ColName DI_DATA --Output-Name MSB{str(i).zfill(2)}_Image_DI '
+            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {exo_MSB[i]}/MSB{str(i).zfill(2)}_Image_DI '
             '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 5 --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
             '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
         )
-        combined_ddf = f"{singularity_command} -c '{cmd_ddf}'"
+        combined_ddf = f"{singularity_command} {cmd_ddf}"
         subprocess.run(combined_ddf, shell=True, check=True)
 
         cmd_kms = (
-            f'kMS.py --MSName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS --SolverType CohJones --PolMode IFull --BaseImageName MSB{str(i).zfill(2)}_Image_DI '
+            f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {exo_MSB[i]}/MSB{str(i).zfill(2)}_Image_DI '
             '--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir=SOLSDIR --NodesFile Single --DDFCacheDir=. --NChanPredictPerMS 5 --NChanSols 5 '
             '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
         )
-        combined_kms = f"{singularity_command} -c '{cmd_kms}'"
+        combined_kms = f"{singularity_command} {cmd_kms}"
         subprocess.run(combined_kms, shell=True, check=True)
 
 # Task 6. DynspecMS
 
 @task(log_prints=True)
 def dynspec(exo_dir: str):
-    singularity_command = "singularity shell -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
+    singularity_command = "singularity exec -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
 
     cmd_list = f'ls -d {postprocess_dir}/{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
     subprocess.run(cmd_list, shell=True, check=True)
 
     cmd_ddf = (
-        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/mslist.txt --Data-ColName KMS_SUB --Output-Name Image_SUB --Image-Cell 60 --Image-NPix 2400 '
+        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/mslist.txt --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
         '--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 12 --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
         '--Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 --Mask-Auto 1 --Mask-SigTh 4 '
         '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
     )
 
-    combined_ddf = f"{singularity_command} -c '{cmd_ddf}'"
+    combined_ddf = f"{singularity_command} '{cmd_ddf}'"
     subprocess.run(combined_ddf, shell=True, check=True)
 
     target_str = exo_dir.split("_")[4:-1]
