@@ -302,7 +302,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         subprocess.run(cmd_aoflagger, shell=True, check=True)
 
         # Copy calibration solution
-        cmd_copy_solution = f'cp {postprocess_dir}/{cal_dir}/{MSB_filename}/instrument_ddecal.h5 {MSB_filename}/instrument_dical.h5'
+        cmd_copy_solution = f'cp {postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS/instrument_ddecal.h5 {MSB_filename}/instrument_dical.h5'
         subprocess.run(cmd_copy_solution, shell=True, check=True)
 
         # apply solution
