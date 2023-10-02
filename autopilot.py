@@ -10,7 +10,7 @@ from templates.Make_Target_List_template import make_target_list
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/2023/03/"
+watch_dir = "/databf/nenufar-nri/LT02/2023/06/"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
