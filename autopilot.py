@@ -360,7 +360,7 @@ def dynspec(exo_dir: str):
     if len(target_str) > 1:
         target_name = "_".join(target_str)
     else:
-        target_name = target_str
+        target_name = target_str[0]
 
     make_target_list(target_name, postprocess_dir, exo_dir)
 

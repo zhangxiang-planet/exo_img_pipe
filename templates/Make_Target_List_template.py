@@ -97,10 +97,10 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
             ra_3, dec_3 = simbad_coor('KOI-4777')
             ra_4, dec_4 = simbad_coor('KEPLER_32')
 
-        file.write(f"KEPLER_78, {ra_1:.6f}, {dec_1:.6f}, Target\n")
-        file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Target\n")
-        file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Target\n")
-        file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Target\n")
+            file.write(f"KEPLER_78, {ra_1:.6f}, {dec_1:.6f}, Target\n")
+            file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Target\n")
+            file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Target\n")
+            file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Target\n")
 
         # Loop through each point within the field of view
         for i, (ra, dec) in enumerate(zip(ra_within_fov, dec_within_fov)):
