@@ -17,7 +17,7 @@ def read_multiple_h5_files(base_dir):
 
     for dir_name in msb:
         # dir_name = f"MSB{i:02d}.MS"
-        file_path = os.path.join(dir_name, '/instrument_ddecal.h5')
+        file_path = os.path.join(dir_name, 'instrument_ddecal.h5')
         if os.path.isfile(file_path):
             with h5py.File(file_path, 'r') as h5_file:
                 amplitude_group = h5_file['sol000/amplitude000']
