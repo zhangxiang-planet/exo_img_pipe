@@ -343,7 +343,7 @@ def subtract_Ateam(exo_dir: str):
 def dynspec(exo_dir: str):
     singularity_command = "singularity exec -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
 
-    cmd_list = f'ls -d {postprocess_dir}/{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
+    cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
     subprocess.run(cmd_list, shell=True, check=True)
 
     cmd_ddf = (
