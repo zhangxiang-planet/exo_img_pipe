@@ -321,7 +321,7 @@ def subtract_Ateam(exo_dir: str):
 
     for i in range(num_MSB):
         cmd_ddf = (
-            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {exo_MSB[i]}/MSB{str(i).zfill(2)}_Image_DI '
+            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
             '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 5 --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
             '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
@@ -330,8 +330,8 @@ def subtract_Ateam(exo_dir: str):
         subprocess.run(combined_ddf, shell=True, check=True)
 
         cmd_kms = (
-            f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {exo_MSB[i]}/MSB{str(i).zfill(2)}_Image_DI '
-            '--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir=SOLSDIR --NodesFile Single --DDFCacheDir=. --NChanPredictPerMS 5 --NChanSols 5 '
+            f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
+            '--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 5 --NChanSols 5 '
             '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
         )
         combined_kms = f"{singularity_command} {cmd_kms}"
