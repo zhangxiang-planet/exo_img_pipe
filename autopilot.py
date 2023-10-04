@@ -59,9 +59,9 @@ def copy_astronomical_data(exo_dir: str):
 
     year = parts[0][:4]
     month = parts[0][4:6]
-    day = parts[0][6:8]
+    # day = parts[0][6:8]
 
-    data_date = datetime(int(year), int(month), int(day))
+    # data_date = datetime(int(year), int(month), int(day))
 
     # Construct source and destination directory paths
     pre_target_dir = os.path.join(preprocess_dir, year, month, exo_dir)
@@ -90,13 +90,14 @@ def copy_astronomical_data(exo_dir: str):
     cal_dir = valid_cal_dirs[0]
 
     # data after a specific date would have scp completion marker.
-    comparison_date = datetime(2023, 10, 1)
-    scp_marker_target = pre_target_dir + '/L1/' + 'copper_copy_done'
-    scp_marker_cali = base_cal_dir + '/' + cal_dir + '/L1/' + 'copper_copy_done'
+    # 2023-10-04: Cedric modified preprocessing code so this part is no longer necessary.
+    # comparison_date = datetime(2023, 10, 1)
+    # scp_marker_target = pre_target_dir + '/L1/' + 'copper_copy_done'
+    # scp_marker_cali = base_cal_dir + '/' + cal_dir + '/L1/' + 'copper_copy_done'
 
-    if data_date > comparison_date:
-        if not os.path.exists(scp_marker_cali) or not os.path.exists(scp_marker_target):
-            raise FileNotFoundError(f"SCP marker not found. COPPER scp ongoing. Please wait.")
+    # if data_date > comparison_date:
+    #     if not os.path.exists(scp_marker_cali) or not os.path.exists(scp_marker_target):
+    #         raise FileNotFoundError(f"SCP marker not found. COPPER scp ongoing. Please wait.")
 
     if os.path.exists(f"{postprocess_dir}/{cal_dir}"):
         print("Calibrator data already processed. "+ postprocess_dir + '/' + cal_dir)
@@ -366,7 +367,7 @@ def dynspec(exo_dir: str):
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}/{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 5 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}/{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName dynamic_spec'
+        f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}/{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}/{exo_dir}/dynamic_spec'
     )
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
