@@ -37,8 +37,8 @@ class LockExitException(Exception):
 
 @task(log_prints=True)
 def check_new_data(watch_dir: str, postprocess_dir: str) -> list:
-    avai_dir = glob.glob(watch_dir + "*")
-    avai_data = [f.split('/')[-1] for f in avai_dir]
+    avai_dir = glob.glob(watch_dir + "*/L1")
+    avai_data = [f.split('/')[-2] for f in avai_dir]
     
     processed_dir = glob.glob(postprocess_dir + "*")
     processed_data = [f.split('/')[-1] for f in processed_dir]
