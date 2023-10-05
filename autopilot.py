@@ -125,7 +125,8 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     # subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
-    cali_SB = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
+    cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
+    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
     cali_SB.sort()
 
     # Determine the number of full chunks of chunk_num we can form
@@ -194,7 +195,8 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     # subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
-    cali_SB = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
+    cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
+    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
     cali_SB.sort()
 
     # Determine the number of full chunks of chunk_num we can form
@@ -265,7 +267,8 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     # subprocess.run(cmd, shell=True, check=True)
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
-    exo_SB = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
+    exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
     exo_SB.sort()
 
     # Determine the number of full chunks of chunk_num we can form
