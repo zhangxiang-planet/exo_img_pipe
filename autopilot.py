@@ -24,7 +24,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chunk_num = 12
 
 # How many channels per SB
-chan_per_SB = 12
+chan_per_SB = 3
 
 ###### Lock the flow runs when data processing is ongoing ######
 
