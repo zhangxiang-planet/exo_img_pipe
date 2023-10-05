@@ -144,7 +144,7 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
 
         # Loop through each exoplanet
         for exo in exo_list:
-            file.write(f"{exo['hostname']}, {exo['ra'].value:.6f}, {exo['dec'].value:.6f}, Exoplanet\n")
+            file.write(f"{exo['hostname'].replace(' ', '_')}, {exo['ra'].value:.6f}, {exo['dec'].value:.6f}, Exoplanet\n")
 
         for i, (ra, dec) in enumerate(zip(ucd_ra, ucd_dec)):
             # Wrap RA within [0, 360] degrees
