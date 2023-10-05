@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from astroquery.simbad import Simbad
+from astropy.table import Table
 
 def simbad_coor(star_name):
     # Create a Simbad object
@@ -26,6 +27,21 @@ def simbad_coor(star_name):
 
     return ra_deg, dec_deg
 
+def get_ucd_list(ra_center, dec_center, fov_radius):
+
+    ucd_catalog = Table.read('catalogs/gaia_dr3_ucd.fits')
+
+    ucd_coor = SkyCoord(ucd_catalog['ra'] * u.degree, ucd_catalog['dec'] * u.degree, frame='icrs')
+
+    center = SkyCoord(ra_center * u.degree, dec_center * u.degree, frame='icrs')
+
+    within_fov = center.separation(ucd_coor).degree < fov_radius
+
+    ucd_ra = ucd_catalog['ra'][within_fov]
+    ucd_dec = ucd_catalog['dec'][within_fov]
+
+    return ucd_ra, ucd_dec
+
 def make_target_list(target_name, postprocess_dir, exo_dir):
     
 
@@ -34,6 +50,9 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
 
     # Define the radius of the field of view
     fov_radius = 20.0 / 2.0  # in degrees
+
+    # Get the UCDs
+    ucd_ra, ucd_dec = get_ucd_list(ra_center, dec_center, fov_radius)
 
     # Define the maximum angular distance between points
     max_angular_distance = 0.5  # in degrees
@@ -91,16 +110,24 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
         # Targets first
         file.write(f"{target_name}, {ra_center:.6f}, {dec_center:.6f}, Target\n")
 
-        if target_name == "KEPLER_42":
-            ra_1, dec_1 = simbad_coor('KEPLER_78')
-            ra_2, dec_2 = simbad_coor('KOI-55')
-            ra_3, dec_3 = simbad_coor('KOI-4777')
-            ra_4, dec_4 = simbad_coor('KEPLER_32')
+        # We no longer need this part as we are searching for all exoplanets in field
 
-            file.write(f"KEPLER_78, {ra_1:.6f}, {dec_1:.6f}, Target\n")
-            file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Target\n")
-            file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Target\n")
-            file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Target\n")
+        # if target_name == "KEPLER_42":
+        #     ra_1, dec_1 = simbad_coor('KEPLER_78')
+        #     ra_2, dec_2 = simbad_coor('KOI-55')
+        #     ra_3, dec_3 = simbad_coor('KOI-4777')
+        #     ra_4, dec_4 = simbad_coor('KEPLER_32')
+
+        #     file.write(f"KEPLER_78, {ra_1:.6f}, {dec_1:.6f}, Target\n")
+        #     file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Target\n")
+        #     file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Target\n")
+        #     file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Target\n")
+
+        for i, (ra, dec) in enumerate(zip(ucd_ra, ucd_dec)):
+            # Wrap RA within [0, 360] degrees
+            # ra = ra % 360
+            # Write the point index, RA, and Dec to the file in the specified format
+            file.write(f"UCD_{i}, {ra:.6f}, {dec:.6f}, UCD\n")
 
         # Loop through each point within the field of view
         for i, (ra, dec) in enumerate(zip(ra_within_fov, dec_within_fov)):
