@@ -210,6 +210,10 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         # Construct the output file name using the loop index (i+1)
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
 
+        # Construct the command string with the msin argument and the msout argument
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        subprocess.run(cmd_flagchan, shell=True, check=True)
+
         # Flag the bad MAs
         with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
             flag_content = template_flag.read()
@@ -220,12 +224,8 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         with open(f'{postprocess_dir}/{cal_dir}/DPPP-flagant.parset', 'w') as flag_file:
             flag_file.write(modified_flag_content)
 
-        cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={MSB_filename}"
         subprocess.run(cmd_flagMA, shell=True, check=True)
-
-        # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin={MSB_filename}"
-        subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
         cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
@@ -281,6 +281,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         # Construct the output file name using the loop index (i+1)
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS"
 
+        # Construct the command string with the msin argument and the msout argument
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        subprocess.run(cmd_flagchan, shell=True, check=True)
+
         # Flag the bad MAs
         with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
             flag_content = template_flag.read()
@@ -291,12 +295,8 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         with open(f'{postprocess_dir}/{exo_dir}/DPPP-flagant.parset', 'w') as flag_file:
             flag_file.write(modified_flag_content)
 
-        cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_filename}"
         subprocess.run(cmd_flagMA, shell=True, check=True)
-
-        # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin={MSB_filename}"
-        subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
         cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
