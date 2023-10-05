@@ -366,7 +366,7 @@ def dynspec(exo_dir: str):
     make_target_list(target_name, postprocess_dir, exo_dir)
 
     cmd_dynspec = (
-        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 5 --LogBoring 1 --uv 0.067,1000 '
+        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
         f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
