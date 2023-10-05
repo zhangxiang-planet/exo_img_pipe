@@ -413,4 +413,4 @@ def check_flow():
             exo_pipe(unprocessed_data)
 
 if __name__ == "__main__":
-    check_flow.serve(name="check-flow", interval=3600)
+    check = check_flow.serve(name="check-flow", interval=3600)

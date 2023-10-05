@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from astroquery.simbad import Simbad
-from astropy.table import Table
+from astropy.table import Table, unique
+from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 
 def simbad_coor(star_name):
     # Create a Simbad object
@@ -31,7 +32,7 @@ def get_ucd_list(ra_center, dec_center, fov_radius):
 
     ucd_catalog = Table.read('catalogs/gaia_dr3_ucd.fits')
 
-    ucd_coor = SkyCoord(ucd_catalog['ra'] * u.degree, ucd_catalog['dec'] * u.degree, frame='icrs')
+    ucd_coor = SkyCoord(ucd_catalog['ra'], ucd_catalog['dec'], unit = u.deg, frame='icrs')
 
     center = SkyCoord(ra_center * u.degree, dec_center * u.degree, frame='icrs')
 
@@ -42,8 +43,23 @@ def get_ucd_list(ra_center, dec_center, fov_radius):
 
     return ucd_ra, ucd_dec
 
-def make_target_list(target_name, postprocess_dir, exo_dir):
+def get_exo_list(ra_center, dec_center, fov_radius):
+
+    table = NasaExoplanetArchive.query_region(
+        table="pscomppars", coordinates=SkyCoord(ra=ra_center * u.deg, dec=dec_center * u.deg),
+        radius=fov_radius * u.deg)
     
+    unique_hosts = unique(table, keys='hostname', keep='first')
+
+    field_center = SkyCoord(ra=ra_center, dec=dec_center, unit=u.deg)
+
+    angular_distances = field_center.separation(unique_hosts['sky_coord'])
+
+    filtered_hosts = unique_hosts[angular_distances > 0.3 * u.deg]
+
+    return filtered_hosts
+
+def make_target_list(target_name, postprocess_dir, exo_dir):
 
     # Define the center of the field of view
     ra_center, dec_center = simbad_coor(target_name)  # in degrees
@@ -53,6 +69,9 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
 
     # Get the UCDs
     ucd_ra, ucd_dec = get_ucd_list(ra_center, dec_center, fov_radius)
+
+    # Get the exoplanets
+    exo_list = get_exo_list(ra_center, dec_center, fov_radius)
 
     # Define the maximum angular distance between points
     max_angular_distance = 0.5  # in degrees
@@ -122,6 +141,10 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
         #     file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Target\n")
         #     file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Target\n")
         #     file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Target\n")
+
+        # Loop through each exoplanet
+        for exo in exo_list:
+            file.write(f"{exo['hostname']}, {exo['ra'].value:.6f}, {exo['dec'].value:.6f}, Exoplanet\n")
 
         for i, (ra, dec) in enumerate(zip(ucd_ra, ucd_dec)):
             # Wrap RA within [0, 360] degrees
