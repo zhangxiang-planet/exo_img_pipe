@@ -35,7 +35,7 @@ def plot_target_distribution(postprocess_dir, exo_dir):
 
     ax.scatter(x_target, y_target, transform=ax.get_transform('world'), s=10, marker='o', color='tab:red', label='Target')
     ax.scatter(x_exo, y_exo, transform=ax.get_transform('world'), s=10, marker='+', color='tab:orange', label='Exoplanet')
-    ax.scatter(x_ucd, y_ucd, transform=ax.get_transform('world'), s=10, marker='*', color='tab:yellow', label='UCD')
+    ax.scatter(x_ucd, y_ucd, transform=ax.get_transform('world'), s=10, marker='*', color='yellow', label='UCD')
     ax.scatter(x_field, y_field, transform=ax.get_transform('world'), s=10, marker='.', color='gray', label='Field')
 
     ax.set_xlabel('RA')
