@@ -31,7 +31,7 @@ def plot_target_distribution(postprocess_dir, exo_dir):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection=wcs)
 
-    img = ax.imshow(data[0,0], cmap='Blues', vmin=-15, vmax=40, zorder=0)
+    img = ax.imshow(data[0,0], cmap='cubehelix', vmin=-15, vmax=40, zorder=0)
 
     ax.grid(color='white', ls='--', zorder=1)
 
