@@ -31,14 +31,15 @@ def plot_target_distribution(postprocess_dir, exo_dir):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection=wcs)
 
-    img = ax.imshow(data[0,0], cmap='Blues', vmin=-15, vmax=40)
+    img = ax.imshow(data[0,0], cmap='Blues', vmin=-15, vmax=40, zorder=0)
 
-    ax.grid(color='white', ls='--')
+    ax.grid(color='white', ls='--', zorder=1)
 
-    ax.scatter(x_field, y_field, s=3, marker='.', color='gray', label='Field')
-    ax.scatter(x_ucd, y_ucd, s=5, marker='*', color='yellow', label='UCD')
-    ax.scatter(x_exo, y_exo, s=5, marker='+', color='tab:orange', label='Exoplanet')
-    ax.scatter(x_target, y_target, s=5, marker='o', color='tab:red', label='Target')
+    ax.scatter(x_field, y_field, s=3, marker='.', color='gray', label='Field', zorder=2)
+    ax.scatter(x_ucd, y_ucd, s=5, marker='*', color='yellow', label='UCD', zorder=2)
+    ax.scatter(x_exo, y_exo, s=5, marker='+', color='tab:orange', label='Exoplanet', zorder=2)
+    ax.scatter(x_target, y_target, s=5, marker='o', color='tab:red', label='Target', zorder=2)
+
 
     ax.set_xlabel('RA')
     ax.set_ylabel('Dec')
