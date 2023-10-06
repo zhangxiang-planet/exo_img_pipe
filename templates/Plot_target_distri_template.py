@@ -33,10 +33,10 @@ def plot_target_distribution(postprocess_dir, exo_dir):
 
     img = ax.imshow(data[0,0], cmap='Blues', vmin=-15, vmax=40)
 
-    ax.scatter(x_target, y_target, s=5, marker='o', color='tab:red', label='Target')
-    ax.scatter(x_exo, y_exo, s=5, marker='+', color='tab:orange', label='Exoplanet')
+    ax.scatter(x_field, y_field, s=3, marker='.', color='gray', label='Field', alpha=0.5)
     ax.scatter(x_ucd, y_ucd, s=5, marker='*', color='yellow', label='UCD')
-    ax.scatter(x_field, y_field, s=5, marker='.', color='gray', label='Field')
+    ax.scatter(x_exo, y_exo, s=5, marker='+', color='tab:orange', label='Exoplanet')
+    ax.scatter(x_target, y_target, s=5, marker='o', color='tab:red', label='Target')
 
     ax.set_xlabel('RA')
     ax.set_ylabel('Dec')
