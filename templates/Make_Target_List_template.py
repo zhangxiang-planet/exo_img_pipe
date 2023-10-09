@@ -74,7 +74,7 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
     exo_list = get_exo_list(ra_center, dec_center, fov_radius)
 
     # Define the maximum angular distance between points
-    max_angular_distance = 0.5  # in degrees
+    max_angular_distance = 1.0  # in degrees
 
     # Define the radius of the sphere (the celestial sphere)
     # Since we are interested in angular distances, we can set R = 1
