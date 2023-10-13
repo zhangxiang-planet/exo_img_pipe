@@ -131,7 +131,7 @@ def find_bad_MAs(path_to_base_dir):
 
     # Combine the bad antennas found by both criteria
     # bad_antennas = np.unique(np.concatenate((bad_antennas_mean, bad_antennas_std)))
-    bad_antennas = np.where(counts > 0.1 * ratio_val[0,:,:,0].shape[0])
+    bad_antennas = np.where(counts > 0.3 * ratio_val[0,:,:,0].shape[0])
 
     # print(bad_antennas)
 
@@ -180,4 +180,6 @@ def find_bad_MAs(path_to_base_dir):
 
     bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
 
-    return bad_MA_names
+    # Flag MR103NEN as bad antenna for now
+
+    return bad_MA_names+',MR103NEN'

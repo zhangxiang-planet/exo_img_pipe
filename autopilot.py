@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from prefect import flow, task
+from prefect.states import Completed
 import subprocess
 import os, glob
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from datetime import datetime
 from templates.Make_Target_List_template import make_target_list
+from templates.Plot_target_distri_template import plot_target_distribution
 
 ###### Initial settings ######
 
@@ -24,12 +26,14 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chunk_num = 12
 
 # How many channels per SB
-chan_per_SB = 3
+chan_per_SB_origin = 12
+ave_chan = 4
+chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 ###### Lock the flow runs when data processing is ongoing ######
 
-class LockExitException(Exception):
-    pass
+# class LockExitException(Exception):
+#     pass
 
 ###### Here are the tasks (aka functions doing the job) ######
 
@@ -61,6 +65,10 @@ def copy_astronomical_data(exo_dir: str):
     month = parts[0][4:6]
     # day = parts[0][6:8]
 
+    start_date = parts[0]
+    end_date = parts[2]
+    
+
     # data_date = datetime(int(year), int(month), int(day))
 
     # Construct source and destination directory paths
@@ -82,6 +90,19 @@ def copy_astronomical_data(exo_dir: str):
             if exo_files_count == cal_files_count:
                 valid_cal_dirs.append(dir)
     
+    # If no valid calibrator directory is found, get the calibrator directory with the same date
+    if len(valid_cal_dirs) < 1: 
+        for dir in potential_dirs:
+            parts = dir.split("_")
+            dir_start_date = parts[0] 
+            dir_end_date = parts[2]
+            if dir_start_date == start_date or dir_end_date == end_date:
+                exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
+                cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
+                if exo_files_count == cal_files_count:
+                    valid_cal_dirs.append(dir)
+
+    # No calibrator data found for that day, raise error
     if len(valid_cal_dirs) < 1:
         cmd = f"mkdir {post_target_dir}"
         subprocess.run(cmd, shell=True, check=True)
@@ -146,7 +167,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
@@ -213,7 +234,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Flag the bad MAs
@@ -285,7 +306,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Flag the bad MAs
@@ -367,6 +388,7 @@ def dynspec(exo_dir: str):
         target_name = target_str[0]
 
     make_target_list(target_name, postprocess_dir, exo_dir)
+    plot_target_distribution(postprocess_dir, exo_dir)
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
@@ -406,7 +428,8 @@ def exo_pipe(exo_dir):
 @flow(name='Check Flow', log_prints=True)
 def check_flow():
     if os.path.exists(lockfile):
-        raise LockExitException("Exiting due to existence of lockfile")
+        print("Exiting due to existence of lockfile")
+        return Completed(message="Lockfile exists, skipping run.")
 
     new_data = check_new_data(watch_dir, postprocess_dir)
 
@@ -414,6 +437,8 @@ def check_flow():
         # Trigger the main flow
         for unprocessed_data in new_data:
             exo_pipe(unprocessed_data)
+
+    return Completed(message="Run completed without issues.")
 
 if __name__ == "__main__":
     check = check_flow.serve(name="check-flow", interval=3600)
