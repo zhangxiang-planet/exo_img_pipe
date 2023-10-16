@@ -144,7 +144,7 @@ def find_bad_MAs(path_to_base_dir):
 
     bad_antennas = np.where(modified_z_scores > 100)[0]
 
-    # Flag MR103NEN as bad antenna for now
+    # Flag MR103NEN for UV distribution reasons
 
     always_bad_antenna = b'MR103NEN'
 
@@ -195,9 +195,9 @@ def find_bad_MAs(path_to_base_dir):
     # plot_sol(phase_val, ant, freq, pol, 'PHASE', 'phase_sol.png')
     # plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', 'ratio_sol.png', show_legend=False, log_scale=True)
 
-    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=bad_antennas)
-    plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
-    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=final_bad_antennas)
+    plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=final_bad_antennas)
+    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=final_bad_antennas)
 
     bad_MA_names = ','.join([ant_name.decode() for ant_name in final_bad_antennas])
 
