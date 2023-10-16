@@ -135,6 +135,7 @@ def copy_calibrator_data(exo_dir: str):
     raise ValueError("Calibrator not found in the valid cal_dir.")
 
 # Task 1.5. Copy target data
+@task(log_prints=True)
 def copy_target_data(exo_dir: str):
     # Parse year and month from exo_dir
     parts = exo_dir.split("_")
