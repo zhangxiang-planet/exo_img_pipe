@@ -2,10 +2,11 @@
 
 from prefect import flow, task
 from prefect.states import Completed
+# from prefect.task_runners import ConcurrentTaskRunner
 import subprocess
 import os, glob
 from templates.Find_Bad_MAs_template import find_bad_MAs
-from datetime import datetime
+# from datetime import datetime
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
 
@@ -55,7 +56,7 @@ def check_new_data(watch_dir: str, postprocess_dir: str) -> list:
 # Task 1. Moving target and calibrator data from /databf to /data where we do the processing
 
 @task(log_prints=True)
-def copy_astronomical_data(exo_dir: str):
+def copy_calibrator_data(exo_dir: str):
     # Parse year and month from exo_dir
     parts = exo_dir.split("_")
     start_time = parts[0] + "_" + parts[1]
@@ -128,14 +129,26 @@ def copy_astronomical_data(exo_dir: str):
         subprocess.run(cmd, shell=True, check=True)
         cali_check = False
 
-    # Use rsync to copy data
-    cmd = f"rsync -av --progress {pre_target_dir}/L1/ {post_target_dir}"
-    subprocess.run(cmd, shell=True, check=True)
-
     for cal in CALIBRATORS:
         if cal in cal_dir:
             return cal, cal_dir, cali_check
     raise ValueError("Calibrator not found in the valid cal_dir.")
+
+# Task 1.5. Copy target data
+def copy_target_data(exo_dir: str):
+    # Parse year and month from exo_dir
+    parts = exo_dir.split("_")
+
+    year = parts[0][:4]
+    month = parts[0][4:6]
+
+    # Construct source and destination directory paths
+    pre_target_dir = os.path.join(preprocess_dir, year, month, exo_dir)
+    post_target_dir = os.path.join(postprocess_dir, exo_dir)
+    # Use rsync to copy data
+    cmd = f"rsync -av --progress {pre_target_dir}/L1/ {post_target_dir}"
+    subprocess.run(cmd, shell=True, check=True)
+
 
 # Task 2. Do a testing round of calibration to find the bad Mini Arrays
 
@@ -406,9 +419,13 @@ def exo_pipe(exo_dir):
     with open(lockfile, "w") as f:
         f.write("Processing ongoing")
 
-    cal, cal_dir, cali_check = copy_astronomical_data(exo_dir)
+    task_copy_calibrator = copy_calibrator_data.submit(exo_dir)
+
+    task_copy_target = copy_target_data.submit(exo_dir)
 
     # Has calibrator been processed already? If not, find bad MA and do A-team calibration
+    cal, cal_dir, cali_check = task_copy_calibrator.result()
+
     if cali_check == False:
         bad_MAs = identify_bad_mini_arrays(cal, cal_dir)
         calibration_Ateam(cal, cal_dir, bad_MAs)
@@ -417,7 +434,7 @@ def exo_pipe(exo_dir):
             bad_MAs = bad_MA_text.read().strip()
         # No need to do Ateam calibration if it's done previously
 
-    apply_Ateam_solution(cal_dir, exo_dir, bad_MAs)
+    apply_Ateam_solution(cal_dir, exo_dir, bad_MAs, wait_for=[task_copy_calibrator, task_copy_target])
 
     subtract_Ateam(exo_dir)
 
