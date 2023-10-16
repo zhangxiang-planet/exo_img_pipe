@@ -148,10 +148,12 @@ def find_bad_MAs(path_to_base_dir):
 
     always_bad_antenna = b'MR103NEN'
 
-    if not np.isin(always_bad_antenna, ant[bad_antennas]):
-        final_bad_antennas = np.append(ant[bad_antennas], always_bad_antenna)
-    else:
-        final_bad_antennas = ant[bad_antennas]
+    # Find the index of 'MR103NEN' in the ant array
+    index_always_bad = np.where(ant == always_bad_antenna)[0]
+
+    # If 'MR103NEN' is found in ant, add its index to bad_antennas
+    if index_always_bad.size > 0:
+        bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
 
 
     # print(bad_antennas)
@@ -166,7 +168,7 @@ def find_bad_MAs(path_to_base_dir):
     #     print(f"Antenna {ant[i].decode()}: Median Ratio = {medians[0, i, 0]:.6f}, MAD = {mads[0, i, 0]:.6f}")
 
     with open(f'{path_to_base_dir}/bad_MA.txt', 'w') as file:
-        print(','.join([ant_name.decode() for ant_name in final_bad_antennas]), file=file)
+        print(','.join([ant_name.decode() for ant_name in ant[bad_antennas]]), file=file)
 
 
     # Plot the distribution of mean ratios
@@ -195,10 +197,10 @@ def find_bad_MAs(path_to_base_dir):
     # plot_sol(phase_val, ant, freq, pol, 'PHASE', 'phase_sol.png')
     # plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', 'ratio_sol.png', show_legend=False, log_scale=True)
 
-    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=final_bad_antennas)
-    plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=final_bad_antennas)
-    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=final_bad_antennas)
+    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=bad_antennas)
+    plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
 
-    bad_MA_names = ','.join([ant_name.decode() for ant_name in final_bad_antennas])
+    bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
 
     return bad_MA_names
