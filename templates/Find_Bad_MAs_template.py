@@ -146,7 +146,7 @@ def find_bad_MAs(path_to_base_dir):
 
     # Flag MR103NEN as bad antenna for now
 
-    always_bad_antenna = b'NR103NEN'
+    always_bad_antenna = b'MR103NEN'
 
     if not np.isin(always_bad_antenna, ant[bad_antennas]):
         final_bad_antennas = np.append(ant[bad_antennas], always_bad_antenna)
