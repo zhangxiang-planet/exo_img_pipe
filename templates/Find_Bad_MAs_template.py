@@ -98,6 +98,9 @@ def find_bad_MAs(path_to_base_dir):
     amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
     ratio_val = calculate_ratio(amplitude_val, pol)
 
+    # We need to put ratio_val on log scale, because 2 and 0.5 are equally bad
+    ratio_val = np.log10(ratio_val)
+
     # Compute the standard deviation and mean along the frequency axis
     # medians = np.median(ratio_val, axis=0)
     # mads = np.median(np.abs(ratio_val - medians), axis=0)
@@ -131,7 +134,7 @@ def find_bad_MAs(path_to_base_dir):
 
     # Combine the bad antennas found by both criteria
     # bad_antennas = np.unique(np.concatenate((bad_antennas_mean, bad_antennas_std)))
-    bad_antennas = np.where(counts > 0.3 * ratio_val[0,:,:,0].shape[0])
+    bad_antennas = np.where(counts > 0.05 * ratio_val[0,:,:,0].shape[0])
 
     # print(bad_antennas)
 
