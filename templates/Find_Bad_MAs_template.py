@@ -108,11 +108,11 @@ def find_bad_MAs(path_to_base_dir):
     # std_devs = np.std(ratio_val, axis=1)
     # means = np.mean(ratio_val, axis=1)
 
-    global_median = np.nanmedian(ratio_val[0,:,:,0])
-    global_mad = np.nanmedian(np.abs(ratio_val[0,:,:,0] - global_median))
-    z_scores = np.where(global_mad != 0, 0.6745 * (ratio_val[0,:,:,0] - global_median) / global_mad, 0)
+    # global_median = np.nanmedian(ratio_val[0,:,:,0])
+    # global_mad = np.nanmedian(np.abs(ratio_val[0,:,:,0] - global_median))
+    # z_scores = np.where(global_mad != 0, 0.6745 * (ratio_val[0,:,:,0] - global_median) / global_mad, 0)
 
-    counts = np.sum(np.abs(z_scores) > 3.5, axis=0)
+    # counts = np.sum(np.abs(z_scores) > 3.5, axis=0)
 
     # Print the results
     # print("Antenna\tStandard Deviation\tMean Ratio")
@@ -134,7 +134,25 @@ def find_bad_MAs(path_to_base_dir):
 
     # Combine the bad antennas found by both criteria
     # bad_antennas = np.unique(np.concatenate((bad_antennas_mean, bad_antennas_std)))
-    bad_antennas = np.where(counts > 0.1 * ratio_val[0,:,:,0].shape[0])
+    # bad_antennas = np.where(counts > 0.1 * ratio_val[0,:,:,0].shape[0])
+
+    # Change the method. A bad antenna has big deviation from a flat ratio_val spectrum
+    variance = np.var(np.diff(ratio_val[0, :, :, 0], axis=0), axis=0)
+    var_median = np.median(variance)
+    var_mad = np.median(np.abs(variance - var_median))
+    modified_z_scores = 0.6745 * (variance - var_median)/var_mad
+
+    bad_antennas = np.where(modified_z_scores > 100)[0]
+
+    # Flag MR103NEN as bad antenna for now
+
+    always_bad_antenna = b'NR103NEN'
+
+    if not np.isin(always_bad_antenna, ant[bad_antennas]):
+        final_bad_antennas = np.append(ant[bad_antennas], always_bad_antenna)
+    else:
+        final_bad_antennas = ant[bad_antennas]
+
 
     # print(bad_antennas)
 
@@ -148,7 +166,7 @@ def find_bad_MAs(path_to_base_dir):
     #     print(f"Antenna {ant[i].decode()}: Median Ratio = {medians[0, i, 0]:.6f}, MAD = {mads[0, i, 0]:.6f}")
 
     with open(f'{path_to_base_dir}/bad_MA.txt', 'w') as file:
-        print(','.join([ant_name.decode() for ant_name in ant[bad_antennas]]), file=file)
+        print(','.join([ant_name.decode() for ant_name in final_bad_antennas]), file=file)
 
 
     # Plot the distribution of mean ratios
@@ -181,8 +199,6 @@ def find_bad_MAs(path_to_base_dir):
     plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
     plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
 
-    bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
+    bad_MA_names = ','.join([ant_name.decode() for ant_name in final_bad_antennas])
 
-    # Flag MR103NEN as bad antenna for now
-
-    return bad_MA_names+',MR103NEN'
+    return bad_MA_names
