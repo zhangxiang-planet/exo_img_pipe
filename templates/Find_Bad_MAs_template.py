@@ -108,8 +108,8 @@ def find_bad_MAs(path_to_base_dir):
     # std_devs = np.std(ratio_val, axis=1)
     # means = np.mean(ratio_val, axis=1)
 
-    global_median = np.median(ratio_val[0,:,:,0])
-    global_mad = np.median(np.abs(ratio_val[0,:,:,0] - global_median))
+    global_median = np.nanmedian(ratio_val[0,:,:,0])
+    global_mad = np.nanmedian(np.abs(ratio_val[0,:,:,0] - global_median))
     z_scores = np.where(global_mad != 0, 0.6745 * (ratio_val[0,:,:,0] - global_median) / global_mad, 0)
 
     counts = np.sum(np.abs(z_scores) > 3.5, axis=0)
@@ -134,7 +134,7 @@ def find_bad_MAs(path_to_base_dir):
 
     # Combine the bad antennas found by both criteria
     # bad_antennas = np.unique(np.concatenate((bad_antennas_mean, bad_antennas_std)))
-    bad_antennas = np.where(counts > 0.05 * ratio_val[0,:,:,0].shape[0])
+    bad_antennas = np.where(counts > 0.1 * ratio_val[0,:,:,0].shape[0])
 
     # print(bad_antennas)
 
