@@ -144,16 +144,18 @@ def find_bad_MAs(path_to_base_dir):
 
     bad_antennas = np.where(modified_z_scores > 100)[0]
 
-    # Flag MR103NEN for UV distribution reasons
+    # Flag MR102NEN for quality reason, MR103NEN for UV distribution reasons
 
-    always_bad_antenna = b'MR103NEN'
+    always_bad_antennas = [b'MR102NEN', b'MR103NEN']
 
-    # Find the index of 'MR103NEN' in the ant array
-    index_always_bad = np.where(ant == always_bad_antenna)[0]
+    # Iterate over each always_bad_antenna
+    for always_bad_antenna in always_bad_antennas:
+        # Find the index of always_bad_antenna in the ant array
+        index_always_bad = np.where(ant == always_bad_antenna)[0]
 
-    # If 'MR103NEN' is found in ant, add its index to bad_antennas
-    if index_always_bad.size > 0:
-        bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
+        # If always_bad_antenna is found in ant, add its index to bad_antennas
+        if index_always_bad.size > 0:
+            bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
 
 
     # print(bad_antennas)
