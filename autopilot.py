@@ -19,6 +19,7 @@ preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
+singularity_file = "/home/xzhang/software/ddf.sif"
 
 # Calibrators
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
@@ -353,7 +354,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 @task(log_prints=True)
 def subtract_Ateam(exo_dir: str):
     # Step 1: Set the environment
-    singularity_command = "singularity exec -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
+    singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
     exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
     num_MSB = len(exo_MSB)
@@ -380,7 +381,7 @@ def subtract_Ateam(exo_dir: str):
 
 @task(log_prints=True)
 def dynspec(exo_dir: str):
-    singularity_command = "singularity exec -B/data/$USER /home/cyril.tasse/DDFSingularity/ddf.sif"
+    singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
     cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
     subprocess.run(cmd_list, shell=True, check=True)
