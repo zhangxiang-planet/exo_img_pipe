@@ -47,6 +47,16 @@ def calculate_ratio(amplitude_val, pol):
     
     return ratio_val
 
+def calculate_diff(phase_val, pol):
+    pol_labels = [p.decode() for p in pol]
+    xx_index = pol_labels.index('XX')
+    yy_index = pol_labels.index('YY')
+
+    # Calculate the ratio of amplitudes of XX and YY
+    diff_val = phase_val[..., xx_index] - phase_val[..., yy_index]
+    
+    return diff_val
+
 def plot_sol(val, ant, freq, pol, ylabel, output_filename, show_legend=True, highlight_antennas=None, log_y=False):
     n_ant = len(ant)
     # n_pol = len(pol)
@@ -99,11 +109,11 @@ def find_bad_MAs(path_to_base_dir):
     ratio_val = calculate_ratio(amplitude_val, pol)
 
     # take phase into consideration
-    ratio_val_phase = calculate_ratio(phase_val, pol)
+    diff_val_phase = calculate_diff(phase_val, pol)
 
     # We need to put ratio_val on log scale, because 2 and 0.5 are equally bad
     ratio_val = np.log10(ratio_val)
-    ratio_val_phase = np.log10(ratio_val_phase)
+    # ratio_val_phase = np.log10(ratio_val_phase)
 
     # Compute the standard deviation and mean along the frequency axis
     # medians = np.median(ratio_val, axis=0)
@@ -147,14 +157,20 @@ def find_bad_MAs(path_to_base_dir):
     modified_z_scores = 0.6745 * (variance - var_median)/var_mad
 
     # find bad antennas with phase as well
-    variance_phase = np.var(np.diff(ratio_val_phase[0, :, :, 0], axis=0), axis=0)
+    variance_phase = np.var(np.diff(diff_val_phase[0, :, :, 0], axis=0), axis=0)
     var_median_phase = np.median(variance_phase)
     var_mad_phase = np.median(np.abs(variance_phase - var_median_phase))
     modified_z_scores_phase = 0.6745 * (variance_phase - var_median_phase)/var_mad_phase
+    modified_z_scores_phase_noremote = modified_z_scores_phase.copy()
+
+    # however, we cannot use phase to judge if a remote antenna is bad. A remote antenna has ant_name matching 'MR1??NEN'
+    # so we need to find the index of these antennas
+    remote_antennas = np.where(np.char.find(ant, b'MR1') == 0)[0]
+    modified_z_scores_phase_noremote[remote_antennas] = 0
 
     # bad antennas are those with either bad amplitude or phase
 
-    bad_antennas = np.where(np.logical_or(modified_z_scores > 100, modified_z_scores_phase > 100))[0]
+    bad_antennas = np.where(np.logical_or(modified_z_scores > 100, modified_z_scores_phase_noremote > 100))[0]
 
     # Flag MR102NEN for quality reason, MR103NEN for UV distribution reasons
 
@@ -216,7 +232,7 @@ def find_bad_MAs(path_to_base_dir):
     plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
 
     # add a plot for the phase ratio
-    plot_sol(ratio_val_phase, ant, freq, pol[:1], 'PHASE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+    plot_sol(diff_val_phase, ant, freq, pol[:1], 'PHASE DIFF (XX-YY)', f'{path_to_base_dir}/diff_phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
 
     bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
 
