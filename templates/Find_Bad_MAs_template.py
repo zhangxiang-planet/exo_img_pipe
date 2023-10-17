@@ -98,8 +98,12 @@ def find_bad_MAs(path_to_base_dir):
     amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
     ratio_val = calculate_ratio(amplitude_val, pol)
 
+    # take phase into consideration
+    ratio_val_phase = calculate_ratio(phase_val, pol)
+
     # We need to put ratio_val on log scale, because 2 and 0.5 are equally bad
     ratio_val = np.log10(ratio_val)
+    ratio_val_phase = np.log10(ratio_val_phase)
 
     # Compute the standard deviation and mean along the frequency axis
     # medians = np.median(ratio_val, axis=0)
@@ -142,7 +146,15 @@ def find_bad_MAs(path_to_base_dir):
     var_mad = np.median(np.abs(variance - var_median))
     modified_z_scores = 0.6745 * (variance - var_median)/var_mad
 
-    bad_antennas = np.where(modified_z_scores > 100)[0]
+    # find bad antennas with phase as well
+    variance_phase = np.var(np.diff(ratio_val_phase[0, :, :, 0], axis=0), axis=0)
+    var_median_phase = np.median(variance_phase)
+    var_mad_phase = np.median(np.abs(variance_phase - var_median_phase))
+    modified_z_scores_phase = 0.6745 * (variance_phase - var_median_phase)/var_mad_phase
+
+    # bad antennas are those with either bad amplitude or phase
+
+    bad_antennas = np.where(np.logical_or(modified_z_scores > 100, modified_z_scores_phase > 100))[0]
 
     # Flag MR102NEN for quality reason, MR103NEN for UV distribution reasons
 
@@ -202,6 +214,9 @@ def find_bad_MAs(path_to_base_dir):
     plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=bad_antennas)
     plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
     plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+
+    # add a plot for the phase ratio
+    plot_sol(ratio_val_phase, ant, freq, pol[:1], 'PHASE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
 
     bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
 
