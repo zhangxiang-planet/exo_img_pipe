@@ -9,7 +9,7 @@ from templates.Find_Bad_MAs_template import find_bad_MAs
 # from datetime import datetime
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map, generate_and_save_snr_map
+from templates.Noise_esti_template import generate_noise_map, generate_and_save_snr_map, matched_filtering_with_detection
 
 ###### Initial settings ######
 
@@ -32,6 +32,11 @@ chunk_num = 12
 chan_per_SB_origin = 12
 ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
+
+# Window and SNR threshold for matched filtering
+snr_threshold = 5 / 1.4826 # 5 sigma to MAD
+time_windows = [3, 6, 12, 24, 48, 96, 192, 384, 768, 1536]
+freq_windows = [9, 18, 36, 72, 144, 288, 576]
 
 ###### Lock the flow runs when data processing is ongoing ######
 
@@ -426,6 +431,13 @@ def dynspec(exo_dir: str):
     subprocess.run(cmd_norm_dir, shell=True, check=True)
 
     generate_and_save_snr_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/', f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/')
+
+    # mkdir for the matched filtering result
+    cmd_mf_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/matched_filtering'
+    subprocess.run(cmd_mf_dir, shell=True, check=True)
+
+    # matched filtering
+    transient_detected_files = matched_filtering_with_detection(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/', time_windows, freq_windows, f'{postprocess_dir}{exo_dir}/{dynspec_folder}/matched_filtering/', snr_threshold)
 
 
 ###### Here come the flows (functions calling the tasks) #######

@@ -110,3 +110,87 @@ def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
                 # Save the SNR map as a FITS file
                 snr_fits_path = os.path.join(snr_fits_directory, f"SNR_{filename}")
                 snr_hdu.writeto(snr_fits_path, overwrite=True)
+
+
+def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_windows, output_directory, snr_threshold):
+    """
+    Apply matched filtering with Gaussian filter to SNR dynamic spectra with multiple time and frequency windows.
+    Save filtered maps based on specific conditions.
+    
+    Parameters:
+    - snr_fits_directory: str
+        The directory containing the SNR FITS files.
+    - time_windows: list of int
+        List of time window sizes in seconds.
+    - freq_windows: list of int
+        List of frequency window sizes in kHz.
+    - output_directory: str
+        Directory where the filtered SNR maps will be saved based on conditions.
+    - snr_threshold: float
+        SNR threshold for flagging potential transients.
+    """
+
+    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
+    import numpy as np
+    import os
+    from scipy.ndimage import gaussian_filter
+
+    transient_detected_files = []
+    
+    # Loop through each SNR FITS file in the directory
+    for filename in os.listdir(snr_fits_directory):
+        if filename.startswith('SNR_') and filename.endswith('.fits'):
+            filepath = os.path.join(snr_fits_directory, filename)
+            
+            # Open the SNR FITS file
+            with fits.open(filepath) as hdul:
+                # Check if this is a target
+                is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
+                
+                # Extract SNR data
+                snr_data = hdul[0].data
+                
+                # Remove NaN values (replace with zeros)
+                snr_data = np.nan_to_num(snr_data)
+                
+                # Get the dimensions of the dynamic spectrum
+                time_bins, freq_bins = snr_data.shape
+                
+                # Filter out window sizes that are larger than the dynamic spectrum
+                time_windows = [w for w in time_windows if w <= time_bins]
+                freq_windows = [w for w in freq_windows if w <= freq_bins]
+                
+                # Loop through each combination of time and frequency window
+                for t_window in time_windows:
+                    for f_window in freq_windows:
+                        # Apply Gaussian filter
+                        sigma_t = t_window / 3  # Standard deviation for time
+                        sigma_f = f_window / 3  # Standard deviation for frequency
+                        filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
+                        
+                        # Flag potential transients
+                        transient_detected = np.any(filtered_snr >= snr_threshold)
+                        if transient_detected:
+                            transient_detected_files.append(filename)
+                        
+                        # Save the filtered SNR map based on conditions
+                        if transient_detected or is_target:
+                            prefix = "prime" if transient_detected and is_target else ("transient" if transient_detected else "target")
+                            # Prepare the HDU for the filtered SNR map
+                            filtered_hdu = fits.PrimaryHDU(filtered_snr)
+                            filtered_hdu.header = hdul[0].header.copy()
+                            
+                            # Save the filtered SNR map as a FITS file
+                            output_filename = f"{prefix}_{t_window}s_{f_window}kHz_{filename}"
+                            output_filepath = os.path.join(output_directory, output_filename)
+                            filtered_hdu.writeto(output_filepath, overwrite=True)
+                            
+    return transient_detected_files
+
+# Usage example (you'll run this part in your local environment)
+# Time windows in units of 8 sec bins: [4, 8, 16, ..., 1024] => [32, 64, 128, ..., 8192] sec
+# Frequency windows in units of 60 kHz bins: [8, 16, ..., 512] => [480, 960, ..., 30720] kHz
+# snr_threshold = 5  # An example value; you may need to adjust this based on your specific needs
+# detected_files = matched_filtering_with_detection_v3('/path/to/snr/fits', list(range(4, 1025, 4)), list(range(8, 513, 8)), '/path/to/save/filtered/fits', snr_threshold)
+# print("Files where potential transients were detected:", detected_files)
+
