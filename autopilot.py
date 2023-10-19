@@ -9,6 +9,7 @@ from templates.Find_Bad_MAs_template import find_bad_MAs
 # from datetime import datetime
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
+from templates.Noise_esti_template import generate_noise_map
 
 ###### Initial settings ######
 
@@ -412,6 +413,12 @@ def dynspec(exo_dir: str):
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
     subprocess.run(combined_dynspec, shell=True, check=True)
+
+    # get the folder name of the dynamic spectrum
+    dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
+
+    # generate noise map
+    median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
 
 
 ###### Here come the flows (functions calling the tasks) #######
