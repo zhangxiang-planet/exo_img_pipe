@@ -174,7 +174,7 @@ def find_bad_MAs(path_to_base_dir):
 
     # Flag MR102NEN for quality reason, MR103NEN for UV distribution reasons
 
-    always_bad_antennas = [b'MR100NEN', b'MR101NEN', b'MR102NEN', b'MR103NEN']
+    always_bad_antennas = [b'MR102NEN', b'MR103NEN']
 
     # Iterate over each always_bad_antenna
     for always_bad_antenna in always_bad_antennas:
