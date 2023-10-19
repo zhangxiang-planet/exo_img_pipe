@@ -9,7 +9,7 @@ from templates.Find_Bad_MAs_template import find_bad_MAs
 # from datetime import datetime
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map
+from templates.Noise_esti_template import generate_noise_map, generate_and_save_snr_map
 
 ###### Initial settings ######
 
@@ -419,6 +419,13 @@ def dynspec(exo_dir: str):
 
     # generate noise map
     median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
+
+    # generate normalized dynamic spectrum
+    # but we need to make a directory for the normalized dynamic spectrum first
+    cmd_norm_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec'
+    subprocess.run(cmd_norm_dir, shell=True, check=True)
+
+    generate_and_save_snr_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/', f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/')
 
 
 ###### Here come the flows (functions calling the tasks) #######

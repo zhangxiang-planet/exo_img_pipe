@@ -60,3 +60,53 @@ def generate_noise_map(dynspec_directory):
 
 # Usage example (you'll run this part in your local environment)
 # median_map, mad_map = generate_noise_map('/path/to/your/directory')
+
+def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
+    """
+    Generate and save SNR maps for each FITS file in the directory.
+
+    Parameters:
+    - fits_directory: str
+        The directory containing the original FITS files.
+    - median_fits_path: str
+        Path to the median map FITS file.
+    - mad_fits_path: str
+        Path to the MAD map FITS file.
+    - snr_fits_directory: str
+        Directory where the SNR maps will be saved.
+    """
+    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
+    import numpy as np
+    import os
+
+    # Read the median and MAD maps from the FITS files
+    with fits.open(f'{dynspec_directory}/median_mad.fits') as hdul:
+        median_map = hdul[0].data[0,:,:]
+        mad_map = hdul[0].data[1,:,:]
+
+    fits_directory = f'{dynspec_directory}/TARGET/'
+
+    # Loop through each FITS file in the directory
+    for filename in os.listdir(fits_directory):
+        if filename.endswith('.fits'):
+            filepath = os.path.join(fits_directory, filename)
+            
+            # Open the FITS file
+            with fits.open(filepath) as hdul:
+                # Extract Stokes V data (assuming it's the 4th index in the first dimension)
+                stokes_v_data = hdul[0].data[3, :, :]
+                
+                # Calculate the SNR map
+                snr_map = (stokes_v_data - median_map) / mad_map
+                
+                # Prepare the HDU for the SNR map
+                snr_hdu = fits.PrimaryHDU(snr_map)
+                snr_hdu.header = hdul[0].header.copy()
+                # Remove the polarization axis information
+                for key in ['NAXIS3', 'CTYPE3', 'CRVAL3', 'CDELT3', 'CRPIX3', 'CUNIT3']:
+                    snr_hdu.header.remove(key, ignore_missing=True)
+                snr_hdu.header['NAXIS'] = 2  # Now it's a 2D image
+                
+                # Save the SNR map as a FITS file
+                snr_fits_path = os.path.join(snr_fits_directory, f"SNR_{filename}")
+                snr_hdu.writeto(snr_fits_path, overwrite=True)
