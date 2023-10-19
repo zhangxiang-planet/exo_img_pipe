@@ -164,14 +164,17 @@ def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_wind
                 for t_window in time_windows:
                     for f_window in freq_windows:
                         # Apply Gaussian filter
-                        sigma_t = t_window / 3  # Standard deviation for time
-                        sigma_f = f_window / 3  # Standard deviation for frequency
+                        sigma_t = t_window / 2  # Standard deviation for time
+                        sigma_f = f_window / 2  # Standard deviation for frequency
                         filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
                         
                         # Flag potential transients
                         transient_detected = np.any(filtered_snr >= snr_threshold)
                         if transient_detected:
                             transient_detected_files.append(filename)
+
+                        t_window_sec = t_window * 8
+                        f_window_khz = f_window * 60
                         
                         # Save the filtered SNR map based on conditions
                         if transient_detected or is_target:
@@ -181,7 +184,7 @@ def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_wind
                             filtered_hdu.header = hdul[0].header.copy()
                             
                             # Save the filtered SNR map as a FITS file
-                            output_filename = f"{prefix}_{t_window}s_{f_window}kHz_{filename}"
+                            output_filename = f"{prefix}_{t_window_sec}s_{f_window_khz}kHz_{filename}"
                             output_filepath = os.path.join(output_directory, output_filename)
                             filtered_hdu.writeto(output_filepath, overwrite=True)
                             
