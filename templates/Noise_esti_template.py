@@ -47,12 +47,14 @@ def generate_noise_map(dynspec_directory):
     median_map = np.median(subsample_spectra, axis=0)
     mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
 
-    hdul[0].data[0,:,:] = median_map
-    hdul[0].data[1,:,:] = mad_map
-    hdul[0].data[2,:,:] = 0
-    hdul[0].data[3,:,:] = 0
+    with fits.open(filepath) as hdul:
 
-    hdul.writeto(f'{dynspec_directory}/median_mad.fits', overwrite=True)
+        hdul[0].data[0,:,:] = median_map
+        hdul[0].data[1,:,:] = mad_map
+        hdul[0].data[2,:,:] = 0
+        hdul[0].data[3,:,:] = 0
+
+        hdul.writeto(f'{dynspec_directory}/median_mad.fits', overwrite=True)
 
     return median_map, mad_map
 
