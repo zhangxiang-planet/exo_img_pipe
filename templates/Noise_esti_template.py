@@ -1,5 +1,43 @@
 # Here's the code rewritten as a function. Note that you would need to import the necessary libraries in your local environment.
 
+def generate_noise_map(dynspec_directory):
+    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
+    import numpy as np
+    import os
+
+    subsample_spectra = []
+
+    fits_directory = f'{dynspec_directory}/TARGET/'
+
+    for filename in os.listdir(fits_directory):
+        if filename.endswith('.fits'):
+            filepath = os.path.join(fits_directory, filename)
+
+            # Open the FITS file
+            with fits.open(filepath) as hdul:
+                # Check if the file is part of the subsample based on the 'SRC-TYPE' header parameter
+                if hdul[0].header.get('SRC-TYPE', '').strip() == 'Field':
+                    # Assuming the dynamic spectrum for Stokes I is in the first HDU
+                    # This may vary depending on how your data is structured
+                    data = hdul[0].data[3, :, :]
+
+                    # Add this dynamic spectrum to our list
+                    subsample_spectra.append(data)
+
+    median_map = np.median(subsample_spectra, axis=0)
+    mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
+
+    with fits.open(filepath) as hdul:
+        hdul[0].data[0,:,:] = median_map
+        hdul[0].data[1,:,:] = mad_map
+        hdul[0].data[2,:,:] = 0
+        hdul[0].data[3,:,:] = 0
+
+        hdul.writeto(f'{dynspec_directory}/median_mad.fits', overwrite=True)
+
+    return median_map, mad_map
+
+
 def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_window, normal_directory, snr_threshold):
     """
     Generate a time-frequency noise map based on a subsample of FITS files.

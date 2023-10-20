@@ -9,7 +9,7 @@ from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import calculate_noise_for_window, apply_gaussian_filter
+from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter
 
 ###### Initial settings ######
 
@@ -421,6 +421,9 @@ def dynspec(exo_dir: str):
 
     # get the folder name of the dynamic spectrum
     dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
+
+    # generate a MAD map to be used as a weight map in convolution
+    median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
 
     # mkdir to apply the Gaussian filter
     cmd_convol_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/convol_gaussian/'
