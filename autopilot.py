@@ -9,7 +9,7 @@ from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import calculate_noise_for_window, generate_and_save_snr_map, apply_gaussian_filter
+from templates.Noise_esti_template import calculate_noise_for_window, apply_gaussian_filter
 
 ###### Initial settings ######
 
