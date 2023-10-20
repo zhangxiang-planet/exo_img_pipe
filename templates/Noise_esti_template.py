@@ -112,7 +112,7 @@ def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
                 snr_hdu.writeto(snr_fits_path, overwrite=True)
 
 
-def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_windows, output_directory, snr_threshold):
+def matched_filtering_with_detection(filename, snr_fits_directory, time_windows, freq_windows, output_directory, snr_threshold):
     """
     Apply matched filtering with Gaussian filter to SNR dynamic spectra with multiple time and frequency windows.
     Save filtered maps based on specific conditions.
@@ -133,66 +133,75 @@ def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_wind
     from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
     import numpy as np
     import os
-    from scipy.ndimage import gaussian_filter
+    # from scipy.ndimage import gaussian_filter
+    from astropy.convolution import convolve, Box2DKernel
 
-    transient_detected_files = []
+    # transient_detected_files = []
     
     # Loop through each SNR FITS file in the directory
-    for filename in os.listdir(snr_fits_directory):
-        if filename.startswith('SNR_') and filename.endswith('.fits'):
-            filepath = os.path.join(snr_fits_directory, filename)
-            
-            # Open the SNR FITS file
-            with fits.open(filepath) as hdul:
-                # Check if this is a target
-                is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
-                
-                # Extract SNR data
-                snr_data = hdul[0].data
-                
-                # Remove NaN values (replace with zeros)
-                snr_data = np.nan_to_num(snr_data)
-                
-                # Get the dimensions of the dynamic spectrum
-                time_bins, freq_bins = snr_data.shape
-                
-                # Filter out window sizes that are larger than the dynamic spectrum
-                time_windows = [w for w in time_windows if w <= time_bins]
-                freq_windows = [w for w in freq_windows if w <= freq_bins]
-                
-                # Loop through each combination of time and frequency window
-                for t_window in time_windows:
-                    for f_window in freq_windows:
-                        # Apply Gaussian filter
-                        sigma_t = t_window / 2  # Standard deviation for time
-                        sigma_f = f_window / 2  # Standard deviation for frequency
-                        filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
+    # for filename in os.listdir(snr_fits_directory):
+        # if filename.startswith('SNR_') and filename.endswith('.fits'):
+    filepath = os.path.join(snr_fits_directory, filename)
+    
+    # Open the SNR FITS file
+    with fits.open(filepath) as hdul:
+        # Check if this is a target
+        is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
+        
+        # Extract SNR data
+        snr_data = hdul[0].data
+        
+        # Remove NaN values (replace with zeros)
+        snr_data = np.nan_to_num(snr_data)
+        
+        # Get the dimensions of the dynamic spectrum
+        time_bins, freq_bins = snr_data.shape
+        
+        # Filter out window sizes that are larger than the dynamic spectrum
+        time_windows = [w for w in time_windows if w <= time_bins]
+        freq_windows = [w for w in freq_windows if w <= freq_bins]
+        
+        # Loop through each combination of time and frequency window
+        for t_window in time_windows:
+            for f_window in freq_windows:
+                # # Apply Gaussian filter
+                # sigma_t = t_window / 2  # Standard deviation for time
+                # sigma_f = f_window / 2  # Standard deviation for frequency
+                # filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
 
-                        # We need to normalize the filtered SNR map to account for the different window sizes
-                        normal_filtered_snr = filtered_snr * ( 2 * np.pi * sigma_t * sigma_f) ** 0.5 
-                        
-                        # Flag potential transients
-                        # filtered_snr_threshold = snr_threshold / ( (2 * np.pi * sigma_t ** 2) ** 0.5 * (2 * np.pi * sigma_f ** 2) ** 0.5 )
-                        transient_detected = np.any(normal_filtered_snr >= snr_threshold)
-                        if transient_detected:
-                            transient_detected_files.append(filename)
+                box_kernel = Box2DKernel(f_window * t_window)
 
-                        t_window_sec = t_window * 8
-                        f_window_khz = f_window * 60
-                        
-                        # Save the filtered SNR map based on conditions
-                        if transient_detected or is_target:
-                            prefix = "prime" if transient_detected and is_target else ("transient" if transient_detected else "target")
-                            # Prepare the HDU for the filtered SNR map
-                            filtered_hdu = fits.PrimaryHDU(normal_filtered_snr)
-                            filtered_hdu.header = hdul[0].header.copy()
+                filtered_data = convolve(snr_data, box_kernel, boundary='extend', normalize_kernel=True)
+
+                scale_factor = (f_window * t_window) ** 0.5
+
+                filtered_data *= scale_factor
+
+                # We need to normalize the filtered SNR map to account for the different window sizes
+                # normal_filtered_snr = filtered_snr * ( 2 * np.pi * sigma_t * sigma_f) ** 0.5 
+                
+                # Flag potential transients
+                # filtered_snr_threshold = snr_threshold / ( (2 * np.pi * sigma_t ** 2) ** 0.5 * (2 * np.pi * sigma_f ** 2) ** 0.5 )
+                transient_detected = np.any(filtered_data >= snr_threshold)
+                # if transient_detected:
+                #     transient_detected_files.append(filename)
+
+                t_window_sec = t_window * 8
+                f_window_khz = f_window * 60
+                
+                # Save the filtered SNR map based on conditions
+                if transient_detected or is_target:
+                    prefix = "prime" if transient_detected and is_target else ("transient" if transient_detected else "target")
+                    # Prepare the HDU for the filtered SNR map
+                    filtered_hdu = fits.PrimaryHDU(filtered_data)
+                    filtered_hdu.header = hdul[0].header.copy()
+                    
+                    # Save the filtered SNR map as a FITS file
+                    output_filename = f"{prefix}_{t_window_sec}s_{f_window_khz}kHz_{filename}"
+                    output_filepath = os.path.join(output_directory, output_filename)
+                    filtered_hdu.writeto(output_filepath, overwrite=True)
                             
-                            # Save the filtered SNR map as a FITS file
-                            output_filename = f"{prefix}_{t_window_sec}s_{f_window_khz}kHz_{filename}"
-                            output_filepath = os.path.join(output_directory, output_filename)
-                            filtered_hdu.writeto(output_filepath, overwrite=True)
-                            
-    return transient_detected_files
+    # return transient_detected_files
 
 # Usage example (you'll run this part in your local environment)
 # Time windows in units of 8 sec bins: [4, 8, 16, ..., 1024] => [32, 64, 128, ..., 8192] sec

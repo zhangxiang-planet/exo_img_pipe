@@ -2,11 +2,10 @@
 
 from prefect import flow, task
 from prefect.states import Completed
-# from prefect.task_runners import ConcurrentTaskRunner
 import subprocess
 import os, glob
+from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
-# from datetime import datetime
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
 from templates.Noise_esti_template import generate_noise_map, generate_and_save_snr_map, matched_filtering_with_detection
@@ -437,7 +436,12 @@ def dynspec(exo_dir: str):
     subprocess.run(cmd_mf_dir, shell=True, check=True)
 
     # matched filtering
-    transient_detected_files = matched_filtering_with_detection(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/', time_windows, freq_windows, f'{postprocess_dir}{exo_dir}/{dynspec_folder}/matched_filtering/', snr_threshold)
+    snr_fits_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/'
+    output_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/matched_filtering/'
+    transient_tasks = [delayed(matched_filtering_with_detection)(filename, snr_fits_directory, time_windows, freq_windows, output_directory, snr_threshold)
+                       for filename in os.listdir(snr_fits_directory)]
+    
+    compute(*transient_tasks)
 
 
 ###### Here come the flows (functions calling the tasks) #######
