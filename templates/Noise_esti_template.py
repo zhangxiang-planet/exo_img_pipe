@@ -169,7 +169,7 @@ def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_wind
                         filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
 
                         # We need to normalize the filtered SNR map to account for the different window sizes
-                        normal_filtered_snr = filtered_snr * ( (2 * np.pi * sigma_t ** 2) ** 0.5 * (2 * np.pi * sigma_f ** 2) ** 0.5 )
+                        normal_filtered_snr = filtered_snr * ( 2 * np.pi * sigma_t * sigma_f) ** 0.5 
                         
                         # Flag potential transients
                         # filtered_snr_threshold = snr_threshold / ( (2 * np.pi * sigma_t ** 2) ** 0.5 * (2 * np.pi * sigma_f ** 2) ** 0.5 )
