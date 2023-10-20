@@ -167,9 +167,13 @@ def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_wind
                         sigma_t = t_window / 2  # Standard deviation for time
                         sigma_f = f_window / 2  # Standard deviation for frequency
                         filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
+
+                        # We need to normalize the filtered SNR map to account for the different window sizes
+                        normal_filtered_snr = filtered_snr * ( (2 * np.pi * sigma_t ** 2) ** 0.5 * (2 * np.pi * sigma_f ** 2) ** 0.5 )
                         
                         # Flag potential transients
-                        transient_detected = np.any(filtered_snr >= snr_threshold)
+                        # filtered_snr_threshold = snr_threshold / ( (2 * np.pi * sigma_t ** 2) ** 0.5 * (2 * np.pi * sigma_f ** 2) ** 0.5 )
+                        transient_detected = np.any(normal_filtered_snr >= snr_threshold)
                         if transient_detected:
                             transient_detected_files.append(filename)
 
@@ -180,7 +184,7 @@ def matched_filtering_with_detection(snr_fits_directory, time_windows, freq_wind
                         if transient_detected or is_target:
                             prefix = "prime" if transient_detected and is_target else ("transient" if transient_detected else "target")
                             # Prepare the HDU for the filtered SNR map
-                            filtered_hdu = fits.PrimaryHDU(filtered_snr)
+                            filtered_hdu = fits.PrimaryHDU(normal_filtered_snr)
                             filtered_hdu.header = hdul[0].header.copy()
                             
                             # Save the filtered SNR map as a FITS file
