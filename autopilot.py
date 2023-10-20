@@ -4,11 +4,12 @@ from prefect import flow, task
 from prefect.states import Completed
 import subprocess
 import os, glob
+from astropy.io import fits
 from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map, generate_and_save_snr_map, matched_filtering_with_detection
+from templates.Noise_esti_template import calculate_noise_for_window, generate_and_save_snr_map, apply_gaussian_filter
 
 ###### Initial settings ######
 
@@ -421,27 +422,49 @@ def dynspec(exo_dir: str):
     # get the folder name of the dynamic spectrum
     dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
 
-    # generate noise map
-    median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
+    # mkdir to apply the Gaussian filter
+    cmd_convol_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/convol_gaussian/'
+    subprocess.run(cmd_convol_dir, shell=True, check=True)
+
+    # matched filtering
+    dynamic_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/TARGET/'
+    convol_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/convol_gaussian/'
+
+    # get the size of the dynamic spectrum, to make sure that the windows do not exceed the size
+    dynspec_file = glob.glob(f'{dynamic_directory}/*.fits')[0]
+    with fits.open(dynspec_file) as hdul:
+        dynspec_size = hdul[0].data.shape
+        time_bins = dynspec_size[2]
+        freq_bins = dynspec_size[1]
+
+    time_windows = [w for w in time_windows if w <= time_bins]
+    freq_windows = [w for w in freq_windows if w <= freq_bins]
+
+    convol_tasks = [delayed(apply_gaussian_filter)(filename, dynamic_directory, time_windows, freq_windows, convol_directory)
+                       for filename in os.listdir(dynamic_directory)]
+    
+    compute(*convol_tasks)
+
+    # generate noise map for the convolved dynamic spectrum
+    # but we need to make a directory for the noise map first
+    cmd_noise_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/noise_map/'
+    subprocess.run(cmd_noise_dir, shell=True, check=True)
+
+    noise_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/noise_map/'
 
     # generate normalized dynamic spectrum
     # but we need to make a directory for the normalized dynamic spectrum first
     cmd_norm_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec'
     subprocess.run(cmd_norm_dir, shell=True, check=True)
 
-    generate_and_save_snr_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/', f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/')
+    normal_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/'
 
-    # mkdir for the matched filtering result
-    cmd_mf_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/matched_filtering'
-    subprocess.run(cmd_mf_dir, shell=True, check=True)
+    noise_tasks = [delayed(calculate_noise_for_window)(convol_directory, noise_directory, t_window, f_window, normal_directory, snr_threshold) 
+         for t_window in time_windows
+         for f_window in freq_windows]
 
-    # matched filtering
-    snr_fits_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/'
-    output_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/matched_filtering/'
-    transient_tasks = [delayed(matched_filtering_with_detection)(filename, snr_fits_directory, time_windows, freq_windows, output_directory, snr_threshold)
-                       for filename in os.listdir(snr_fits_directory)]
-    
-    compute(*transient_tasks)
+    # Execute tasks in parallel
+    compute(*noise_tasks)
 
 
 ###### Here come the flows (functions calling the tasks) #######
