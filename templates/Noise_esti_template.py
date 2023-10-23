@@ -165,7 +165,7 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
 # detected_files = matched_filtering_with_detection_v3('/path/to/snr/fits', list(range(4, 1025, 4)), list(range(8, 513, 8)), '/path/to/save/filtered/fits', snr_threshold)
 # print("Files where potential transients were detected:", detected_files)
 
-def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_window, normal_directory, snr_threshold):
+def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_window):
     """
     Generate a time-frequency noise map based on a subsample of FITS files.
 
@@ -214,6 +214,17 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
         hdul[0].data = mad_map
         hdul.writeto(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
 
+def source_detection(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold):
+
+    t_window_sec = t_window * 8
+    f_window_khz = f_window * 60
+
+    with fits.open(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
+        median_map = hdul[0].data
+
+    with fits.open(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
+        mad_map = hdul[0].data
+
     for filepath in glob.glob(f'{convol_directory}/convol_{t_window_sec}s_{f_window_khz}kHz*.fits'):
         filename = filepath.split('/')[-1]
         with fits.open(filepath) as hdul:
@@ -228,5 +239,5 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
                 snr_hdu.header = hdul[0].header.copy()
 
                 output_filename = f"{prefix}_{filename}"
-                output_filepath = os.path.join(normal_directory, output_filename)
+                output_filepath = os.path.join(detection_directory, output_filename)
                 snr_hdu.writeto(output_filepath, overwrite=True)

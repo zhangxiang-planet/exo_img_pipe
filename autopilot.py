@@ -9,7 +9,7 @@ from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map
+from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map, source_detection
 
 ###### Initial settings ######
 
@@ -459,19 +459,23 @@ def dynspec(exo_dir: str):
 
     noise_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/noise_map/'
 
-    # generate normalized dynamic spectrum
-    # but we need to make a directory for the normalized dynamic spectrum first
-    cmd_norm_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec'
-    subprocess.run(cmd_norm_dir, shell=True, check=True)
+    cmd_detection_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec'
+    subprocess.run(cmd_detection_dir, shell=True, check=True)
 
-    normal_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/normalized_dynamic_spec/'
+    detection_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/'
 
-    noise_tasks = [delayed(calculate_noise_for_window)(convol_directory, noise_directory, t_window, f_window, normal_directory, snr_threshold) 
+    noise_tasks = [delayed(calculate_noise_for_window)(convol_directory, noise_directory, t_window, f_window) 
          for t_window in time_windows
          for f_window in freq_windows]
 
     # Execute tasks in parallel
     compute(*noise_tasks)
+
+    detection_tasks = [delayed(source_detection)(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold)
+            for t_window in time_windows
+            for f_window in freq_windows]
+    
+    compute(*detection_tasks)
 
 
 ###### Here come the flows (functions calling the tasks) #######
