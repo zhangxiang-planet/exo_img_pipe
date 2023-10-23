@@ -7,6 +7,7 @@ import os
 # from scipy.ndimage import gaussian_filter
 from astropy.convolution import Gaussian2DKernel, convolve
 from dask import delayed
+import glob
 
 def generate_noise_map(dynspec_directory):
 
