@@ -5,12 +5,11 @@ from prefect.states import Completed
 import subprocess
 import os, glob
 from astropy.io import fits
-import numpy as np
 from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map, write_to_disk
+from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map
 
 ###### Initial settings ######
 
@@ -442,33 +441,16 @@ def dynspec(exo_dir: str):
     dynspec_file = glob.glob(f'{dynamic_directory}/*.fits')[0]
     with fits.open(dynspec_file) as hdul:
         dynspec_size = hdul[0].data.shape
-        convol_header = hdul[0].header
-        time_bins = dynspec_size[1]
-        freq_bins = dynspec_size[0]
+        time_bins = dynspec_size[2]
+        freq_bins = dynspec_size[1]
 
     time_windows = [w for w in time_windows if w <= time_bins]
     freq_windows = [w for w in freq_windows if w <= freq_bins]
 
-    dynamic_data_dict = {}
-    for filename in os.listdir(dynamic_directory):
-        filepath = os.path.join(dynamic_directory, filename)
-        with fits.open(filepath) as hdul:
-            dynamic_data_dict[filename] = np.nan_to_num(hdul[0].data)
-
-    convol_tasks = [apply_gaussian_filter(dynamic_data_dict[filename], filename, time_windows, freq_windows, convol_directory, convol_header)
-                for filename in dynamic_data_dict.keys()]
-    # convol_tasks = [delayed(apply_gaussian_filter)(filename, dynamic_directory, time_windows, freq_windows, convol_directory)
-    #                    for filename in os.listdir(dynamic_directory)]
+    convol_tasks = [delayed(apply_gaussian_filter)(filename, dynamic_directory, time_windows, freq_windows, convol_directory)
+                       for filename in os.listdir(dynamic_directory)]
     
-    # compute(*convol_tasks)
-
-    write_tasks = [item for sublist in convol_tasks for item in sublist]
-
-    # write_tasks = [delayed(write_to_disk)(convol_data, output_filename, convol_directory)
-            #    for convol_data, output_filename in convol_tasks]
-
-    # Compute
-    compute(*write_tasks)
+    compute(*convol_tasks)
 
     # generate noise map for the convolved dynamic spectrum
     # but we need to make a directory for the noise map first
