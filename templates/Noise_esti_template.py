@@ -165,7 +165,7 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
 # detected_files = matched_filtering_with_detection_v3('/path/to/snr/fits', list(range(4, 1025, 4)), list(range(8, 513, 8)), '/path/to/save/filtered/fits', snr_threshold)
 # print("Files where potential transients were detected:", detected_files)
 
-def calculate_noise_for_window(convol_directory, noise_directory, t_window, freq_windows):
+def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_window):
     """
     Generate a time-frequency noise map based on a subsample of FITS files.
 
@@ -185,36 +185,36 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, freq
 
     t_window_sec = t_window * 8
 
-    for f_window in freq_windows:
-        f_window_khz = f_window * 60
+    # for f_window in freq_windows:
+    f_window_khz = f_window * 60
 
-        # Loop through each FITS file in the directory
-        for filepath in glob.glob(f'{convol_directory}/convol_{t_window_sec}s_{f_window_khz}kHz*.fits'):
-            with fits.open(filepath) as hdul:
-                # Check if the file is part of the subsample based on the 'SRC-TYPE' header parameter
-                if hdul[0].header.get('SRC-TYPE', '').strip() == 'Field':
-                    # Assuming the dynamic spectrum for Stokes I is in the first HDU
-                    # This may vary depending on how your data is structured
-                    data = hdul[0].data
-                    
-                    # Add this dynamic spectrum to our list
-                    subsample_spectra.append(data)
-
-        # Convert the list of 2D arrays into a 3D NumPy array
-        # The shape would be (num_directions, num_time_bins, num_freq_channels)
-        subsample_spectra = np.array(subsample_spectra)
-
-        # Calculate the median and MAD along the direction axis (axis=0)
-        median_map = np.median(subsample_spectra, axis=0)
-        mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
-
+    # Loop through each FITS file in the directory
+    for filepath in glob.glob(f'{convol_directory}/convol_{t_window_sec}s_{f_window_khz}kHz*.fits'):
         with fits.open(filepath) as hdul:
-            hdul[0].data = median_map
-            hdul.writeto(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+            # Check if the file is part of the subsample based on the 'SRC-TYPE' header parameter
+            if hdul[0].header.get('SRC-TYPE', '').strip() == 'Field':
+                # Assuming the dynamic spectrum for Stokes I is in the first HDU
+                # This may vary depending on how your data is structured
+                data = hdul[0].data
+                
+                # Add this dynamic spectrum to our list
+                subsample_spectra.append(data)
 
-        with fits.open(filepath) as hdul:
-            hdul[0].data = mad_map
-            hdul.writeto(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+    # Convert the list of 2D arrays into a 3D NumPy array
+    # The shape would be (num_directions, num_time_bins, num_freq_channels)
+    subsample_spectra = np.array(subsample_spectra)
+
+    # Calculate the median and MAD along the direction axis (axis=0)
+    median_map = np.median(subsample_spectra, axis=0)
+    mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
+
+    with fits.open(filepath) as hdul:
+        hdul[0].data = median_map
+        hdul.writeto(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+
+    with fits.open(filepath) as hdul:
+        hdul[0].data = mad_map
+        hdul.writeto(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
 
 def source_detection(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold):
 
