@@ -119,7 +119,7 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
                 sigma_f = f_window / 2  # Standard deviation for frequency
                 # filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
 
-                gaussian_kernel = Gaussian2DKernel(sigma_f, sigma_t)
+                gaussian_kernel = Gaussian2DKernel(sigma_t, sigma_f)
 
                 convol_data = convolve(dynspec_data, gaussian_kernel, boundary='extend')
 
