@@ -464,12 +464,18 @@ def dynspec(exo_dir: str):
 
     detection_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/'
 
-    noise_tasks = [delayed(calculate_noise_for_window)(convol_directory, noise_directory, t_window, f_window) 
-         for t_window in time_windows
-         for f_window in freq_windows]
+    noise_tasks = [delayed(calculate_noise_for_window)(convol_directory, noise_directory, t_window, freq_windows) 
+         for t_window in time_windows]
 
-    # Execute tasks in parallel
+    # # Execute tasks in parallel
     compute(*noise_tasks)
+
+
+
+    # Not parallelized because it's opening too many files
+    # for t_window in time_windows:
+    #     for f_window in freq_windows:
+    #         calculate_noise_for_window(convol_directory, noise_directory, t_window, f_window)
 
     detection_tasks = [delayed(source_detection)(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold)
             for t_window in time_windows
