@@ -9,7 +9,7 @@ from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter
+from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map
 
 ###### Initial settings ######
 
@@ -425,12 +425,16 @@ def dynspec(exo_dir: str):
     # generate a MAD map to be used as a weight map in convolution
     median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
 
+    cmd_norm_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec'
+    subprocess.run(cmd_norm_dir, shell=True, check=True)
+    generate_and_save_snr_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/', f'{postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec/')
+
     # mkdir to apply the Gaussian filter
     cmd_convol_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/convol_gaussian/'
     subprocess.run(cmd_convol_dir, shell=True, check=True)
 
     # matched filtering
-    dynamic_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/TARGET/'
+    dynamic_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec/'
     convol_directory = f'{postprocess_dir}{exo_dir}/{dynspec_folder}/convol_gaussian/'
 
     # get the size of the dynamic spectrum, to make sure that the windows do not exceed the size
