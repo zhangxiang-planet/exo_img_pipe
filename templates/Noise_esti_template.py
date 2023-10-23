@@ -85,20 +85,7 @@ def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
                 snr_hdu.writeto(snr_fits_path, overwrite=True)
 
 def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_windows, convol_directory):
-    """
-    Apply matched filtering with Gaussian filter to SNR dynamic spectra with multiple time and frequency windows.
-    Save filtered maps based on specific conditions.
-    
-    Parameters:
-
-    - time_windows: list of int
-        List of time window sizes in seconds.
-    - freq_windows: list of int
-        List of frequency window sizes in kHz.
-    - output_directory: str
-        Directory where the filtered SNR maps will be saved based on conditions.
-
-    """
+   
     # transient_detected_files = []
     
     # Loop through each SNR FITS file in the directory
@@ -162,7 +149,7 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
                 output_filename = f"{prefix}_{t_window_sec}s_{f_window_khz}kHz_{filename}"
                 output_filepath = os.path.join(convol_directory, output_filename)
                 convol_hdu.writeto(output_filepath, overwrite=True)
-                convol_hdu.close()
+                # convol_hdu.close()
                             
     # return transient_detected_files
 

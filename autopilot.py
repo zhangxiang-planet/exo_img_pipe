@@ -441,8 +441,8 @@ def dynspec(exo_dir: str):
     dynspec_file = glob.glob(f'{dynamic_directory}/*.fits')[0]
     with fits.open(dynspec_file) as hdul:
         dynspec_size = hdul[0].data.shape
-        time_bins = dynspec_size[2]
-        freq_bins = dynspec_size[1]
+        time_bins = dynspec_size[1]
+        freq_bins = dynspec_size[0]
 
     time_windows = [w for w in time_windows if w <= time_bins]
     freq_windows = [w for w in freq_windows if w <= freq_bins]
