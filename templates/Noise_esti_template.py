@@ -195,7 +195,7 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, freq
                 if hdul[0].header.get('SRC-TYPE', '').strip() == 'Field':
                     # Assuming the dynamic spectrum for Stokes I is in the first HDU
                     # This may vary depending on how your data is structured
-                    data = hdul[0].data * 1
+                    data = hdul[0].data
                     
                     # Add this dynamic spectrum to our list
                     subsample_spectra.append(data)
