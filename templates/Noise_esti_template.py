@@ -1,10 +1,12 @@
 # Here's the code rewritten as a function. Note that you would need to import the necessary libraries in your local environment.
 
+from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
+import numpy as np
+import os, glob
+# from scipy.ndimage import gaussian_filter
+from astropy.convolution import Gaussian2DKernel, convolve
 
 def generate_noise_map(dynspec_directory):
-    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
-    import numpy as np
-    import os
 
     subsample_spectra = []
 
@@ -51,9 +53,7 @@ def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
     - snr_fits_directory: str
         Directory where the SNR maps will be saved.
     """
-    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
-    import numpy as np
-    import os
+
     # Read the median and MAD maps from the FITS files
     with fits.open(f'{dynspec_directory}/median_mad.fits') as hdul:
         median_map = hdul[0].data[0,:,:]
@@ -99,13 +99,6 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
         Directory where the filtered SNR maps will be saved based on conditions.
 
     """
-
-    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
-    import numpy as np
-    import os
-    # from scipy.ndimage import gaussian_filter
-    from astropy.convolution import Gaussian2DKernel, convolve
-
     # transient_detected_files = []
     
     # Loop through each SNR FITS file in the directory
@@ -169,6 +162,7 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
                 output_filename = f"{prefix}_{t_window_sec}s_{f_window_khz}kHz_{filename}"
                 output_filepath = os.path.join(convol_directory, output_filename)
                 convol_hdu.writeto(output_filepath, overwrite=True)
+                convol_hdu.close()
                             
     # return transient_detected_files
 
@@ -193,9 +187,6 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
     - mad_map: np.ndarray
         2D array representing the Median Absolute Deviation at each time-frequency pixel.
     """
-    from astropy.io import fits  # Import within the function; you'll need to import this in your local environment
-    import numpy as np
-    import glob, os
 
     # Initialize lists to store the dynamic spectra from the subsample of directions
     subsample_spectra = []
