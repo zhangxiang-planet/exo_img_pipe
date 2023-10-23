@@ -94,7 +94,7 @@ def write_to_disk(convol_data, output_filename, convol_directory, convol_header)
     convol_hdu.writeto(output_filepath, overwrite=True)
 
 
-def apply_gaussian_filter(data, filename, time_windows, freq_windows, convol_directory):
+def apply_gaussian_filter(data, filename, time_windows, freq_windows, convol_directory, convol_header):
     """
     Apply matched filtering with Gaussian filter to SNR dynamic spectra with multiple time and frequency windows.
     Save filtered maps based on specific conditions.
@@ -178,7 +178,7 @@ def apply_gaussian_filter(data, filename, time_windows, freq_windows, convol_dir
             # output_filepath = os.path.join(convol_directory, output_filename)
             # convol_hdu.writeto(output_filepath, overwrite=True)
 
-            write_task = delayed(write_to_disk)(convol_data, output_filename, convol_directory)
+            write_task = delayed(write_to_disk)(convol_data, output_filename, convol_directory, convol_header)
             write_tasks.append(write_task)
 
     return write_tasks

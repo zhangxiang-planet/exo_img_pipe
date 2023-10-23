@@ -455,7 +455,7 @@ def dynspec(exo_dir: str):
         with fits.open(filepath) as hdul:
             dynamic_data_dict[filename] = np.nan_to_num(hdul[0].data)
 
-    convol_tasks = [apply_gaussian_filter(dynamic_data_dict[filename], filename, time_windows, freq_windows, convol_directory)
+    convol_tasks = [apply_gaussian_filter(dynamic_data_dict[filename], filename, time_windows, freq_windows, convol_directory, convol_header)
                 for filename in dynamic_data_dict.keys()]
     # convol_tasks = [delayed(apply_gaussian_filter)(filename, dynamic_directory, time_windows, freq_windows, convol_directory)
     #                    for filename in os.listdir(dynamic_directory)]
