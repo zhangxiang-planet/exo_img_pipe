@@ -4,7 +4,8 @@ from astropy.io import fits  # Import within the function; you'll need to import
 import numpy as np
 import os, glob
 # from scipy.ndimage import gaussian_filter
-from astropy.convolution import Gaussian2DKernel, convolve
+# from astropy.convolution import Gaussian2DKernel, convolve
+from scipy.ndimage import gaussian_filter
 
 def generate_noise_map(dynspec_directory):
 
@@ -119,9 +120,13 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
                 sigma_f = f_window / 2  # Standard deviation for frequency
                 # filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
 
-                gaussian_kernel = Gaussian2DKernel(sigma_t, sigma_f)
+                sigma = [sigma_f, sigma_t]
 
-                convol_data = convolve(dynspec_data, gaussian_kernel, boundary='extend')
+                convol_data = gaussian_filter(dynspec_data, sigma=sigma)
+
+                # gaussian_kernel = Gaussian2DKernel(sigma_t, sigma_f)
+
+                # convol_data = convolve(dynspec_data, gaussian_kernel, boundary='extend')
 
                 # scale_factor = (f_window * t_window) ** 0.5
 
