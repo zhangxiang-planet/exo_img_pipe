@@ -243,7 +243,7 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
             source_type = hdul[0].header.get('SRC-TYPE', '').strip()
             # is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
             source_detected = np.any(np.abs(snr_map) >= snr_threshold)
-            source_region = snr_map[np.abs(snr_map) >= snr_threshold]
+            source_region = np.where(np.abs(snr_map) >= snr_threshold, snr_map, np.nan)
 
             if source_detected:
                 snr_median = np.nanmedian(snr_map)
