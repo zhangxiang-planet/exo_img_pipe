@@ -7,6 +7,8 @@ import os, glob
 # from astropy.convolution import Gaussian2DKernel, convolve
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 
 def generate_noise_map(dynspec_directory):
 
