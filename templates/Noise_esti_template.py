@@ -261,8 +261,10 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 snr_hdu.writeto(output_filepath, overwrite=True)
 
                 # make a plot for the snr map
+                snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
+
                 plt.figure(figsize=(12, 4))
-                plt.imshow(snr_map, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
+                plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
                 plt.colorbar()
                 plt.xlabel('Time (8 s bins)')
                 plt.ylabel('Frequency (60 kHz bins)')
