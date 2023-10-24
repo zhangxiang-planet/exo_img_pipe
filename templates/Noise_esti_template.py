@@ -227,7 +227,7 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
         hdul[0].data = mad_map
         hdul.writeto(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
 
-def source_detection(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold):
+def source_detection(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold, snr_threshold_target):
 
     t_window_sec = t_window * 8
     f_window_khz = f_window * 60
@@ -244,28 +244,33 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
             convol_data = hdul[0].data
             snr_map = (convol_data - median_map) / mad_map
             source_type = hdul[0].header.get('SRC-TYPE', '').strip()
-            # is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
-            source_detected = np.any(np.abs(snr_map) >= snr_threshold)
-            source_region = np.where(np.abs(snr_map) >= snr_threshold, snr_map, np.nan)
+            is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
+            if is_target:
+                source_detected = np.any(np.abs(snr_map) >= snr_threshold_target)
+                # source_region = snr_map[np.abs(snr_map) >= snr_threshold_target]
+            else:
+                source_detected = np.any(np.abs(snr_map) >= snr_threshold)
+                # source_region = snr_map[np.abs(snr_map) >= snr_threshold]
 
             if source_detected:
-                snr_median = np.nanmedian(snr_map)
-                snr_mad = np.nanmedian(np.abs(snr_map - snr_median))
-                transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= snr_threshold)
-                prefix = "transient" if transient_detected else "source"
+                # snr_median = np.nanmedian(snr_map)
+                # snr_mad = np.nanmedian(np.abs(snr_map - snr_median))
+                # transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= snr_threshold_target)
+                # if transient_detected:
+
                 snr_hdu = fits.PrimaryHDU(snr_map)
                 snr_hdu.header = hdul[0].header.copy()
 
-                output_filename = f"{prefix}_{source_type}_{filename}"
+                output_filename = f"{source_type}_{filename}"
                 output_filepath = os.path.join(detection_directory, output_filename)
                 snr_hdu.writeto(output_filepath, overwrite=True)
 
                 # make a plot for the snr map
                 snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
 
-                print("Type and shape of snr_map:", type(snr_map), snr_map.shape)  # Debugging line
+                # print("Type and shape of snr_map:", type(snr_map), snr_map.shape)  # Debugging line
                 # print("Any NaNs in snr_map:", np.isnan(snr_map).any())  # Debugging line
-                print("Any Infs in snr_map:", np.isinf(snr_map).any())  # Debugging line
+                # print("Any Infs in snr_map:", np.isinf(snr_map).any())  # Debugging line
 
                 plt.figure(figsize=(12, 4))
                 plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
@@ -273,7 +278,7 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 plt.xlabel('Time (8 s bins)')
                 plt.ylabel('Frequency (60 kHz bins)')
                 plt.title(f'SNR Map for {filename}')
-                plt.savefig(f'{detection_directory}/SNR_{prefix}_{source_type}_{filename}.png')
+                plt.savefig(f'{detection_directory}/{source_type}_{filename}.png')
                 plt.close()
 
                 # source_region_hdu = fits.PrimaryHDU(source_region)

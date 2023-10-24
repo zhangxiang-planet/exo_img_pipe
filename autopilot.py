@@ -35,7 +35,8 @@ ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Window and SNR threshold for matched filtering
-snr_threshold = 6 * 1.4826 # 5 sigma to MAD
+snr_threshold = 1.4826 * 7
+snr_threshold_target = 1.4826 * 6
 time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
 freq_windows = [12, 24, 48, 96, 192, 384, 768]
 
@@ -476,7 +477,7 @@ def dynspec(exo_dir: str):
         for f_window in freq_windows:
             calculate_noise_for_window(convol_directory, noise_directory, t_window, f_window)
 
-    detection_tasks = [delayed(source_detection)(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold)
+    detection_tasks = [delayed(source_detection)(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold, snr_threshold_target)
             for t_window in time_windows
             for f_window in freq_windows]
     
