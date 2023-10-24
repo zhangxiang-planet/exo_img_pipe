@@ -124,8 +124,8 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
 
                 convol_data = gaussian_filter(dynspec_data, sigma=sigma)
 
-                kernel_t = sigma_t * 3
-                kernel_f = sigma_f * 3
+                kernel_t = int(sigma_t * 3)
+                kernel_f = int(sigma_f * 3)
 
                 convol_data[:kernel_f, :] = np.nan
                 convol_data[-kernel_f:, :] = np.nan
