@@ -256,3 +256,9 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 output_filename = f"{prefix}_{source_type}_{filename}"
                 output_filepath = os.path.join(detection_directory, output_filename)
                 snr_hdu.writeto(output_filepath, overwrite=True)
+
+                source_region_hdu = fits.PrimaryHDU(source_region)
+                source_region_hdu.header = hdul[0].header.copy()
+                region_output_filename = f"{prefix}_{source_type}_region_{filename}"
+                region_output_filepath = os.path.join(detection_directory, region_output_filename)
+                source_region_hdu.writeto(region_output_filepath, overwrite=True)
