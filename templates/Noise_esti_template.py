@@ -240,14 +240,19 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
         with fits.open(filepath) as hdul:
             convol_data = hdul[0].data
             snr_map = (convol_data - median_map) / mad_map
-            is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
-            transient_detected = np.any(np.abs(snr_map) >= snr_threshold)
+            source_type = hdul[0].header.get('SRC-TYPE', '').strip()
+            # is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
+            source_detected = np.any(np.abs(snr_map) >= snr_threshold)
+            source_region = snr_map[np.abs(snr_map) >= snr_threshold]
 
-            if transient_detected or is_target:
-                prefix = "prime" if transient_detected and is_target else ("transient" if transient_detected else "target")
+            if source_detected:
+                snr_median = np.nanmedian(snr_map)
+                snr_mad = np.nanmedian(np.abs(snr_map - snr_median))
+                transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= snr_threshold)
+                prefix = "transient" if transient_detected else "source"
                 snr_hdu = fits.PrimaryHDU(snr_map)
                 snr_hdu.header = hdul[0].header.copy()
 
-                output_filename = f"{prefix}_{filename}"
+                output_filename = f"{prefix}_{source_type}_{filename}"
                 output_filepath = os.path.join(detection_directory, output_filename)
                 snr_hdu.writeto(output_filepath, overwrite=True)
