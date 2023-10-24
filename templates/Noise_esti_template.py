@@ -116,13 +116,21 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
         for t_window in time_windows:
             for f_window in freq_windows:
                 # # Apply Gaussian filter
-                sigma_t = t_window / 2  # Standard deviation for time
-                sigma_f = f_window / 2  # Standard deviation for frequency
+                sigma_t = t_window / 6  # Standard deviation for time
+                sigma_f = f_window / 6  # Standard deviation for frequency
                 # filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
 
                 sigma = [sigma_f, sigma_t]
 
                 convol_data = gaussian_filter(dynspec_data, sigma=sigma)
+
+                kernel_t = sigma_t * 3
+                kernel_f = sigma_f * 3
+
+                convol_data[:kernel_f, :] = np.nan
+                convol_data[-kernel_f:, :] = np.nan
+                convol_data[:, :kernel_t] = np.nan
+                convol_data[:, -kernel_t:] = np.nan
 
                 # gaussian_kernel = Gaussian2DKernel(sigma_t, sigma_f)
 

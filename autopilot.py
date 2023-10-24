@@ -35,8 +35,8 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Window and SNR threshold for matched filtering
 snr_threshold = 5 / 1.4826 # 5 sigma to MAD
-time_windows = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
-freq_windows = [8, 16, 32, 64, 128, 256, 512]
+time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
+freq_windows = [6, 12, 24, 48, 96, 192, 384, 768]
 
 ###### Lock the flow runs when data processing is ongoing ######
 
