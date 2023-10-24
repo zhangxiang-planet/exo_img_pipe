@@ -216,33 +216,55 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
     subsample_spectra = np.array(subsample_spectra)
 
     # Calculate the median and MAD along the direction axis (axis=0)
-    median_map = np.median(subsample_spectra, axis=0)
-    mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
+    # median_map = np.median(subsample_spectra, axis=0)
+    # mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
+
+    # maybe we should use mean and std instead of median and mad
+    mean_map = np.mean(subsample_spectra, axis=0)
+    std_map = np.std(subsample_spectra, axis=0)
+
+    # with fits.open(filepath) as hdul:
+    #     hdul[0].data = median_map
+    #     hdul.writeto(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+
+    # with fits.open(filepath) as hdul:
+    #     hdul[0].data = mad_map
+    #     hdul.writeto(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+
+    # and save the mean and std map
+    with fits.open(filepath) as hdul:
+        hdul[0].data = mean_map
+        hdul.writeto(f'{noise_directory}/mean_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
 
     with fits.open(filepath) as hdul:
-        hdul[0].data = median_map
-        hdul.writeto(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
-
-    with fits.open(filepath) as hdul:
-        hdul[0].data = mad_map
-        hdul.writeto(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+        hdul[0].data = std_map
+        hdul.writeto(f'{noise_directory}/std_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
 
 def source_detection(convol_directory, noise_directory, t_window, f_window, detection_directory, snr_threshold, snr_threshold_target):
 
     t_window_sec = t_window * 8
     f_window_khz = f_window * 60
 
-    with fits.open(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
-        median_map = hdul[0].data
+    # with fits.open(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
+    #     median_map = hdul[0].data
 
-    with fits.open(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
-        mad_map = hdul[0].data
+    # with fits.open(f'{noise_directory}/mad_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
+    #     mad_map = hdul[0].data
+
+    # Here we need to use the mean and std map instead of median and mad map
+    with fits.open(f'{noise_directory}/mean_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
+        mean_map = hdul[0].data
+
+    with fits.open(f'{noise_directory}/std_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
+        std_map = hdul[0].data
 
     for filepath in glob.glob(f'{convol_directory}/convol_{t_window_sec}s_{f_window_khz}kHz*.fits'):
         filename = filepath.split('/')[-1]
         with fits.open(filepath) as hdul:
             convol_data = hdul[0].data
-            snr_map = (convol_data - median_map) / mad_map
+            # snr_map = (convol_data - median_map) / mad_map
+            # replace with mean and std
+            snr_map = (convol_data - mean_map) / std_map
             source_type = hdul[0].header.get('SRC-TYPE', '').strip()
             is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
             if is_target:
