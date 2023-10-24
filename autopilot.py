@@ -34,7 +34,7 @@ ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Window and SNR threshold for matched filtering
-snr_threshold = 5 * 1.4826 # 5 sigma to MAD
+snr_threshold = 6 * 1.4826 # 5 sigma to MAD
 time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
 freq_windows = [12, 24, 48, 96, 192, 384, 768]
 
