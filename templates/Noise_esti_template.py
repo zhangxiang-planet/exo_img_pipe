@@ -241,7 +241,7 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
             convol_data = hdul[0].data
             snr_map = (convol_data - median_map) / mad_map
             is_target = hdul[0].header.get('SRC-TYPE', '').strip() == 'Target'
-            transient_detected = np.any(snr_map >= snr_threshold)
+            transient_detected = np.any(np.abs(snr_map) >= snr_threshold)
 
             if transient_detected or is_target:
                 prefix = "prime" if transient_detected and is_target else ("transient" if transient_detected else "target")
