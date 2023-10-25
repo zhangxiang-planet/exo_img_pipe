@@ -6,9 +6,6 @@ import os, glob
 # from scipy.ndimage import gaussian_filter
 # from astropy.convolution import Gaussian2DKernel, convolve
 from scipy.ndimage import gaussian_filter
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')
 
 def generate_noise_map(dynspec_directory):
 
@@ -288,20 +285,12 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 snr_hdu.writeto(output_filepath, overwrite=True)
 
                 # make a plot for the snr map
-                snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
+                # snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
 
-                print("Type and shape of snr_map:", type(snr_map), snr_map.shape)  # Debugging line
-                # print("Any NaNs in snr_map:", np.isnan(snr_map).any())  # Debugging line
-                print("Any Infs in snr_map:", np.isinf(snr_map).any())  # Debugging line
+                # print("Type and shape of snr_map:", type(snr_map), snr_map.shape)  # Debugging line
+                # # print("Any NaNs in snr_map:", np.isnan(snr_map).any())  # Debugging line
+                # print("Any Infs in snr_map:", np.isinf(snr_map).any())  # Debugging line
 
-                plt.figure(figsize=(12, 4))
-                plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
-                plt.colorbar()
-                plt.xlabel('Time (8 s bins)')
-                plt.ylabel('Frequency (60 kHz bins)')
-                plt.title(f'SNR Map for {filename}')
-                plt.savefig(f'{detection_directory}/{source_type}_{filename}.png')
-                plt.close()
 
                 # source_region_hdu = fits.PrimaryHDU(source_region)
                 # source_region_hdu.header = hdul[0].header.copy()

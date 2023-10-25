@@ -11,6 +11,9 @@ from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
 from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map, source_detection
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 
 ###### Initial settings ######
 
@@ -486,21 +489,41 @@ def dynspec(exo_dir: str):
     compute(*detection_tasks)
 
     detected_files = [f for f in glob.glob(f'{detection_directory}/*.fits') if "region" not in f.split('/')[-1]]
-    detected_coor = []
+
     for detection in detected_files:
+        with fits.open(detection) as hdu:
+            snr_map = hdu[0].data
+            source_type = hdul[0].header.get('SRC-TYPE', '').strip()
+
+        snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
+
         filename = detection.split('/')[-1]
-        source_type = filename.split('_')[1]
-        source_coord = '_'.join(filename.split('_')[-2:]).replace('.fits', '')
-        detected_coor.append([source_type, source_coord])
 
-    detected_coor = np.array(detected_coor)
-    detected_coor = np.unique(detected_coor, axis=0)
+        plt.figure(figsize=(12, 4))
+        plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
+        plt.colorbar()
+        plt.xlabel('Time (8 s bins)')
+        plt.ylabel('Frequency (60 kHz bins)')
+        plt.title(f'SNR Map for {filename}')
+        plt.savefig(f'{detection_directory}/{source_type}_{filename}.png')
+        plt.close()
 
-    for coor in detected_coor:
-        cmd_mk_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
-        subprocess.run(cmd_mk_dir, shell=True, check=True)
-        cmd_mv_file = f'mv {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/*{coor[1]}*.fits {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
-        subprocess.run(cmd_mv_file, shell=True, check=True)
+
+    # detected_coor = []
+    # for detection in detected_files:
+    #     filename = detection.split('/')[-1]
+    #     source_type = filename.split('_')[1]
+    #     source_coord = '_'.join(filename.split('_')[-2:]).replace('.fits', '')
+    #     detected_coor.append([source_type, source_coord])
+
+    # detected_coor = np.array(detected_coor)
+    # detected_coor = np.unique(detected_coor, axis=0)
+
+    # for coor in detected_coor:
+    #     cmd_mk_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
+    #     subprocess.run(cmd_mk_dir, shell=True, check=True)
+    #     cmd_mv_file = f'mv {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/*{coor[1]}*.fits {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
+    #     subprocess.run(cmd_mv_file, shell=True, check=True)
 
 
 ###### Here come the flows (functions calling the tasks) #######
