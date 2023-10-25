@@ -290,9 +290,9 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 # make a plot for the snr map
                 snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
 
-                # print("Type and shape of snr_map:", type(snr_map), snr_map.shape)  # Debugging line
+                print("Type and shape of snr_map:", type(snr_map), snr_map.shape)  # Debugging line
                 # print("Any NaNs in snr_map:", np.isnan(snr_map).any())  # Debugging line
-                # print("Any Infs in snr_map:", np.isinf(snr_map).any())  # Debugging line
+                print("Any Infs in snr_map:", np.isinf(snr_map).any())  # Debugging line
 
                 plt.figure(figsize=(12, 4))
                 plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
