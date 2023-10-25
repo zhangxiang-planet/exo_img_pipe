@@ -493,7 +493,7 @@ def dynspec(exo_dir: str):
     for detection in detected_files:
         with fits.open(detection) as hdu:
             snr_map = hdu[0].data
-            source_type = hdul[0].header.get('SRC-TYPE', '').strip()
+            # source_type = hdu[0].header.get('SRC-TYPE', '').strip()
 
         snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
 
@@ -505,7 +505,7 @@ def dynspec(exo_dir: str):
         plt.xlabel('Time (8 s bins)')
         plt.ylabel('Frequency (60 kHz bins)')
         plt.title(f'SNR Map for {filename}')
-        plt.savefig(f'{detection_directory}/{source_type}_{filename}.png')
+        plt.savefig(f'{detection_directory}/{filename}.png')
         plt.close()
 
 
