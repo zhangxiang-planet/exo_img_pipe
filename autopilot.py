@@ -38,10 +38,10 @@ ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Window and SNR threshold for matched filtering
-direction_threshold = 7
-direction_threshold_target = 6
-dynamic_threshold = 1.4826 * 7
-dynamic_threshold_target = 1.4826 * 6
+direction_threshold = 6
+direction_threshold_target = 5
+dynamic_threshold = 1.4826 * 6
+dynamic_threshold_target = 1.4826 * 5
 # snr_threshold = 7
 # snr_threshold_target = 6
 time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
@@ -512,21 +512,23 @@ def dynspec(exo_dir: str):
         plt.close()
 
 
-    # detected_coor = []
-    # for detection in detected_files:
-    #     filename = detection.split('/')[-1]
-    #     source_type = filename.split('_')[1]
-    #     source_coord = '_'.join(filename.split('_')[-2:]).replace('.fits', '')
-    #     detected_coor.append([source_type, source_coord])
+    detected_coor = []
+    for detection in detected_files:
+        filename = detection.split('/')[-1]
+        source_type = filename.split('_')[0]
+        source_coord = '_'.join(filename.split('_')[-2:]).replace('.fits', '')
+        detected_coor.append([source_type, source_coord])
 
-    # detected_coor = np.array(detected_coor)
-    # detected_coor = np.unique(detected_coor, axis=0)
+    detected_coor = np.array(detected_coor)
+    detected_coor = np.unique(detected_coor, axis=0)
 
-    # for coor in detected_coor:
-    #     cmd_mk_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
-    #     subprocess.run(cmd_mk_dir, shell=True, check=True)
-    #     cmd_mv_file = f'mv {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/*{coor[1]}*.fits {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
-    #     subprocess.run(cmd_mv_file, shell=True, check=True)
+    for coor in detected_coor:
+        # cmd_mk_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
+        # subprocess.run(cmd_mk_dir, shell=True, check=True)
+        # cmd_mv_file = f'mv {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/*{coor[1]}*.fits {postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_{coor[1]}/'
+        # subprocess.run(cmd_mv_file, shell=True, check=True)
+
+        sources_coor = glob.glob(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_*_{coor[1]}.fits')
 
 
 ###### Here come the flows (functions calling the tasks) #######
