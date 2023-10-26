@@ -38,9 +38,9 @@ ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Window and SNR threshold for matched filtering
-direction_threshold = 1.4826 * 6
-direction_threshold_target = 1.4826 * 6
-dynamic_threshold = 1.4826 * 6
+direction_threshold = 7
+direction_threshold_target = 6
+dynamic_threshold = 1.4826 * 7
 dynamic_threshold_target = 1.4826 * 6
 # snr_threshold = 7
 # snr_threshold_target = 6
@@ -432,7 +432,8 @@ def dynspec(exo_dir: str):
     dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
 
     # generate a MAD map to be used as a weight map in convolution
-    median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
+    # median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
+    mean_map, std_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
 
     cmd_norm_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec'
     subprocess.run(cmd_norm_dir, shell=True, check=True)
