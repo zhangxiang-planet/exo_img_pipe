@@ -40,8 +40,8 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
 direction_threshold_target = 5
-dynamic_threshold = 1.4826 * 6
-dynamic_threshold_target = 1.4826 * 5
+dynamic_threshold = 6
+dynamic_threshold_target = 5
 # snr_threshold = 7
 # snr_threshold_target = 6
 time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]

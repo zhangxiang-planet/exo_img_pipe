@@ -284,12 +284,21 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 source_region = snr_map[np.abs(snr_map) >= direction_threshold]
 
             if source_detected:
-                snr_median = np.nanmedian(snr_map)
-                snr_mad = np.nanmedian(np.abs(snr_map - snr_median))
+                # replace snr_median and snr_mad with mean and std
+                snr_mean = np.nanmean(snr_map)
+                snr_std = np.nanstd(snr_map)
+                # snr_median = np.nanmedian(snr_map)
+                # snr_mad = np.nanmedian(np.abs(snr_map - snr_median))
+
+                # if is_target:
+                #     transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= dynamic_threshold_target)
+                # else:
+                #     transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= dynamic_threshold)
+
                 if is_target:
-                    transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= dynamic_threshold_target)
+                    transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold_target)
                 else:
-                    transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= dynamic_threshold)
+                    transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold)
                 # transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= snr_threshold_target)
                 if transient_detected:
 
