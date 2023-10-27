@@ -46,6 +46,8 @@ dynamic_threshold_target = 5
 # snr_threshold_target = 6
 time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
 freq_windows = [12, 24, 48, 96, 192, 384, 768]
+# 30 sec (5 min) 
+# 600 kHz (6 MHz)
 
 ###### Lock the flow runs when data processing is ongoing ######
 
@@ -493,23 +495,23 @@ def dynspec(exo_dir: str):
 
     detected_files = [f for f in glob.glob(f'{detection_directory}/*.fits') if "region" not in f.split('/')[-1]]
 
-    for detection in detected_files:
-        with fits.open(detection) as hdu:
-            snr_map = hdu[0].data
-            # source_type = hdu[0].header.get('SRC-TYPE', '').strip()
+    # for detection in detected_files:
+    #     with fits.open(detection) as hdu:
+    #         snr_map = hdu[0].data
+    #         # source_type = hdu[0].header.get('SRC-TYPE', '').strip()
 
-        snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
+    #     snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
 
-        filename = detection.split('/')[-1]
+    #     filename = detection.split('/')[-1]
 
-        plt.figure(figsize=(12, 4))
-        plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
-        plt.colorbar()
-        plt.xlabel('Time (8 s bins)')
-        plt.ylabel('Frequency (60 kHz bins)')
-        plt.title(f'SNR Map for {filename}')
-        plt.savefig(f'{detection_directory}/{filename}.png')
-        plt.close()
+    #     plt.figure(figsize=(12, 4))
+    #     plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-9, vmax=9)
+    #     plt.colorbar()
+    #     plt.xlabel('Time (8 s bins)')
+    #     plt.ylabel('Frequency (60 kHz bins)')
+    #     plt.title(f'SNR Map for {filename}')
+    #     plt.savefig(f'{detection_directory}/{filename}.png')
+    #     plt.close()
 
 
     detected_coor = []
@@ -529,6 +531,54 @@ def dynspec(exo_dir: str):
         # subprocess.run(cmd_mv_file, shell=True, check=True)
 
         sources_coor = glob.glob(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/detected_dynamic_spec/{coor[0]}_*_{coor[1]}.fits')
+        filenames = [f.split('/')[-1] for f in sources_coor]
+        times = [f.split('_')[2].replace('s', '') for f in filenames]
+        times = [int(t) for t in times]
+        freqs = [f.split('_')[3].replace('kHz', '') for f in filenames]
+        freqs = [int(f) for f in freqs]
+        reso = np.array(times) * np.array(freqs)
+        highest_reso_index = np.argmin(reso)
+        highest_reso_file = sources_coor[highest_reso_index]
+
+        with fits.open(highest_reso_file) as hdu:
+            snr_map = hdu[0].data
+            header = hdu[0].header
+
+            # Time axis info
+            crval1 = header['CRVAL1']
+            cdelt1 = header['CDELT1']
+            crpix1 = header['CRPIX1']
+            naxis1 = header['NAXIS1']
+
+            # Frequency axis info
+            crval2 = header['CRVAL2']
+            cdelt2 = header['CDELT2']
+            crpix2 = header['CRPIX2']
+            naxis2 = header['NAXIS2']
+
+            # Calculate physical values for the axes
+            time_vals = crval1 + (np.arange(naxis1) - (crpix1 - 1)) * cdelt1
+            freq_vals = crval2 + (np.arange(naxis2) - (crpix2 - 1)) * cdelt2
+
+            snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)
+
+            filename = highest_reso_file.split('/')[-1]
+
+            plt.figure(figsize=(12, 4))
+            plt.imshow(snr_map_no_nan, aspect='auto', origin='lower', cmap='PiYG', vmin=-7, vmax=7, extent=[time_vals[0], time_vals[-1], freq_vals[0], freq_vals[-1]])
+            cbar = plt.colorbar(shrink=0.95, aspect=15, pad=0.02)
+
+            # Add a label to the colorbar and bring it closer
+            cbar.set_label('SNR', rotation=270, labelpad=10)
+            plt.xlabel('Time (s)')
+            plt.ylabel('Frequency (MHz)')
+            plt.title(f'SNR Map for {filename}')
+
+            plt.savefig(f'{detection_directory}/{filename}.png', dpi=200, bbox_inches='tight')
+            plt.close()
+
+
+
 
 
 ###### Here come the flows (functions calling the tasks) #######
