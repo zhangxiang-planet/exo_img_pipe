@@ -366,6 +366,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_filename}'
         subprocess.run(cmd_apply_solution, shell=True, check=True)
 
+        # second round of aoflagger
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+        subprocess.run(cmd_aoflagger, shell=True, check=True)
+
 # Task 5. Subtract A-team from field
 
 @task(log_prints=True)
@@ -566,7 +570,7 @@ def dynspec(exo_dir: str):
         time_with_highest_snr = highest_snr_record['time']
         freq_with_highest_snr = highest_snr_record['freq']
 
-        if time_with_highest_snr > 8 * time_windows[0] and freq_with_highest_snr > 60 * freq_windows[0]:
+        if freq_with_highest_snr > 60 * freq_windows[0]:
 
         # filenames = [f.split('/')[-1] for f in sources_coor]
         # times = [f.split('_')[2].replace('s', '') for f in filenames]
