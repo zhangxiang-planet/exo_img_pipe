@@ -297,13 +297,16 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
 
                 if is_target:
                     transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold_target)
+                    transient_snr = np.max(np.abs(source_region - snr_mean)/snr_std)
                 else:
                     transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold)
+                    transient_snr = np.max(np.abs(source_region - snr_mean)/snr_std)
                 # transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= snr_threshold_target)
                 if transient_detected:
 
                     snr_hdu = fits.PrimaryHDU(snr_map)
                     snr_hdu.header = hdul[0].header.copy()
+                    snr_hdu.header['SNR'] = transient_snr
 
                     output_filename = f"{source_type}_{filename}"
                     output_filepath = os.path.join(detection_directory, output_filename)
