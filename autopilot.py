@@ -25,6 +25,7 @@ postprocess_dir = "/data/xzhang/exo_img/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
 singularity_file = "/home/xzhang/software/ddf.sif"
+skip_file = "/home/xzhang/software/exo_img_pipe/skip.txt"
 
 # Calibrators
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
@@ -65,9 +66,10 @@ def check_new_data(watch_dir: str, postprocess_dir: str) -> list:
     
     processed_dir = glob.glob(postprocess_dir + "*")
     processed_data = [f.split('/')[-1] for f in processed_dir]
+    skip_data = np.genfromtxt(skip_file, dtype='str')
 
     # Filtering out the data that's already processed and not in CALIBRATORS
-    unprocessed_data = [data for data in avai_data if data not in processed_data and not any(cal in data for cal in CALIBRATORS)]
+    unprocessed_data = [data for data in avai_data if data not in processed_data and not any(cal in data for cal in CALIBRATORS) and data not in skip_data]
 
     return unprocessed_data
 
