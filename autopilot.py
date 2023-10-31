@@ -426,6 +426,8 @@ def subtract_Ateam(exo_dir: str):
             f'--dt 2 --InCol KMS_SUB --OutCol SELFCAL_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR2 --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 4 --NChanSols 4 '
             '--OutSolsName DD2 --UVMinMax 0.067,1000 --WeightInCol=BRIGGS_WEIGHT0 --ApplyMode P --ApplyToDir 0'
         )
+        combined_kms = f"{singularity_command} {cmd_kms}"
+        subprocess.run(combined_kms, shell=True, check=True)
 
 # Task 6. DynspecMS
 
