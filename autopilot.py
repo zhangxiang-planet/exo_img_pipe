@@ -34,9 +34,9 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chunk_num = 12
 
 # How many channels per SB
-chan_per_SB_origin = 12
+# chan_per_SB_origin = 12
 ave_chan = 4
-chan_per_SB = int(chan_per_SB_origin/ave_chan)
+# chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
@@ -217,7 +217,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
         # Replace placeholders in the template content
         modified_content = template_content.replace('CALI_MODEL', cali_model)
-        modified_content = modified_content.replace('CHAN_PER_SB', str(chan_per_SB))
+        modified_content = modified_content.replace('CHAN_PER_SB', str(chunk_num))
 
         # Write the modified content to a new file
         with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
@@ -297,7 +297,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
 
         # Replace placeholders in the template content
         modified_content = template_content.replace('CALI_MODEL', cali_model)
-        modified_content = modified_content.replace('CHAN_PER_SB', str(chan_per_SB))
+        modified_content = modified_content.replace('CHAN_PER_SB', str(chunk_num))
 
         # Write the modified content to a new file
         with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
@@ -389,7 +389,7 @@ def subtract_Ateam(exo_dir: str):
     for i in range(num_MSB):
         cmd_ddf = (
             f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-            '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 4 --Freq-NDegridBand 0 '
+            f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
             '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
         )
@@ -398,7 +398,7 @@ def subtract_Ateam(exo_dir: str):
 
         cmd_kms = (
             f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-            f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 4 --NChanSols 4 '
+            f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
             '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
         )
         combined_kms = f"{singularity_command} {cmd_kms}"
@@ -407,7 +407,7 @@ def subtract_Ateam(exo_dir: str):
         # another round of ddf and kms
         cmd_ddf = (
             f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-            '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 4 --Freq-NDegridBand 0 '
+            '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
             '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT0'
         )
@@ -423,7 +423,7 @@ def subtract_Ateam(exo_dir: str):
 
         cmd_kms = (
             f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-            f'--dt 2 --InCol KMS_SUB --OutCol SELFCAL_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR2 --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 4 --NChanSols 4 '
+            f'--dt 2 --InCol KMS_SUB --OutCol SELFCAL_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR2 --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
             '--OutSolsName DD2 --UVMinMax 0.067,1000 --WeightInCol=BRIGGS_WEIGHT0 --ApplyMode P --ApplyToDir 0'
         )
         combined_kms = f"{singularity_command} {cmd_kms}"
@@ -438,9 +438,12 @@ def dynspec(exo_dir: str):
     cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
     subprocess.run(cmd_list, shell=True, check=True)
 
+    exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
+    num_MSB = len(exo_MSB)
+
     cmd_ddf = (
         f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/mslist.txt --Data-ColName SELFCAL_DATA --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
-        '--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 12 --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
+        f'--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_MSB} --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
         '--Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 --Mask-Auto 1 --Mask-SigTh 4 '
         '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
     )
