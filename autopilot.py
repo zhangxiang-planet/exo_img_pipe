@@ -404,30 +404,30 @@ def subtract_Ateam(exo_dir: str):
         combined_kms = f"{singularity_command} {cmd_kms}"
         subprocess.run(combined_kms, shell=True, check=True)
 
-        # another round of ddf and kms
-        cmd_ddf = (
-            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-            '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
-            '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT0'
-        )
-        combined_ddf = f"{singularity_command} {cmd_ddf}"
-        subprocess.run(combined_ddf, shell=True, check=True)
-
-        # # make model
-        # cmd_mkmodel = (
-        #     f'MakeModel.py --BaseImageName={postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB --NCluster=1 --OutSkyModel={postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_SUB.npy'
+        # another round of ddf and kms (Removed. Selfcal not working well.)
+        # cmd_ddf = (
+        #     f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
+        #     '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
+        #     '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
+        #     '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT0'
         # )
-        # combined_mkmodel = f"{singularity_command} {cmd_mkmodel}"
-        # subprocess.run(combined_mkmodel, shell=True, check=True)
+        # combined_ddf = f"{singularity_command} {cmd_ddf}"
+        # subprocess.run(combined_ddf, shell=True, check=True)
 
-        cmd_kms = (
-            f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-            f'--dt 2 --InCol KMS_SUB --OutCol SELFCAL_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR2 --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-            '--OutSolsName DD2 --UVMinMax 0.067,1000 --WeightInCol=BRIGGS_WEIGHT0 --ApplyMode P --ApplyToDir 0'
-        )
-        combined_kms = f"{singularity_command} {cmd_kms}"
-        subprocess.run(combined_kms, shell=True, check=True)
+        # # # make model
+        # # cmd_mkmodel = (
+        # #     f'MakeModel.py --BaseImageName={postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB --NCluster=1 --OutSkyModel={postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_SUB.npy'
+        # # )
+        # # combined_mkmodel = f"{singularity_command} {cmd_mkmodel}"
+        # # subprocess.run(combined_mkmodel, shell=True, check=True)
+
+        # cmd_kms = (
+        #     f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
+        #     f'--dt 2 --InCol KMS_SUB --OutCol SELFCAL_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR2 --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
+        #     '--OutSolsName DD2 --UVMinMax 0.067,1000 --WeightInCol=BRIGGS_WEIGHT0 --ApplyMode P --ApplyToDir 0'
+        # )
+        # combined_kms = f"{singularity_command} {cmd_kms}"
+        # subprocess.run(combined_kms, shell=True, check=True)
 
 # Task 6. DynspecMS
 
@@ -442,7 +442,7 @@ def dynspec(exo_dir: str):
     num_MSB = len(exo_MSB)
 
     cmd_ddf = (
-        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/mslist.txt --Data-ColName SELFCAL_DATA --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
+        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/mslist.txt --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
         f'--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_MSB} --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
         '--Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 --Mask-Auto 1 --Mask-SigTh 4 '
         '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
@@ -461,7 +461,7 @@ def dynspec(exo_dir: str):
     plot_target_distribution(postprocess_dir, exo_dir)
 
     cmd_dynspec = (
-        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data SELFCAL_DATA --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
+        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
         f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
