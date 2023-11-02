@@ -432,7 +432,7 @@ def subtract_Ateam(exo_dir: str):
 # Task 6. DynspecMS
 
 @task(log_prints=True)
-def dynspec(exo_dir: str):
+def dynspec(exo_dir: str, time_windows, freq_windows):
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
     cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
@@ -687,7 +687,7 @@ def exo_pipe(exo_dir):
 
     subtract_Ateam(exo_dir)
 
-    dynspec(exo_dir)
+    dynspec(exo_dir, time_windows, freq_windows)
 
     os.remove(lockfile)
 
