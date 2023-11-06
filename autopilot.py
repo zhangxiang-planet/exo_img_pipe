@@ -609,7 +609,7 @@ def source_find(exo_dir: str, time_windows, freq_windows):
         time_with_highest_snr = highest_snr_record['time']
         freq_with_highest_snr = highest_snr_record['freq']
 
-        if freq_with_highest_snr > 60 * freq_windows[0] and time_with_highest_snr > 8 * time_windows[0]:
+        if freq_with_highest_snr > 60 * freq_windows[0]: # and time_with_highest_snr > 8 * time_windows[0]:
 
         # filenames = [f.split('/')[-1] for f in sources_coor]
         # times = [f.split('_')[2].replace('s', '') for f in filenames]
