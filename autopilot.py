@@ -10,7 +10,7 @@ from dask import delayed, compute
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
-from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_snr_map, source_detection
+from templates.Noise_esti_template import generate_noise_map, calculate_noise_for_window, apply_gaussian_filter, generate_and_save_weight_map, source_detection
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
@@ -482,7 +482,7 @@ def source_find(exo_dir: str, time_windows, freq_windows):
 
     cmd_norm_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec'
     subprocess.run(cmd_norm_dir, shell=True, check=True)
-    generate_and_save_snr_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/', f'{postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec/')
+    generate_and_save_weight_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/', f'{postprocess_dir}{exo_dir}/{dynspec_folder}/weighted_dynamic_spec/')
 
     # mkdir to apply the Gaussian filter
     cmd_convol_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/convol_gaussian/'

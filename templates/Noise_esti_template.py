@@ -47,7 +47,7 @@ def generate_noise_map(dynspec_directory):
     # return median_map, mad_map
     return mean_map, std_map
 
-def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
+def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
     """
     Generate and save SNR maps for each FITS file in the directory.
     Parameters:
@@ -83,7 +83,7 @@ def generate_and_save_snr_map(dynspec_directory, snr_fits_directory):
                 # Calculate the SNR map
                 # snr_map = (stokes_v_data - median_map) / mad_map
                 # replace with mean and std
-                snr_map = (stokes_v_data - mean_map) / std_map
+                snr_map = (stokes_v_data - mean_map) / (std_map**2)
                 
                 # Prepare the HDU for the SNR map
                 snr_hdu = fits.PrimaryHDU(snr_map)
