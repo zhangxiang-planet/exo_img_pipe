@@ -404,15 +404,15 @@ def subtract_Ateam(exo_dir: str):
         combined_kms = f"{singularity_command} {cmd_kms}"
         subprocess.run(combined_kms, shell=True, check=True)
 
-        # another round of ddf and kms (Removed. Selfcal not working well.)
-        # cmd_ddf = (
-        #     f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-        #     '--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
-        #     '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-        #     '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT0'
-        # )
-        # combined_ddf = f"{singularity_command} {cmd_ddf}"
-        # subprocess.run(combined_ddf, shell=True, check=True)
+        # another round of ddf and kms (Removed. Selfcal not working well. Just make images for scientific analysis)
+        cmd_ddf = (
+            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
+            f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Dirty --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
+            '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
+            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV'
+        )
+        combined_ddf = f"{singularity_command} {cmd_ddf}"
+        subprocess.run(combined_ddf, shell=True, check=True)
 
         # # # make model
         # # cmd_mkmodel = (
@@ -432,7 +432,7 @@ def subtract_Ateam(exo_dir: str):
 # Task 6. DynspecMS
 
 @task(log_prints=True)
-def dynspec(exo_dir: str, time_windows, freq_windows):
+def dynspec(exo_dir: str):
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
     cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
@@ -467,6 +467,11 @@ def dynspec(exo_dir: str, time_windows, freq_windows):
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
     subprocess.run(combined_dynspec, shell=True, check=True)
+
+# Task 7. Source-finding
+
+@task(log_prints=True)
+def source_find(exo_dir: str, time_windows, freq_windows):
 
     # get the folder name of the dynamic spectrum
     dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
@@ -604,7 +609,7 @@ def dynspec(exo_dir: str, time_windows, freq_windows):
         time_with_highest_snr = highest_snr_record['time']
         freq_with_highest_snr = highest_snr_record['freq']
 
-        if freq_with_highest_snr > 60 * freq_windows[0]:
+        if freq_with_highest_snr > 60 * freq_windows[0] and time_with_highest_snr > 8 * time_windows[0]:
 
         # filenames = [f.split('/')[-1] for f in sources_coor]
         # times = [f.split('_')[2].replace('s', '') for f in filenames]
@@ -658,8 +663,40 @@ def dynspec(exo_dir: str, time_windows, freq_windows):
                 plt.close()
 
 
+# Task 8. Clear up the directory
 
+@task(log_prints=True)
+def clearup(exo_dir: str):
 
+    # first, remove all the SB*.MS files
+    cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB???.MS"
+    subprocess.run(cmd_remo_SB, shell=True, check=True)
+
+    # second, make a directory to keep some images
+    cmd_image_dir = f'mkdir {postprocess_dir}/{exo_dir}/archive_images/'
+    subprocess.run(cmd_image_dir, shell=True, check=True)
+
+    # third, move the images to the directory
+    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/MSB??_Image_SUB.dirty*.fits {postprocess_dir}/{exo_dir}/archive_images/' 
+    subprocess.run(cmd_mv_image, shell=True, check=True)
+
+    # fourth, move some other images to the directory
+    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/Image_SUB.app.*.fits {postprocess_dir}/{exo_dir}/archive_images/'
+    subprocess.run(cmd_mv_image, shell=True, check=True)
+
+    # fifth, remove the MSB files and Image_SUB files
+    cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB* {postprocess_dir}/{exo_dir}/Image_SUB.*"
+    subprocess.run(cmd_remo_MSB, shell=True, check=True)
+
+    # sixth, remove the other files
+    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_DynSpecs_*.tgz {postprocess_dir}/{exo_dir}/mslist.txt.ddfcache"
+    subprocess.run(cmd_remo_other, shell=True, check=True)
+
+    # seventh, remove some directories within dynamic_spec
+
+    dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
+    cmd_remo_dyna = f"rm -rf {postprocess_dir}/{exo_dir}/{dynspec_folder}/convol_gaussian {postprocess_dir}/{exo_dir}/{dynspec_folder}/noise_map {postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec"
+    subprocess.run(cmd_remo_dyna, shell=True, check=True)
 
 ###### Here come the flows (functions calling the tasks) #######
 
@@ -687,7 +724,11 @@ def exo_pipe(exo_dir):
 
     subtract_Ateam(exo_dir)
 
-    dynspec(exo_dir, time_windows, freq_windows)
+    dynspec(exo_dir)
+
+    source_find(exo_dir, time_windows, freq_windows)
+
+    clearup(exo_dir)
 
     os.remove(lockfile)
 
