@@ -662,6 +662,14 @@ def source_find(exo_dir: str, time_windows, freq_windows):
                 plt.savefig(f'{detection_directory}/{filename}.png', dpi=200, bbox_inches='tight')
                 plt.close()
 
+    # Make a directory
+    cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+    subprocess.run(cmd_png_dir, shell=True, check=True)
+
+    # Move the png files to the directory
+    cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+    subprocess.run(cmd_mv_png, shell=True, check=True)
+
 
 # Task 8. Clear up the directory
 
