@@ -397,8 +397,14 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 
         # only run removeant when there are antennas to be removed
         if len(remove_antennas) > 0:
-            cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_filename}"
+            cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_filename} msout={MSB_filename}B"
             subprocess.run(cmd_removeMA, shell=True, check=True)
+            # remove original MSB
+            cmd_remo_MSB = f"rm -rf {MSB_filename}"
+            subprocess.run(cmd_remo_MSB, shell=True, check=True)
+            # rename the new MSB
+            cmd_rename_MSB = f"mv {MSB_filename}B {MSB_filename}"
+            subprocess.run(cmd_rename_MSB, shell=True, check=True)
 
         cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_filename}"
         subprocess.run(cmd_flagMA, shell=True, check=True)
