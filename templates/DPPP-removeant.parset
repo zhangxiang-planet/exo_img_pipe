@@ -1,6 +1,6 @@
 # this is the main parameter block
 msin=SB230.MS
-msout=SB230_removed.MS
+msout=.
 steps=[filterstep,count]      # we define here the list of steps to perform
 
 # this is the step description block
