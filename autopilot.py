@@ -357,7 +357,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 
     # only write the file when there are antennas to be removed
     if len(remove_antennas) > 0:
-        remove_MA_names = ','.join([ant_name.decode() for ant_name in remove_antennas])
+        remove_MA_names = ','.join(remove_antennas)
         # modify DPPP-removeant.parset in a similar way to DPPP-flagant.parset
         with open(f'{pipe_dir}/templates/DPPP-removeant.parset', 'r') as template_remove:
             remove_content = template_remove.read()
