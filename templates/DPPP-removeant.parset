@@ -1,0 +1,22 @@
+# this is the main parameter block
+msin=SB230.MS
+msout=SB230_removed.MS
+steps=[filterstep,count]      # we define here the list of steps to perform
+
+# this is the step description block
+filterstep.type=filter    # use preflagger step to manually flag specific antennas
+
+# Alter and uncomment the appropriate line depending on the objective
+# Examples:
+#preflagstep.baseline=MR002NEN&MR003NEN  # will flag all correlations between MR002NEN & MR003NEN
+#preflagstep.baseline=MR001NEN&&*  # will flag all cross (and auto)correlation involving MR001NEN
+#preflagstep.baseline=MR001NEN,MR002NEN&&* # same but for MR001NEN with all, and MR002NEN with all
+
+filterstep.baseline=!MA_TO_REMOVE&&;!MA_TO_REMOVE
+filterstep.remove=True
+
+
+# the "count" step does not require any parameter but will output the current count
+# of flagged data. This is useful to track what has been flagged between steps.
+
+

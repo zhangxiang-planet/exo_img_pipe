@@ -7,6 +7,7 @@ import os, glob
 from astropy.io import fits
 import numpy as np
 from dask import delayed, compute
+from casatools import table
 from templates.Find_Bad_MAs_template import find_bad_MAs
 from templates.Make_Target_List_template import make_target_list
 from templates.Plot_target_distri_template import plot_target_distribution
@@ -184,6 +185,21 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
     cali_SB.sort()
 
+    # Read the template file
+    with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
+        template_content = template_file.read()
+
+    # Perform the replacements
+    cali_model = f'{pipe_dir}/cal_models/{cal}_lcs.skymodel'
+
+    # Replace placeholders in the template content
+    modified_content = template_content.replace('CALI_MODEL', cali_model)
+    modified_content = modified_content.replace('CHAN_PER_SB', str(chunk_num))
+
+    # Write the modified content to a new file
+    with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
+        cali_file.write(modified_content)
+
     # Determine the number of full chunks of chunk_num we can form
     num_chunks = len(cali_SB) // chunk_num
 
@@ -207,21 +223,6 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         # Construct the command string with the msin argument and the msout argument
         cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
-        
-        # Read the template file
-        with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
-            template_content = template_file.read()
-
-        # Perform the replacements
-        cali_model = f'{pipe_dir}/cal_models/{cal}_lcs.skymodel'
-
-        # Replace placeholders in the template content
-        modified_content = template_content.replace('CALI_MODEL', cali_model)
-        modified_content = modified_content.replace('CHAN_PER_SB', str(chunk_num))
-
-        # Write the modified content to a new file
-        with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
-            cali_file.write(modified_content)
 
         cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
         subprocess.run(cmd_cali, shell=True, check=True)
@@ -254,6 +255,26 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
     cali_SB.sort()
 
+    # Use casatools to get the list of antennas observed
+    tb = table()
+    tb.open(cali_SB[0] + '/ANTENNA')
+    antennas = tb.getcol('NAME')
+    tb.close()
+
+    # save the list of antennas to a file, seperated by commas
+    with open(f'{postprocess_dir}/{cal_dir}/All_MAs.txt', 'w') as f:
+        f.write(','.join(antennas))
+
+    # Flag the bad MAs
+    with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
+        flag_content = template_flag.read()
+
+    modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
+
+    # Write the modified content to a new file
+    with open(f'{postprocess_dir}/{cal_dir}/DPPP-flagant.parset', 'w') as flag_file:
+        flag_file.write(modified_flag_content)
+
     # Determine the number of full chunks of chunk_num we can form
     num_chunks = len(cali_SB) // chunk_num
 
@@ -270,16 +291,6 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         # Construct the command string with the msin argument and the msout argument
         cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
-
-        # Flag the bad MAs
-        with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
-            flag_content = template_flag.read()
-
-        modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
-
-        # Write the modified content to a new file
-        with open(f'{postprocess_dir}/{cal_dir}/DPPP-flagant.parset', 'w') as flag_file:
-            flag_file.write(modified_flag_content)
 
         cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={MSB_filename}"
         subprocess.run(cmd_flagMA, shell=True, check=True)
@@ -330,6 +341,43 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
     exo_SB.sort()
 
+    # we need a list of antennas to be compared with the antennas in calibration
+    # Use casatools to get the list of antennas observed
+    tb = table()
+    tb.open(exo_SB[0] + '/ANTENNA')
+    exo_antennas = tb.getcol('NAME')
+    tb.close()
+
+    # read the list of antennas in calibration
+    with open(f'{postprocess_dir}/{cal_dir}/All_MAs.txt', 'r') as f:
+        cal_antennas = f.read().split(',')
+
+    # find the antennas that are not in calibration
+    remove_antennas = [ant for ant in exo_antennas if ant not in cal_antennas]
+
+    # only write the file when there are antennas to be removed
+    if len(remove_antennas) > 0:
+        remove_MA_names = ','.join([ant_name.decode() for ant_name in remove_antennas])
+        # modify DPPP-removeant.parset in a similar way to DPPP-flagant.parset
+        with open(f'{pipe_dir}/templates/DPPP-removeant.parset', 'r') as template_remove:
+            remove_content = template_remove.read()
+
+        modified_remove_content = remove_content.replace('MA_TO_REMOVE', remove_MA_names)
+
+        # Write the modified content to a new file
+        with open(f'{postprocess_dir}/{exo_dir}/DPPP-removeant.parset', 'w') as remove_file:
+            remove_file.write(modified_remove_content)
+
+    # Flag the bad MAs
+    with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
+        flag_content = template_flag.read()
+
+    modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
+
+    # Write the modified content to a new file
+    with open(f'{postprocess_dir}/{exo_dir}/DPPP-flagant.parset', 'w') as flag_file:
+        flag_file.write(modified_flag_content)
+
     # Determine the number of full chunks of chunk_num we can form
     num_chunks = len(exo_SB) // chunk_num
 
@@ -347,15 +395,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
-        # Flag the bad MAs
-        with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
-            flag_content = template_flag.read()
-
-        modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
-
-        # Write the modified content to a new file
-        with open(f'{postprocess_dir}/{exo_dir}/DPPP-flagant.parset', 'w') as flag_file:
-            flag_file.write(modified_flag_content)
+        # only run removeant when there are antennas to be removed
+        if len(remove_antennas) > 0:
+            cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_filename}"
+            subprocess.run(cmd_removeMA, shell=True, check=True)
 
         cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_filename}"
         subprocess.run(cmd_flagMA, shell=True, check=True)
