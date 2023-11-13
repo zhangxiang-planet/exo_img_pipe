@@ -152,14 +152,14 @@ def find_bad_MAs(path_to_base_dir):
 
     # Change the method. A bad antenna has big deviation from a flat ratio_val spectrum
     variance = np.var(np.diff(ratio_val[0, :, :, 0], axis=0), axis=0)
-    var_median = np.median(variance)
-    var_mad = np.median(np.abs(variance - var_median))
+    var_median = np.nanmedian(variance)
+    var_mad = np.nanmedian(np.abs(variance - var_median))
     modified_z_scores = 0.6745 * (variance - var_median)/var_mad
 
     # find bad antennas with phase as well
     variance_phase = np.var(np.diff(diff_val_phase[0, :, :, 0], axis=0), axis=0)
-    var_median_phase = np.median(variance_phase)
-    var_mad_phase = np.median(np.abs(variance_phase - var_median_phase))
+    var_median_phase = np.nanmedian(variance_phase)
+    var_mad_phase = np.nanmedian(np.abs(variance_phase - var_median_phase))
     modified_z_scores_phase = 0.6745 * (variance_phase - var_median_phase)/var_mad_phase
     modified_z_scores_phase_noremote = modified_z_scores_phase.copy()
 
@@ -169,8 +169,12 @@ def find_bad_MAs(path_to_base_dir):
     modified_z_scores_phase_noremote[remote_antennas] = 0
 
     # bad antennas are those with either bad amplitude or phase
+    # bad antennas have high modified_z_scores or modified_z_scores_phase_noremote
 
-    bad_antennas = np.where(np.logical_or(modified_z_scores > 100, modified_z_scores_phase_noremote > 100))[0]
+    amp_threshold = np.nanmedian(np.abs(modified_z_scores)) * 10.3782   # equivalent to 7 sigma
+    phase_threshold = np.nanmedian(np.abs(modified_z_scores_phase_noremote)) * 10.3782   # equivalent to 7 sigma
+
+    bad_antennas = np.where(np.logical_or(modified_z_scores > amp_threshold, modified_z_scores_phase_noremote > phase_threshold))[0]
 
     # Flag MR102NEN for quality reason, MR103NEN for UV distribution reasons
 
