@@ -39,6 +39,9 @@ chunk_num = 12
 ave_chan = 4
 # chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
+# the lowest SB we use
+SB_min = 92
+
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
 direction_threshold_target = 5
@@ -182,7 +185,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
-    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
+    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     cali_SB.sort()
 
     # Read the template file
@@ -252,7 +255,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
-    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
+    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     cali_SB.sort()
 
     # Use casatools to get the list of antennas observed
@@ -338,7 +341,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
-    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > 80]
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     exo_SB.sort()
 
     # we need a list of antennas to be compared with the antennas in calibration
@@ -805,4 +808,4 @@ def check_flow():
     return Completed(message="Run completed without issues.")
 
 if __name__ == "__main__":
-    check = check_flow.serve(name="check-flow", interval=3600)
+    check = check_flow.serve(name="check-flow", interval=21600)
