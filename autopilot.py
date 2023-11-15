@@ -40,7 +40,7 @@ ave_chan = 4
 # chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
-SB_min = 96
+SB_min = 92
 
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
