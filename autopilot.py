@@ -450,7 +450,7 @@ def subtract_Ateam(exo_dir: str):
 
         cmd_kms = (
             f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-            f'--dt 3 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
+            f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
             '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
         )
         combined_kms = f"{singularity_command} {cmd_kms}"
