@@ -436,6 +436,7 @@ def subtract_Ateam(exo_dir: str):
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
     exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
+    exo_MSB.sort()
     num_MSB = len(exo_MSB)
 
     for i in range(num_MSB):
