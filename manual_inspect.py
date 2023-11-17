@@ -23,6 +23,8 @@ bin_per_SB = chan_per_SB // ave_chan
 # the lowest SB we use
 SB_min = 92
 
+singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
+
 ######################
 # A region grow function here
 def grow_region(image, mask, start_coords):
@@ -69,6 +71,8 @@ for img in img_list:
         img_name = img.split("/")[-1].replace(".png", "")
         dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec/{img_name}')[0]
         dyna_data = fits.getdata(dyna_file)
+        # we need the shape of the dynamic spectrum
+        num_chan, num_ts = dyna_data.shape
         four_sigma_mask = np.abs(dyna_data) > 4
         six_sigma_mask = np.abs(dyna_data) > 6
 
@@ -98,6 +102,8 @@ for img in img_list:
             max_SB = max_freq // bin_per_SB + SB_min
 
             num_SB = max_SB - min_SB + 1
+
+            num_time = max_time - min_time + 1
 
             # now we find the calibrator
 
@@ -217,11 +223,53 @@ for img in img_list:
             cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
             subprocess.run(cmd_aoflagger, shell=True, check=True)
 
+            ############################
+            # Don't forget to remove the A team sources
+            cmd_ddf = (
+                f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_Image_DI '
+                f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB} --Freq-NDegridBand 0 '
+                '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
+                '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
+            )
+            combined_ddf = f"{singularity_command} {cmd_ddf}"
+            subprocess.run(combined_ddf, shell=True, check=True)
+
+            cmd_kms = (
+                f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_Image_DI '
+                f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {num_SB} --NChanSols {num_SB} '
+                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
+            )
+            combined_kms = f"{singularity_command} {cmd_kms}"
+            subprocess.run(combined_kms, shell=True, check=True)
 
 
-        
+            ###########################
 
+            # now we use wsclean to image the time range
+            # ideally, we also image the time range before the burst and after the burst, but we need to know if they fit into the observing window
 
+            # first, we image the burst
+            cmd_burst_img = (f'wsclean -pol I,Q,U,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
+                             f'-scale 1amin -size 2400 2400 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                             f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
+                             f'-interval {min_time} {max_time+1} -name {postprocess_dir}/{exo_dir}/MSB_candidate_{i} {MSB_target}')
+            subprocess.run(cmd_burst_img, shell=True, check=True)
+
+            if min_time - num_time > 0:
+                # we can image the time range before the burst
+                cmd_pre_img = (f'wsclean -pol I,Q,U,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
+                               f'-scale 1amin -size 2400 2400 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                               f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
+                               f'-interval {min_time-num_time} {min_time} -name {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_pre {MSB_target}')
+                subprocess.run(cmd_pre_img, shell=True, check=True)
+
+            if max_time + num_time < num_ts:
+                # we can image the time range after the burst
+                cmd_post_img = (f'wsclean -pol I,Q,U,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
+                                f'-scale 1amin -size 2400 2400 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                                f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
+                                f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_post {MSB_target}')
+                subprocess.run(cmd_post_img, shell=True, check=True)
 
     else:
         continue
