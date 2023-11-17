@@ -161,7 +161,7 @@ for img in img_list:
 
             target_SB_str = ",".join(target_SB)
 
-            MSB_target = f"{postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS"
+            MSB_target = f"{postprocess_dir}{exo_dir}/MSB_candidate_{i}.MS"
 
             ############################
 
