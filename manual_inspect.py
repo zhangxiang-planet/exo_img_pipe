@@ -98,13 +98,6 @@ for img in img_list:
             min_time = unique_bounding_boxes[i][2]
             max_time = unique_bounding_boxes[i][3]
 
-            min_SB = min_freq // bin_per_SB + SB_min
-            max_SB = max_freq // bin_per_SB + SB_min
-
-            num_SB = max_SB - min_SB + 1
-
-            num_time = max_time - min_time + 1
-
             # now we find the calibrator
 
             parts = exo_dir.split("_")
@@ -132,6 +125,19 @@ for img in img_list:
             for cal in CALIBRATORS:
                 if cal in cal_dir:
                     calibrator = cal
+
+            # find the actual min SB, which is the bigger one in SB_min and the min of SBs within {base_cal_dir}/{cal_dir}/L1/
+            cali_SBs = glob.glob(base_cal_dir + "/" + cal_dir + "/L1/SB*.MS")
+            cali_SBs.sort()
+            cali_min = cali_SBs[0].split("/")[-1].split(".")[0].split("SB")[-1]
+            SB_min = max(SB_min, int(cali_min))
+
+            min_SB = min_freq // bin_per_SB + SB_min
+            max_SB = max_freq // bin_per_SB + SB_min
+
+            num_SB = max_SB - min_SB + 1
+
+            num_time = max_time - min_time + 1
 
             # copy data into calibrator directory and exo directory
             for SB in range(min_SB, max_SB+1):
