@@ -85,6 +85,8 @@ for img in img_list:
         # Remove duplicates from bounding_boxes
         unique_bounding_boxes = list(set(bounding_boxes))
 
+        np.savetxt(f'{watch_dir}{exo_dir}/{img_name}.bound_box.txt', unique_bounding_boxes, fmt='%d')
+
         # we might have multiple detections within one dynamic spectrum
         for i in range(len(unique_bounding_boxes)):
             min_freq = unique_bounding_boxes[i][0]
@@ -94,6 +96,8 @@ for img in img_list:
 
             min_SB = min_freq // bin_per_SB + SB_min
             max_SB = max_freq // bin_per_SB + SB_min
+
+            num_SB = max_SB - min_SB + 1
 
             # now we find the calibrator
 
@@ -119,6 +123,10 @@ for img in img_list:
 
             cal_dir = valid_cal_dirs[0]
 
+            for cal in CALIBRATORS:
+                if cal in cal_dir:
+                    calibrator = cal
+
             # copy data into calibrator directory and exo directory
             for SB in range(min_SB, max_SB+1):
                 # copy data into calibrator directory
@@ -128,6 +136,89 @@ for img in img_list:
                 # copy data into exo directory
                 cmd = f"rsync -av --progress {pre_target_dir}/L1/SB{SB:03d}.MS {post_target_dir}/"
                 subprocess.run(cmd, shell=True, check=True)
+
+            cali_SB = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
+            cali_SB.sort()
+
+            cali_SB_str = ",".join(cali_SB)
+
+            MSB_cali = f"{postprocess_dir}/{cal_dir}/MSB_candidate_{i}.MS"
+
+            target_SB = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
+            target_SB.sort()
+
+            target_SB_str = ",".join(target_SB)
+
+            MSB_target = f"{postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS"
+
+            ############################
+
+            # Construct the command string with the msin argument and the msout argument
+            cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{cali_SB_str}] msout={MSB_cali} avg.freqstep={ave_chan}"
+            subprocess.run(cmd_flagchan, shell=True, check=True)
+
+            cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={MSB_cali}"
+            subprocess.run(cmd_flagMA, shell=True, check=True)
+
+            # Construct the command string with the msin argument and the msout argument
+            cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_cali} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+            subprocess.run(cmd_aoflagger, shell=True, check=True)
+
+            with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
+                template_content = template_file.read()
+
+            cali_model = f'{pipe_dir}/cal_models/{cal}_lcs.skymodel'
+
+            modified_content = template_content.replace('CALI_MODEL', cali_model)
+            modified_content = modified_content.replace('CHAN_PER_SB', str(num_SB))
+
+            # Write the modified content to a new file
+            with open(f'{postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml', 'w') as cali_file:
+                cali_file.write(modified_content)
+
+            cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml {MSB_cali}"
+            subprocess.run(cmd_cali, shell=True, check=True)
+
+            # Remove the table files so they don't take up too much space!
+            cmd_remo_table = f"rm -rf {MSB_cali}/table.* {MSB_cali}/pre_cal_flags.h5"
+            subprocess.run(cmd_remo_table, shell=True, check=True)
+
+            cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS"
+            subprocess.run(cmd_remo_SB, shell=True, check=True)
+
+            ############################
+
+            cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{target_SB_str}] msout={MSB_target} avg.freqstep={ave_chan}"
+            subprocess.run(cmd_flagchan, shell=True, check=True)
+
+            if os.path.exists(f'{postprocess_dir}/{exo_dir}/DPPP-removeant.parset'):
+                cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_target} msout={MSB_target}B"
+                subprocess.run(cmd_removeMA, shell=True, check=True)
+
+                cmd_remo_MSB = f"rm -rf {MSB_target}"
+                subprocess.run(cmd_remo_MSB, shell=True, check=True)
+                # rename the new MSB
+                cmd_rename_MSB = f"mv {MSB_target}B {MSB_target}"
+                subprocess.run(cmd_rename_MSB, shell=True, check=True)
+
+            cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_target}"
+            subprocess.run(cmd_flagMA, shell=True, check=True)
+
+            cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+            subprocess.run(cmd_aoflagger, shell=True, check=True)
+
+            cmd_copy_solution = f'cp {MSB_cali}/instrument_ddecal.h5 {MSB_target}/instrument_dical.h5'
+            subprocess.run(cmd_copy_solution, shell=True, check=True)
+
+            cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_target}'
+            subprocess.run(cmd_apply_solution, shell=True, check=True)
+
+            # second round of aoflagger
+            cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+            subprocess.run(cmd_aoflagger, shell=True, check=True)
+
+
+
         
 
 
