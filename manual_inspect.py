@@ -65,8 +65,8 @@ img_list.sort()
 # loop over the images
 for img in img_list:
     # do we have a corresponding fits file?
-    image_file = img.replace(".fits.png", ".image.fits")
-    if not os.path.exists(image_file):
+    bound_file = img.replace(".png", ".bound_box.txt")
+    if not os.path.exists(bound_file):
         exo_dir = img.split("/")[-2].replace("_png", "")
         img_name = img.split("/")[-1].replace(".png", "")
         dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec/{img_name}')[0]
@@ -89,7 +89,7 @@ for img in img_list:
         # Remove duplicates from bounding_boxes
         unique_bounding_boxes = list(set(bounding_boxes))
 
-        np.savetxt(f'{watch_dir}{exo_dir}/{img_name}.bound_box.txt', unique_bounding_boxes, fmt='%d')
+        np.savetxt(f'{watch_dir}{exo_dir}_png/{img_name}.bound_box.txt', unique_bounding_boxes, fmt='%d')
 
         # we might have multiple detections within one dynamic spectrum
         for i in range(len(unique_bounding_boxes)):
@@ -270,6 +270,9 @@ for img in img_list:
                                 f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                                 f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_post {MSB_target}')
                 subprocess.run(cmd_post_img, shell=True, check=True)
+
+            cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
+            subprocess.run(cmd_remo_SB, shell=True, check=True)
 
     else:
         continue
