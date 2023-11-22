@@ -115,6 +115,7 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
                 original_delta_freq = snr_hdu.header['CDELT2']
                 new_delta_freq = original_delta_freq * (snr_map.shape[0] / snr_map_good.shape[0])
                 snr_hdu.header['CDELT2'] = new_delta_freq
+                snr_hdu.header['CHAN-WID'] = new_delta_freq * 1e6  # in Hz
                 
                 # Save the SNR map as a FITS file
                 snr_fits_path = os.path.join(snr_fits_directory, f"SNR_{filename}")
