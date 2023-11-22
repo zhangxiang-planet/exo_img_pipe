@@ -102,7 +102,7 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
                 snr_map_good = np.concatenate(good_chunks, axis=0)
                 
                 # Prepare the HDU for the SNR map
-                snr_hdu = fits.PrimaryHDU(snr_map)
+                snr_hdu = fits.PrimaryHDU(snr_map_good)
                 snr_hdu.header = hdul[0].header.copy()
                 # Remove the polarization axis information
                 for key in ['NAXIS3', 'CTYPE3', 'CRVAL3', 'CDELT3', 'CRPIX3', 'CUNIT3']:
