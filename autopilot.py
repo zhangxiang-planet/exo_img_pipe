@@ -768,7 +768,7 @@ def clearup(exo_dir: str):
     # seventh, remove some directories within dynamic_spec
 
     dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
-    cmd_remo_dyna = f"rm -rf {postprocess_dir}/{exo_dir}/{dynspec_folder}/convol_gaussian {postprocess_dir}/{exo_dir}/{dynspec_folder}/noise_map {postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec"
+    cmd_remo_dyna = f"rm -rf {postprocess_dir}/{exo_dir}/{dynspec_folder}/convol_gaussian {postprocess_dir}/{exo_dir}/{dynspec_folder}/noise_map" #{postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec"
     subprocess.run(cmd_remo_dyna, shell=True, check=True)
 
 ###### Here come the flows (functions calling the tasks) #######
