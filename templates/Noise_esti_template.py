@@ -84,6 +84,22 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
                 # snr_map = (stokes_v_data - median_map) / mad_map
                 # replace with mean and std
                 snr_map = (stokes_v_data - mean_map) / std_map
+
+                # Initialize a list to hold good chunks
+                good_chunks = []
+                i = 0
+                while i < snr_map.shape[0]:
+                    # Take a chunk of 36 rows
+                    good_chunk = snr_map[i:i + 36]
+                    good_chunks.append(good_chunk)
+                    i += 36
+
+                    # Skip bad channels (short, entirely zero chunks)
+                    while i < snr_map.shape[0] and np.all(snr_map[i] == 0):
+                        i += 1
+
+                # Concatenate all good chunks to form the new snr_map
+                snr_map_good = np.concatenate(good_chunks, axis=0)
                 
                 # Prepare the HDU for the SNR map
                 snr_hdu = fits.PrimaryHDU(snr_map)
@@ -92,6 +108,13 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
                 for key in ['NAXIS3', 'CTYPE3', 'CRVAL3', 'CDELT3', 'CRPIX3', 'CUNIT3']:
                     snr_hdu.header.remove(key, ignore_missing=True)
                 snr_hdu.header['NAXIS'] = 2  # Now it's a 2D image
+
+                snr_hdu.header['NAXIS2'] = snr_map_good.shape[0]
+
+                # Adjust frequency range in the header
+                original_delta_freq = snr_hdu.header['CDELT2']
+                new_delta_freq = original_delta_freq * (snr_map.shape[0] / snr_map_good.shape[0])
+                snr_hdu.header['CDELT2'] = new_delta_freq
                 
                 # Save the SNR map as a FITS file
                 snr_fits_path = os.path.join(snr_fits_directory, f"SNR_{filename}")
