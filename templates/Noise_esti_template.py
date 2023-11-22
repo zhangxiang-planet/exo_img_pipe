@@ -7,7 +7,7 @@ import os, glob
 # from astropy.convolution import Gaussian2DKernel, convolve
 from scipy.ndimage import gaussian_filter
 
-def generate_noise_map(dynspec_directory):
+def generate_noise_map_v(dynspec_directory):
 
     subsample_spectra = []
 
@@ -42,12 +42,52 @@ def generate_noise_map(dynspec_directory):
         hdul[0].data[3,:,:] = 0
 
         # hdul.writeto(f'{dynspec_directory}/median_mad.fits', overwrite=True)
-        hdul.writeto(f'{dynspec_directory}/mean_std.fits', overwrite=True)
+        hdul.writeto(f'{dynspec_directory}/mean_std_v.fits', overwrite=True)
 
     # return median_map, mad_map
     return mean_map, std_map
 
-def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
+def generate_noise_map_i(dynspec_directory):
+
+    subsample_spectra = []
+
+    fits_directory = f'{dynspec_directory}/TARGET/'
+
+    for filename in os.listdir(fits_directory):
+        if filename.endswith('.fits'):
+            filepath = os.path.join(fits_directory, filename)
+
+            # Open the FITS file
+            with fits.open(filepath) as hdul:
+                # Check if the file is part of the subsample based on the 'SRC-TYPE' header parameter
+                if hdul[0].header.get('SRC-TYPE', '').strip() == 'Field':
+                    # Assuming the dynamic spectrum for Stokes I is in the first HDU
+                    # This may vary depending on how your data is structured
+                    data = hdul[0].data[0, :, :]
+
+                    # Add this dynamic spectrum to our list
+                    subsample_spectra.append(data)
+
+    # median_map = np.median(subsample_spectra, axis=0)
+    # mad_map = np.median(np.abs(subsample_spectra - median_map), axis=0)
+
+    # maybe we should use mean and std instead of median and mad
+    mean_map = np.mean(subsample_spectra, axis=0)
+    std_map = np.std(subsample_spectra, axis=0)
+
+    with fits.open(filepath) as hdul:
+        hdul[0].data[0,:,:] = mean_map
+        hdul[0].data[1,:,:] = std_map
+        hdul[0].data[2,:,:] = 0
+        hdul[0].data[3,:,:] = 0
+
+        # hdul.writeto(f'{dynspec_directory}/median_mad.fits', overwrite=True)
+        hdul.writeto(f'{dynspec_directory}/mean_std_i.fits', overwrite=True)
+
+    # return median_map, mad_map
+    return mean_map, std_map
+
+def generate_and_save_weight_map_v(dynspec_directory, snr_fits_directory):
     """
     Generate and save SNR maps for each FITS file in the directory.
     Parameters:
@@ -66,7 +106,7 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
     #     median_map = hdul[0].data[0,:,:]
     #     mad_map = hdul[0].data[1,:,:]
 
-    with fits.open(f'{dynspec_directory}/mean_std.fits') as hdul:
+    with fits.open(f'{dynspec_directory}/mean_std_v.fits') as hdul:
         mean_map = hdul[0].data[0,:,:]
         std_map = hdul[0].data[1,:,:]
     fits_directory = f'{dynspec_directory}/TARGET/'
@@ -84,6 +124,80 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
                 # snr_map = (stokes_v_data - median_map) / mad_map
                 # replace with mean and std
                 snr_map = (stokes_v_data - mean_map) / std_map
+
+                # Initialize a list to hold good chunks
+                good_chunks = []
+                i = 0
+                while i < snr_map.shape[0]:
+                    # Take a chunk of 36 rows
+                    good_chunk = snr_map[i:i + 36]
+                    good_chunks.append(good_chunk)
+                    i += 36
+
+                    # Skip bad channels (short, entirely zero chunks)
+                    while i < snr_map.shape[0] and np.all(np.isnan(snr_map[i])):
+                        i += 1
+
+                # Concatenate all good chunks to form the new snr_map
+                snr_map_good = np.concatenate(good_chunks, axis=0)
+                
+                # Prepare the HDU for the SNR map
+                snr_hdu = fits.PrimaryHDU(snr_map_good)
+                snr_hdu.header = hdul[0].header.copy()
+                # Remove the polarization axis information
+                for key in ['NAXIS3', 'CTYPE3', 'CRVAL3', 'CDELT3', 'CRPIX3', 'CUNIT3']:
+                    snr_hdu.header.remove(key, ignore_missing=True)
+                snr_hdu.header['NAXIS'] = 2  # Now it's a 2D image
+
+                snr_hdu.header['NAXIS2'] = snr_map_good.shape[0]
+
+                # Adjust frequency range in the header
+                original_delta_freq = snr_hdu.header['CDELT2']
+                new_delta_freq = original_delta_freq * (snr_map.shape[0] / snr_map_good.shape[0])
+                snr_hdu.header['CDELT2'] = new_delta_freq
+                snr_hdu.header['CHAN-WID'] = new_delta_freq * 1e6  # in Hz
+                
+                # Save the SNR map as a FITS file
+                snr_fits_path = os.path.join(snr_fits_directory, f"SNR_{filename}")
+                snr_hdu.writeto(snr_fits_path, overwrite=True)
+
+def generate_and_save_weight_map_i(dynspec_directory, snr_fits_directory):
+    """
+    Generate and save SNR maps for each FITS file in the directory.
+    Parameters:
+    - fits_directory: str
+        The directory containing the original FITS files.
+    - median_fits_path: str
+        Path to the median map FITS file.
+    - mad_fits_path: str
+        Path to the MAD map FITS file.
+    - snr_fits_directory: str
+        Directory where the SNR maps will be saved.
+    """
+
+    # Read the median and MAD maps from the FITS files
+    # with fits.open(f'{dynspec_directory}/median_mad.fits') as hdul:
+    #     median_map = hdul[0].data[0,:,:]
+    #     mad_map = hdul[0].data[1,:,:]
+
+    with fits.open(f'{dynspec_directory}/mean_std_i.fits') as hdul:
+        mean_map = hdul[0].data[0,:,:]
+        std_map = hdul[0].data[1,:,:]
+    fits_directory = f'{dynspec_directory}/TARGET/'
+    # Loop through each FITS file in the directory
+    for filename in os.listdir(fits_directory):
+        if filename.endswith('.fits'):
+            filepath = os.path.join(fits_directory, filename)
+            
+            # Open the FITS file
+            with fits.open(filepath) as hdul:
+                # Extract Stokes V data (assuming it's the 4th index in the first dimension)
+                stokes_i_data = hdul[0].data[0, :, :]
+                
+                # Calculate the SNR map
+                # snr_map = (stokes_v_data - median_map) / mad_map
+                # replace with mean and std
+                snr_map = (stokes_i_data - mean_map) / std_map
 
                 # Initialize a list to hold good chunks
                 good_chunks = []
