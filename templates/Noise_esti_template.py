@@ -95,7 +95,7 @@ def generate_and_save_weight_map(dynspec_directory, snr_fits_directory):
                     i += 36
 
                     # Skip bad channels (short, entirely zero chunks)
-                    while i < snr_map.shape[0] and np.all(snr_map[i] == 0):
+                    while i < snr_map.shape[0] and np.all(np.isnan(snr_map[i])):
                         i += 1
 
                 # Concatenate all good chunks to form the new snr_map
