@@ -689,9 +689,17 @@ def source_find_v(exo_dir: str, time_windows, freq_windows):
     cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
     subprocess.run(cmd_png_dir, shell=True, check=True)
 
+    png_files = glob.glob(f'{detection_directory}/*.png')
+    if png_files:
+        # Only run the command if there are .png files
+        cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+        subprocess.run(cmd_mv_png, shell=True, check=True)
+    else:
+        print("No .png files found in the directory.")
+
     # Move the png files to the directory
-    cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
-    subprocess.run(cmd_mv_png, shell=True, check=True)
+    # cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+    # subprocess.run(cmd_mv_png, shell=True, check=True)
 
     # seventh, remove some directories within dynamic_spec
     cmd_remo_dyna = f"rm -rf {postprocess_dir}/{exo_dir}/{dynspec_folder}/convol_gaussian {postprocess_dir}/{exo_dir}/{dynspec_folder}/noise_map" #{postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec"
@@ -859,9 +867,17 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
     cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
     subprocess.run(cmd_png_dir, shell=True, check=True)
 
+    png_files = glob.glob(f'{detection_directory}/*.png')
+    if png_files:
+        # Only run the command if there are .png files
+        cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+        subprocess.run(cmd_mv_png, shell=True, check=True)
+    else:
+        print("No .png files found in the directory.")
+
     # Move the png files to the directory
-    cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
-    subprocess.run(cmd_mv_png, shell=True, check=True)
+    # cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+    # subprocess.run(cmd_mv_png, shell=True, check=True)
 
     # seventh, remove some directories within dynamic_spec
     cmd_remo_dyna = f"rm -rf {postprocess_dir}/{exo_dir}/{dynspec_folder}/convol_gaussian {postprocess_dir}/{exo_dir}/{dynspec_folder}/noise_map" #{postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec"
