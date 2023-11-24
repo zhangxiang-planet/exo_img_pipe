@@ -59,17 +59,20 @@ def grow_region(image, mask, start_coords):
 watch_dir = "/data/xzhang/exo_candidates/"
 
 # get a list of images to be inspected
-img_list = glob.glob(watch_dir + "*_png/*.png")
+img_list_i = glob.glob(watch_dir + "*_png_i/*.png")
+img_list_v = glob.glob(watch_dir + "*_png_v/*.png")
+img_list = img_list_i + img_list_v
 img_list.sort()
 
 # loop over the images
 for img in img_list:
+    suffix = 'i' if '_png_i/' in img else 'v'
     # do we have a corresponding fits file?
     bound_file = img.replace(".png", ".bound_box.txt")
     if not os.path.exists(bound_file):
-        exo_dir = img.split("/")[-2].replace("_png", "")
+        exo_dir = img.split("/")[-2].replace(f"_png_{suffix}", "")
         img_name = img.split("/")[-1].replace(".png", "")
-        dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec/{img_name}')[0]
+        dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec_{suffix}/{img_name}')[0]
         dyna_data = fits.getdata(dyna_file)
         # we need the shape of the dynamic spectrum
         num_chan, num_ts = dyna_data.shape
@@ -89,7 +92,7 @@ for img in img_list:
         # Remove duplicates from bounding_boxes
         unique_bounding_boxes = list(set(bounding_boxes))
 
-        np.savetxt(f'{watch_dir}{exo_dir}_png/{img_name}.bound_box.txt', unique_bounding_boxes, fmt='%d')
+        np.savetxt(f'{watch_dir}{exo_dir}_png_{suffix}/{img_name}.bound_box.txt', unique_bounding_boxes, fmt='%d')
 
         # we might have multiple detections within one dynamic spectrum
         for i in range(len(unique_bounding_boxes)):
