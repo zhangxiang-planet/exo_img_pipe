@@ -78,6 +78,35 @@ for img in img_list:
     bound_file = img.replace(".png", ".bound_box.txt")
     if not os.path.exists(bound_file):
         exo_dir = img.split("/")[-2].replace(f"_png_{suffix}", "")
+
+        # get the calibrator name
+        parts = exo_dir.split("_")
+        start_time = parts[0] + "_" + parts[1]
+        end_time = parts[2] + "_" + parts[3]
+        year = parts[0][:4]
+        month = parts[0][4:6]
+
+        base_cal_dir = os.path.join(preprocess_dir, year, month)
+        pre_target_dir = os.path.join(preprocess_dir, year, month, exo_dir)
+        post_target_dir = os.path.join(postprocess_dir, exo_dir)
+
+        potential_dirs = [d for d in os.listdir(postprocess_dir) if any(cal in d for cal in CALIBRATORS)]
+
+        valid_cal_dirs = []
+        for dir in potential_dirs:
+            parts = dir.split("_")
+            dir_start_time = parts[0] + "_" + parts[1]
+            dir_end_time = parts[2] + "_" + parts[3]
+            if dir_start_time == end_time or dir_end_time == start_time:
+                valid_cal_dirs.append(dir)
+
+        cal_dir = valid_cal_dirs[0]
+
+        for cal in CALIBRATORS:
+            if cal in cal_dir:
+                calibrator = cal
+
+                
         img_name = img.split("/")[-1].replace(".png", "")
         dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec_{suffix}/{img_name}')[0]
         dyna_data = fits.getdata(dyna_file)
@@ -111,34 +140,6 @@ for img in img_list:
             # we skip this bounding box if it is too narrow in time or frequency
             if max_freq - min_freq < 3 or max_time - min_time < 3:
                 continue
-
-            # now we find the calibrator
-
-            parts = exo_dir.split("_")
-            start_time = parts[0] + "_" + parts[1]
-            end_time = parts[2] + "_" + parts[3]
-            year = parts[0][:4]
-            month = parts[0][4:6]
-
-            base_cal_dir = os.path.join(preprocess_dir, year, month)
-            pre_target_dir = os.path.join(preprocess_dir, year, month, exo_dir)
-            post_target_dir = os.path.join(postprocess_dir, exo_dir)
-
-            potential_dirs = [d for d in os.listdir(postprocess_dir) if any(cal in d for cal in CALIBRATORS)]
-    
-            valid_cal_dirs = []
-            for dir in potential_dirs:
-                parts = dir.split("_")
-                dir_start_time = parts[0] + "_" + parts[1]
-                dir_end_time = parts[2] + "_" + parts[3]
-                if dir_start_time == end_time or dir_end_time == start_time:
-                    valid_cal_dirs.append(dir)
-
-            cal_dir = valid_cal_dirs[0]
-
-            for cal in CALIBRATORS:
-                if cal in cal_dir:
-                    calibrator = cal
 
             # find the actual min SB, which is the bigger one in SB_min and the min of SBs within {base_cal_dir}/{cal_dir}/L1/
             cali_SBs = glob.glob(base_cal_dir + "/" + cal_dir + "/L1/SB*.MS")
@@ -222,9 +223,6 @@ for img in img_list:
                 cmd_remo_table = f"rm -rf {MSB_cali}/table.* {MSB_cali}/pre_cal_flags.h5"
                 subprocess.run(cmd_remo_table, shell=True, check=True)
 
-                cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS"
-                subprocess.run(cmd_remo_SB, shell=True, check=True)
-
                 ############################
 
                 cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{target_SB_str}] msout={MSB_target} avg.freqstep={ave_chan}"
@@ -259,7 +257,7 @@ for img in img_list:
                 ############################
                 # Don't forget to remove the A team sources
                 cmd_ddf = (
-                    f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
+                    f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_chunk_{chunk_idx}_Image_DI '
                     f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB_chunk} --Freq-NDegridBand 0 '
                     '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
                     '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
@@ -268,7 +266,7 @@ for img in img_list:
                 subprocess.run(combined_ddf, shell=True, check=True)
 
                 cmd_kms = (
-                    f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
+                    f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_chunk_{chunk_idx}_Image_DI '
                     f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB_chunk} --NChanSols {num_SB_chunk} '
                     '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
                 )
@@ -307,8 +305,11 @@ for img in img_list:
                                 f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {processed_target_SB_str}')
                 subprocess.run(cmd_post_img, shell=True, check=True)
 
-            cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
-            subprocess.run(cmd_remo_SB, shell=True, check=True)
+        cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
+        subprocess.run(cmd_remo_SB, shell=True, check=True)
+
+        cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS"
+        subprocess.run(cmd_remo_SB, shell=True, check=True)
 
     else:
         continue
