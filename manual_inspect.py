@@ -184,6 +184,8 @@ for img in img_list:
                 MSB_cali = f"{postprocess_dir}/{cal_dir}/MSB_candidate_{i}_chunk_{chunk_idx}.MS"
                 MSB_target = f"{postprocess_dir}{exo_dir}/MSB_candidate_{i}_chunk_{chunk_idx}.MS"
 
+                num_SB_chunk = len(cali_SB_chunk)
+
                 processed_cali_SBs.append(MSB_cali)
                 processed_target_SBs.append(MSB_target)
 
@@ -258,7 +260,7 @@ for img in img_list:
                 # Don't forget to remove the A team sources
                 cmd_ddf = (
                     f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
-                    f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB} --Freq-NDegridBand 0 '
+                    f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB_chunk} --Freq-NDegridBand 0 '
                     '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
                     '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
                 )
@@ -267,7 +269,7 @@ for img in img_list:
 
                 cmd_kms = (
                     f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
-                    f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB} --NChanSols {num_SB} '
+                    f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB_chunk} --NChanSols {num_SB_chunk} '
                     '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
                 )
                 combined_kms = f"{singularity_command} {cmd_kms}"
