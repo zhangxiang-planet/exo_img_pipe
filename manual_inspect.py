@@ -221,7 +221,7 @@ for img in img_list:
                 cali_model = f'{pipe_dir}/cal_models/{calibrator}_lcs.skymodel'
 
                 modified_content = template_content.replace('CALI_MODEL', cali_model)
-                modified_content = modified_content.replace('CHAN_PER_SB', str(num_SB))
+                modified_content = modified_content.replace('CHAN_PER_SB', str(num_SB_chunk))
 
                 # Write the modified content to a new file
                 with open(f'{postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml', 'w') as cali_file:
