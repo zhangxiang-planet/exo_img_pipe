@@ -328,5 +328,8 @@ for img in img_list:
         cmd_remo_MSB = f"rm -rf {postprocess_dir}/{cal_dir}/MSB_candidate_*"
         subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
+        cmd_remo_soldir = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR"
+        subprocess.run(cmd_remo_soldir, shell=True, check=True)
+
     else:
         continue
