@@ -2,6 +2,7 @@ import subprocess
 import os, glob
 from astropy.io import fits
 import numpy as np
+from nenupy.instru import freq2sb
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
@@ -21,7 +22,7 @@ chan_per_SB = 12
 bin_per_SB = chan_per_SB // ave_chan
 
 # the lowest SB we use
-SB_min = 92
+# SB_min = 92
 
 singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
@@ -110,6 +111,12 @@ for img in img_list:
         img_name = img.split("/")[-1].replace(".png", "")
         dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec_{suffix}/{img_name}')[0]
         dyna_data = fits.getdata(dyna_file)
+        # we need to get the frequency range of the image
+        with fits.open(dyna_file) as hdul:
+            header = hdul[0].header
+            freq_start = header['CRVAL2']
+            freq_step = header['CDELT2']
+
         # we need the shape of the dynamic spectrum
         num_chan, num_ts = dyna_data.shape
         four_sigma_mask = np.abs(dyna_data) > 4
@@ -144,11 +151,15 @@ for img in img_list:
             # find the actual min SB, which is the bigger one in SB_min and the min of SBs within {base_cal_dir}/{cal_dir}/L1/
             cali_SBs = glob.glob(base_cal_dir + "/" + cal_dir + "/L1/SB*.MS")
             cali_SBs.sort()
-            cali_min = cali_SBs[0].split("/")[-1].split(".")[0].split("SB")[-1]
-            SB_min = max(SB_min, int(cali_min))
+            # cali_min = cali_SBs[0].split("/")[-1].split(".")[0].split("SB")[-1]
+            # SB_min = max(SB_min, int(cali_min))
 
-            min_SB = min_freq // bin_per_SB + SB_min
-            max_SB = max_freq // bin_per_SB + SB_min
+            # min_SB = min_freq // bin_per_SB + SB_min
+            # max_SB = max_freq // bin_per_SB + SB_min
+
+            # replace with the min and max SB calculated from the frequency range
+            min_SB = freq2sb(freq_start + min_freq * freq_step)
+            max_SB = freq2sb(freq_start + max_freq * freq_step)
 
             num_SB = max_SB - min_SB + 1
 
