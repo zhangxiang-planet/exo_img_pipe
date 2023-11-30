@@ -119,7 +119,8 @@ for img in img_list:
 
         # we need the shape of the dynamic spectrum
         num_chan, num_ts = dyna_data.shape
-        four_sigma_mask = np.abs(dyna_data) > 4
+        # Try only image the 6 sigma area
+        four_sigma_mask = np.abs(dyna_data) > 6 
         six_sigma_mask = np.abs(dyna_data) > 6
 
         six_sigma_coords = np.argwhere(six_sigma_mask)
