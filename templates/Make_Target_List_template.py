@@ -131,20 +131,38 @@ def make_target_list(target_name, postprocess_dir, exo_dir):
 
         # We no longer need this part as we are searching for all exoplanets in field
 
-        # if target_name == "KEPLER_42":
-        #     ra_1, dec_1 = simbad_coor('KEPLER_78')
-        #     ra_2, dec_2 = simbad_coor('KOI-55')
-        #     ra_3, dec_3 = simbad_coor('KOI-4777')
-        #     ra_4, dec_4 = simbad_coor('KEPLER_32')
+        if target_name == "KEPLER_42":
+            ra_1, dec_1 = simbad_coor('KEPLER_78')
+            ra_2, dec_2 = simbad_coor('KOI-55')
+            ra_3, dec_3 = simbad_coor('KOI-4777')
+            ra_4, dec_4 = simbad_coor('KEPLER_32')
 
-        #     file.write(f"KEPLER_78, {ra_1:.6f}, {dec_1:.6f}, Target\n")
-        #     file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Target\n")
-        #     file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Target\n")
-        #     file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Target\n")
+            file.write(f"KEPLER_78, {ra_1:.6f}, {dec_1:.6f}, Exoplanet\n")
+            file.write(f"KOI-55, {ra_2:.6f}, {dec_2:.6f}, Exoplanet\n")
+            file.write(f"KOI-4777, {ra_3:.6f}, {dec_3:.6f}, Exoplanet\n")
+            file.write(f"KEPLER_32, {ra_4:.6f}, {dec_4:.6f}, Exoplanet\n")
 
-        # Loop through each exoplanet
-        for exo in exo_list:
-            file.write(f"{exo['hostname'].replace(' ', '_')}, {exo['ra'].value:.6f}, {exo['dec'].value:.6f}, Exoplanet\n")
+            file.write("16_Cyg_B, 295.465642, 50.516824, Exoplanet\n")            
+            file.write(f"2MASS_J19383260+4603591, 294.635917, 46.066408, Exoplanet\n")
+            file.write(f"DMPP-4, 293.582665, 51.235807, Exoplanet\n")
+            file.write(f"GJ_720_A, 278.829417, 45.745604, Exoplanet\n")
+            file.write(f"HAT-P-11, 297.710176, 48.081863, Exoplanet\n")
+            file.write(f"HAT-P-37, 284.296039, 51.269121, Exoplanet\n")
+            file.write(f"HAT-P-7, 292.247190, 47.969543, Exoplanet\n")
+            file.write(f"PH1, 298.215064, 39.955086, Exoplanet\n")
+            file.write(f"PH2, 289.763621, 51.962683, Exoplanet\n")
+            file.write(f"TOI-1899, 299.426847, 40.143346, Exoplanet\n")
+            file.write(f"TOI-2010, 292.166942, 53.487369, Exoplanet\n")
+            file.write(f"TrES-1, 286.040876, 36.632536, Exoplanet\n")
+            file.write(f"TrES-2, 286.808526, 49.316421, Exoplanet\n")
+            file.write(f"WTS-1, 293.985028, 36.296294, Exoplanet\n")
+            file.write(f"WTS-2, 293.732783, 36.815494, Exoplanet\n")
+
+
+        else:
+            # Loop through each exoplanet
+            for exo in exo_list:
+                file.write(f"{exo['hostname'].replace(' ', '_')}, {exo['ra'].value:.6f}, {exo['dec'].value:.6f}, Exoplanet\n")
 
         for i, (ra, dec) in enumerate(zip(ucd_ra, ucd_dec)):
             # Wrap RA within [0, 360] degrees
