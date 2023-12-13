@@ -464,7 +464,7 @@ def subtract_Ateam(exo_dir: str):
         else:
             cmd_kms = (
                 f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-                f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
+                f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
                 '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
             )
             combined_kms = f"{singularity_command} {cmd_kms}"
@@ -926,8 +926,8 @@ def clearup(exo_dir: str):
 
 @flow(name="EXO_IMG PIPELINE", log_prints=True)
 def exo_pipe(exo_dir):
-    with open(lockfile, "w") as f:
-        f.write("Processing ongoing")
+    # with open(lockfile, "w") as f:
+    #     f.write("Processing ongoing")
 
     task_copy_calibrator = copy_calibrator_data.submit(exo_dir)
 
@@ -956,20 +956,22 @@ def exo_pipe(exo_dir):
 
     clearup(exo_dir)
 
-    os.remove(lockfile)
+    # os.remove(lockfile)
 
 @flow(name='Check Flow', log_prints=True)
 def check_flow():
-    if os.path.exists(lockfile):
-        print("Exiting due to existence of lockfile")
-        return Completed(message="Lockfile exists, skipping run.")
+    # if os.path.exists(lockfile):
+    #     print("Exiting due to existence of lockfile")
+    #     return Completed(message="Lockfile exists, skipping run.")
 
     new_data = check_new_data(watch_dir, postprocess_dir)
 
     if len(new_data) > 0:
         # Trigger the main flow
-        for unprocessed_data in new_data:
-            exo_pipe(unprocessed_data)
+        # for unprocessed_data in new_data:
+        #     exo_pipe(unprocessed_data)
+
+        exo_pipe(new_data[0])
 
     return Completed(message="Run completed without issues.")
 
