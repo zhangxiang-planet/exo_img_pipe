@@ -296,7 +296,7 @@ for img in img_list:
 
             # first, we image the burst
             cmd_burst_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
-                             f'-scale 1amin -size 2400 2400 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                             f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                              f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                              f'-interval {min_time} {max_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time} {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_chunk_?.MS')
             subprocess.run(cmd_burst_img, shell=True, check=True)
@@ -304,7 +304,7 @@ for img in img_list:
             if min_time - num_time > 0:
                 # we can image the time range before the burst
                 cmd_pre_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
-                               f'-scale 1amin -size 2400 2400 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                               f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                                f'-interval {min_time-num_time} {min_time} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_pre {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_chunk_?.MS')
                 subprocess.run(cmd_pre_img, shell=True, check=True)
@@ -312,7 +312,7 @@ for img in img_list:
             if max_time + num_time < num_ts:
                 # we can image the time range after the burst
                 cmd_post_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
-                                f'-scale 1amin -size 2400 2400 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                                f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                 f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                                 f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_chunk_?.MS')
                 subprocess.run(cmd_post_img, shell=True, check=True)
@@ -323,8 +323,8 @@ for img in img_list:
         cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS"
         subprocess.run(cmd_remo_SB, shell=True, check=True)
 
-        cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB_candidate_*"
-        subprocess.run(cmd_remo_MSB, shell=True, check=True)
+        # cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB_candidate_*"
+        # subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
         cmd_remo_MSB = f"rm -rf {postprocess_dir}/{cal_dir}/MSB_candidate_*"
         subprocess.run(cmd_remo_MSB, shell=True, check=True)
