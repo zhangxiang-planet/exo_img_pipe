@@ -448,7 +448,7 @@ def subtract_Ateam(exo_dir: str):
             f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
             f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
+            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Beam-Model NENUFAR'
         )
         combined_ddf = f"{singularity_command} {cmd_ddf}"
         subprocess.run(combined_ddf, shell=True, check=True)
@@ -457,7 +457,7 @@ def subtract_Ateam(exo_dir: str):
             cmd_kms = (
                 f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
                 f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
+                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
             )
             combined_kms = f"{singularity_command} {cmd_kms}"
             subprocess.run(combined_kms, shell=True, check=True)
@@ -465,7 +465,7 @@ def subtract_Ateam(exo_dir: str):
             cmd_kms = (
                 f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
                 f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
+                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
             )
             combined_kms = f"{singularity_command} {cmd_kms}"
             subprocess.run(combined_kms, shell=True, check=True)
@@ -475,7 +475,7 @@ def subtract_Ateam(exo_dir: str):
             f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
             f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Dirty --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV'
+            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV --Beam-Model NENFUAR'
         )
         combined_ddf = f"{singularity_command} {cmd_ddf}"
         subprocess.run(combined_ddf, shell=True, check=True)
