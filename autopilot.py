@@ -26,7 +26,7 @@ preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
-singularity_file = "/home/xzhang/software/ddf.sif"
+singularity_file = "/home/xzhang/software/ddf_jan2024.sif"
 skip_file = "/home/xzhang/software/exo_img_pipe/templates/skip.txt"
 
 # Calibrators
