@@ -475,7 +475,7 @@ def subtract_Ateam(exo_dir: str):
             f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
             f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Dirty --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
             '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV --Beam-Model NENFUAR'
+            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV --Beam-Model NENUFAR'
         )
         combined_ddf = f"{singularity_command} {cmd_ddf}"
         subprocess.run(combined_ddf, shell=True, check=True)
