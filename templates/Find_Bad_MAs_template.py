@@ -37,6 +37,23 @@ def read_multiple_h5_files(base_dir):
 
     return combined_amplitude_val, combined_phase_val, ant, combined_freq, pol
 
+# replace read_multiple_h5_files with the following function if you want to read from a single file
+def read_h5_file(base_dir):
+    gsb = base_dir + '/GSB.MS'
+    file_path = os.path.join(gsb, 'instrument_ddecal.h5')
+    with h5py.File(file_path, 'r') as h5_file:
+        amplitude_group = h5_file['sol000/amplitude000']
+        phase_group = h5_file['sol000/phase000']
+        freq = amplitude_group['freq'][:]
+
+        amplitude_val = amplitude_group['val'][:]
+        phase_val = phase_group['val'][:]
+        ant = amplitude_group['ant'][:]
+        pol = amplitude_group['pol'][:]
+
+    return amplitude_val, phase_val, ant, freq, pol
+
+
 def calculate_ratio(amplitude_val, pol):
     pol_labels = [p.decode() for p in pol]
     xx_index = pol_labels.index('XX')
@@ -105,7 +122,8 @@ def plot_sol(val, ant, freq, pol, ylabel, output_filename, show_legend=True, hig
 def find_bad_MAs(path_to_base_dir):
     # Replace 'path_to_base_dir' with the path to the base directory containing the SBxxx.MS folders
     # path_to_base_dir = './'
-    amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
+    # amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
+    amplitude_val, phase_val, ant, freq, pol = read_h5_file(path_to_base_dir)
     ratio_val = calculate_ratio(amplitude_val, pol)
 
     # take phase into consideration
@@ -171,8 +189,12 @@ def find_bad_MAs(path_to_base_dir):
     # bad antennas are those with either bad amplitude or phase
     # bad antennas have high modified_z_scores or modified_z_scores_phase_noremote
 
-    amp_threshold = np.nanmedian(np.abs(modified_z_scores)) * 10.3782   # equivalent to 7 sigma
-    phase_threshold = np.nanmedian(np.abs(modified_z_scores_phase_noremote)) * 10.3782   # equivalent to 7 sigma
+    # amp_threshold = np.nanmedian(np.abs(modified_z_scores)) * 10.3782   # equivalent to 7 sigma
+    # phase_threshold = np.nanmedian(np.abs(modified_z_scores_phase_noremote)) * 10.3782   # equivalent to 7 sigma
+
+    # replace the thresholds with 10 sigma
+    amp_threshold = np.nanmedian(np.abs(modified_z_scores)) * 14.826   # equivalent to 10 sigma
+    phase_threshold = np.nanmedian(np.abs(modified_z_scores_phase_noremote)) * 14.826   # equivalent to 10 sigma
 
     bad_antennas = np.where(np.logical_or(modified_z_scores > amp_threshold, modified_z_scores_phase_noremote > phase_threshold))[0]
 

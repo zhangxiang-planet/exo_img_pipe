@@ -1,0 +1,28 @@
+# this is the main parameter block
+msin=SB155.MS
+msout=.
+steps=[count]      # we define here the list of steps to perform
+
+# this is the step description block
+# preflagstep.type=preflagger    # use preflagger step to manually flag specific antennas
+
+# Alter and uncomment the appropriate line depending on the objective
+# Examples:
+#preflagstep.baseline=MR002NEN&MR003NEN  # will flag all correlations between MR002NEN & MR003NEN
+#preflagstep.baseline=MR001NEN&&*  # will flag all cross (and auto)correlation involving MR001NEN
+#preflagstep.baseline=MR001NEN,MR002NEN&&* # same but for MR001NEN with all, and MR002NEN with all
+
+# preflagstep.baseline=MR047NEN,MR102NEN,MR103NEN&&*
+
+# preflagstep.freqrange=[16.12..16.31MHz,26.17..26.38MHz,35.84..36.03MHz]
+
+# this is the step description block
+# avg.type=averager
+# avg.timestep=1
+# avg.freqstep=1
+
+
+# the "count" step does not require any parameter but will output the current count
+# of flagged data. This is useful to track what has been flagged between steps.
+
+
