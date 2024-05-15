@@ -20,28 +20,28 @@ matplotlib.use('Agg')
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/202?/??/"
+watch_dir = "/databf/nenufar-nri/LT02/2023/??/*HD_189733_TRACKING"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
-singularity_file = "/home/xzhang/software/ddf_jan2024.sif"
+singularity_file = "/home/cyril.tasse/DDFSingularity/ddf_dev2.sif"
 skip_file = "/home/xzhang/software/exo_img_pipe/templates/skip.txt"
 
 # Calibrators
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 # How many SB per processing chunk
-chunk_num = 12
+# chunk_num = 12
 
 # How many channels per SB
-# chan_per_SB_origin = 12
+chan_per_SB_origin = 12
 ave_chan = 4
-# chan_per_SB = int(chan_per_SB_origin/ave_chan)
+chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # Avoid bad channel making KMS hang
-bin_per_MSB = chunk_num // 3
+# bin_per_MSB = chunk_num // 3
 
 # the lowest SB we use
 SB_min = 92
@@ -201,51 +201,67 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
     # Replace placeholders in the template content
     modified_content = template_content.replace('CALI_MODEL', cali_model)
-    modified_content = modified_content.replace('CHAN_PER_SB', str(chunk_num))
+    modified_content = modified_content.replace('CHAN_PER_SB', chan_per_SB)
 
     # Write the modified content to a new file
     with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
         cali_file.write(modified_content)
 
     # Determine the number of full chunks of chunk_num we can form
-    num_chunks = len(cali_SB) // chunk_num
+    # num_chunks = len(cali_SB) // chunk_num
 
     cmd_sky_dir = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/"
     subprocess.run(cmd_sky_dir, shell=True, check=True)
 
-    for i in range(num_chunks):
-        # Extract the ith chunk of chunk_num file names
-        chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
+    # Group files by their tens place
+    groups = {}
+    for f in cali_SB:
+        sb_number = int(f.split('/SB')[1].split('.MS')[0])
+        tens_place = sb_number // 10
+        if tens_place not in groups:
+            groups[tens_place] = []
+        groups[tens_place].append(f)
+
+    for tens_place, chunk in groups.items():
+        # # Extract the ith chunk of chunk_num file names
+        # chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
 
         # Create the msin string by joining the chunk with commas
         SB_str = ",".join(chunk)
 
         # Construct the output file name using the loop index (i+1)
-        MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
+        MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
         cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
-        # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-        subprocess.run(cmd_aoflagger, shell=True, check=True)
+    # Stack the GSB.MS
+    msb_files = glob.glob(f"{postprocess_dir}/{cal_dir}/MSB*.MS")
+    msb_files.sort()
+    msb_files_str = ",".join(msb_files)
+    cmd_stack = f"DP3 {pipe_dir}/templates/DPPP-stack.parset msin=[{msb_files_str}] msout={postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_stack, shell=True, check=True)
 
-        cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
-        subprocess.run(cmd_cali, shell=True, check=True)
+    # Construct the command string with the msin argument and the msout argument
+    cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{cal_dir}/GSB.MS flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+    subprocess.run(cmd_aoflagger, shell=True, check=True)
 
-        cmd_makesky = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/"
-        subprocess.run(cmd_makesky, shell=True, check=True)
+    cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_cali, shell=True, check=True)
 
-        cmd_movesky = f"mv {MSB_filename}/sky_model {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/"
-        subprocess.run(cmd_movesky, shell=True, check=True)
+    # cmd_makesky = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/"
+    # subprocess.run(cmd_makesky, shell=True, check=True)
+
+    cmd_movesky = f"mv {postprocess_dir}/{cal_dir}/GSB.MS/sky_model {postprocess_dir}/{cal_dir}/"
+    subprocess.run(cmd_movesky, shell=True, check=True)
 
     # Step 3: Call the imported function directly
     bad_MAs = find_bad_MAs(f"{postprocess_dir}/{cal_dir}/")
 
     # Step 4: Remove the testing MSB
-    cmd_remo_MSB = f"rm -rf {postprocess_dir}/{cal_dir}/MSB*.MS"
-    subprocess.run(cmd_remo_MSB, shell=True, check=True)
+    cmd_remo_GSB = f"rm -rf {postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_remo_GSB, shell=True, check=True)
 
     return bad_MAs
 
@@ -282,57 +298,47 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     with open(f'{postprocess_dir}/{cal_dir}/DPPP-flagant.parset', 'w') as flag_file:
         flag_file.write(modified_flag_content)
 
-    # Determine the number of full chunks of chunk_num we can form
-    num_chunks = len(cali_SB) // chunk_num
+    # Stack the GSB.MS
+    msb_files = glob.glob(f"{postprocess_dir}/{cal_dir}/MSB*.MS")
+    msb_files.sort()
+    msb_files_str = ",".join(msb_files)
+    cmd_stack = f"DP3 {pipe_dir}/templates/DPPP-stack.parset msin=[{msb_files_str}] msout={postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_stack, shell=True, check=True)
 
-    for i in range(num_chunks):
-        # Extract the ith chunk of chunk_num file names
-        chunk = cali_SB[i * chunk_num: (i + 1) * chunk_num]
-
-        # Create the msin string by joining the chunk with commas
-        SB_str = ",".join(chunk)
-
-        # Construct the output file name using the loop index (i+1)
-        MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS"
+    cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_flagMA, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
-        subprocess.run(cmd_flagchan, shell=True, check=True)
-
-        cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={MSB_filename}"
-        subprocess.run(cmd_flagMA, shell=True, check=True)
-
-        # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-        subprocess.run(cmd_aoflagger, shell=True, check=True)
+    cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{cal_dir}/GSB.MS flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+    subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
-        with open(f'{pipe_dir}/templates/calibrator.toml', 'r') as template_file:
-            template_content = template_file.read()
+    with open(f'{pipe_dir}/templates/calibrator.toml', 'r') as template_file:
+        template_content = template_file.read()
 
-        # Perform the replacements
-        cali_model = f'{pipe_dir}/cal_models/{cal}_lcs.skymodel'
+    # Perform the replacements
+    cali_model = f'{pipe_dir}/cal_models/{cal}_lcs.skymodel'
 
-        # Replace placeholders in the template content
-        modified_content = template_content.replace('CALI_MODEL', cali_model)
-        modified_content = modified_content.replace('CHAN_PER_SB', str(chunk_num))
+    # Replace placeholders in the template content
+    modified_content = template_content.replace('CALI_MODEL', cali_model)
+    modified_content = modified_content.replace('CHAN_PER_SB', str(chan_per_SB))
 
-        # Write the modified content to a new file
-        with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
-            cali_file.write(modified_content)
+    # Write the modified content to a new file
+    with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
+        cali_file.write(modified_content)
 
-        cmd_copysky = f"cp -rf {postprocess_dir}/{cal_dir}/sky_models/MSB{str(i).zfill(2)}/sky_model {MSB_filename}/"
-        subprocess.run(cmd_copysky, shell=True, check=True)
+    cmd_copysky = f"cp -rf {postprocess_dir}/{cal_dir}/sky_model {postprocess_dir}/{cal_dir}/GSB.MS/"
+    subprocess.run(cmd_copysky, shell=True, check=True)
 
-        cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
-        subprocess.run(cmd_cali, shell=True, check=True)
+    cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_cali, shell=True, check=True)
 
-        # Remove the table files so they don't take up too much space!
-        cmd_remo_table = f"rm -rf {MSB_filename}/table.* {MSB_filename}/pre_cal_flags.h5"
-        subprocess.run(cmd_remo_table, shell=True, check=True)
+    # Remove the table files so they don't take up too much space!
+    cmd_remo_table = f"rm -rf {postprocess_dir}/{cal_dir}/GSB.MS/table.* {postprocess_dir}/{cal_dir}/GSB.MS/pre_cal_flags.h5"
+    subprocess.run(cmd_remo_table, shell=True, check=True)
 
     # remove the SB*.MS files
-    cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS"
+    cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS {postprocess_dir}/{cal_dir}/MSB*.MS"
     subprocess.run(cmd_remo_SB, shell=True, check=True)
 
 # Task 4. Apply A-team calibration solution to target
@@ -386,51 +392,67 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         flag_file.write(modified_flag_content)
 
     # Determine the number of full chunks of chunk_num we can form
-    num_chunks = len(exo_SB) // chunk_num
+    # num_chunks = len(exo_SB) // chunk_num
 
-    for i in range(num_chunks):
+    # Group files by their tens place
+    groups = {}
+    for f in exo_SB:
+        sb_number = int(f.split('/SB')[1].split('.MS')[0])
+        tens_place = sb_number // 10
+        if tens_place not in groups:
+            groups[tens_place] = []
+        groups[tens_place].append(f)
+
+    for tens_place, chunk in groups.items():
         # Extract the ith chunk of chunk_num file names
-        chunk = exo_SB[i * chunk_num: (i + 1) * chunk_num]
+        # chunk = exo_SB[i * chunk_num: (i + 1) * chunk_num]
 
         # Create the msin string by joining the chunk with commas
         SB_str = ",".join(chunk)
 
         # Construct the output file name using the loop index (i+1)
-        MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}.MS"
+        MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
         cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
-        # only run removeant when there are antennas to be removed
-        if len(remove_antennas) > 0:
-            cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_filename} msout={MSB_filename}B"
-            subprocess.run(cmd_removeMA, shell=True, check=True)
-            # remove original MSB
-            cmd_remo_MSB = f"rm -rf {MSB_filename}"
-            subprocess.run(cmd_remo_MSB, shell=True, check=True)
-            # rename the new MSB
-            cmd_rename_MSB = f"mv {MSB_filename}B {MSB_filename}"
-            subprocess.run(cmd_rename_MSB, shell=True, check=True)
+    # Stack the GSB.MS
+    msb_files = glob.glob(f"{postprocess_dir}/{exo_dir}/MSB*.MS")
+    msb_files.sort()
+    msb_files_str = ",".join(msb_files)
+    cmd_stack = f"DP3 {pipe_dir}/templates/DPPP-stack.parset msin=[{msb_files_str}] msout={postprocess_dir}/{exo_dir}/GSB.MS"
+    subprocess.run(cmd_stack, shell=True, check=True)
 
-        cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_filename}"
-        subprocess.run(cmd_flagMA, shell=True, check=True)
+    # only run removeant when there are antennas to be removed
+    if len(remove_antennas) > 0:
+        cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB.MSB"
+        subprocess.run(cmd_removeMA, shell=True, check=True)
+        # remove original MSB
+        cmd_remo_GSB = f"rm -rf {postprocess_dir}/{exo_dir}/GSB.MS"
+        subprocess.run(cmd_remo_GSB, shell=True, check=True)
+        # rename the new MSB
+        cmd_rename_GSB = f"mv {postprocess_dir}/{exo_dir}/GSB.MSB {postprocess_dir}/{exo_dir}/GSB.MS"
+        subprocess.run(cmd_rename_GSB, shell=True, check=True)
 
-        # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-        subprocess.run(cmd_aoflagger, shell=True, check=True)
+    cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={postprocess_dir}/{exo_dir}/GSB.MS"
+    subprocess.run(cmd_flagMA, shell=True, check=True)
 
-        # Copy calibration solution
-        cmd_copy_solution = f'cp {postprocess_dir}/{cal_dir}/MSB{str(i).zfill(2)}.MS/instrument_ddecal.h5 {MSB_filename}/instrument_dical.h5'
-        subprocess.run(cmd_copy_solution, shell=True, check=True)
+    # Construct the command string with the msin argument and the msout argument
+    cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{exo_dir}/GSB.MS flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+    subprocess.run(cmd_aoflagger, shell=True, check=True)
 
-        # apply solution
-        cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_filename}'
-        subprocess.run(cmd_apply_solution, shell=True, check=True)
+    # Copy calibration solution
+    cmd_copy_solution = f'cp {postprocess_dir}/{cal_dir}/GSB.MS/instrument_ddecal.h5 {postprocess_dir}/{exo_dir}/GSB.MS/instrument_dical.h5'
+    subprocess.run(cmd_copy_solution, shell=True, check=True)
 
-        # second round of aoflagger
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-        subprocess.run(cmd_aoflagger, shell=True, check=True)
+    # apply solution
+    cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {postprocess_dir}/{exo_dir}/GSB.MS'
+    subprocess.run(cmd_apply_solution, shell=True, check=True)
+
+    # second round of aoflagger
+    cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+    subprocess.run(cmd_aoflagger, shell=True, check=True)
 
 # Task 5. Subtract A-team from field
 
@@ -439,46 +461,53 @@ def subtract_Ateam(exo_dir: str):
     # Step 1: Set the environment
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
-    exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
-    exo_MSB.sort()
-    num_MSB = len(exo_MSB)
+    # Modify the code to use GSB.MS, rather than multiple MSB???.MS files
+    # exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
+    # exo_MSB.sort()
+    # num_MSB = len(exo_MSB)
 
-    for i in range(num_MSB):
-        cmd_ddf = (
-            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-            f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
-            '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Beam-Model NENUFAR'
-        )
-        combined_ddf = f"{singularity_command} {cmd_ddf}"
-        subprocess.run(combined_ddf, shell=True, check=True)
+    # for i in range(num_MSB):
+    cmd_ddf = (
+        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/GSB_Image_DI '
+        f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 '
+        '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
+        '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Beam-Model NENUFAR'
+    )
+    combined_ddf = f"{singularity_command} {cmd_ddf}"
+    subprocess.run(combined_ddf, shell=True, check=True)
 
-        if i < 2:
-            cmd_kms = (
-                f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-                f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
-            )
-            combined_kms = f"{singularity_command} {cmd_kms}"
-            subprocess.run(combined_kms, shell=True, check=True)
-        else:
-            cmd_kms = (
-                f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-                f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
-            )
-            combined_kms = f"{singularity_command} {cmd_kms}"
-            subprocess.run(combined_kms, shell=True, check=True)
+        # if i < 2:
+        #     cmd_kms = (
+        #         f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
+        #         f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
+        #         '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
+        #     )
+        #     combined_kms = f"{singularity_command} {cmd_kms}"
+        #     subprocess.run(combined_kms, shell=True, check=True)
+        # else:
+        #     cmd_kms = (
+        #         f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
+        #         f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
+        #         '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
+        #     )
+        #     combined_kms = f"{singularity_command} {cmd_kms}"
+        #     subprocess.run(combined_kms, shell=True, check=True)
+
+    cmd_kms = (
+        f'kMS.py --MSName {postprocess_dir}/{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/GSB_Image_DI '
+        f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 45 --NChanSols 45 '
+        '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
+    )
 
         # another round of ddf and kms (Removed. Selfcal not working well. Just make images for scientific analysis)
-        cmd_ddf = (
-            f'DDF.py --Data-MS {exo_MSB[i]} --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-            f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Dirty --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {chunk_num} --Freq-NDegridBand 0 '
-            '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-            '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV --Beam-Model NENUFAR'
-        )
-        combined_ddf = f"{singularity_command} {cmd_ddf}"
-        subprocess.run(combined_ddf, shell=True, check=True)
+    # cmd_ddf = (
+    #     f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/GSB_Image_SUB '
+    #     f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Dirty --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 '
+    #     '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
+    #     '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV --Beam-Model NENUFAR'
+    # )
+    # combined_ddf = f"{singularity_command} {cmd_ddf}"
+    # subprocess.run(combined_ddf, shell=True, check=True)
 
         # # # make model
         # # cmd_mkmodel = (
@@ -501,15 +530,15 @@ def subtract_Ateam(exo_dir: str):
 def dynspec(exo_dir: str):
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
-    cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
-    subprocess.run(cmd_list, shell=True, check=True)
+    # cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
+    # subprocess.run(cmd_list, shell=True, check=True)
 
-    exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
-    num_MSB = len(exo_MSB)
+    # exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
+    # num_MSB = len(exo_MSB)
 
     cmd_ddf = (
-        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/mslist.txt --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
-        f'--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_MSB} --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
+        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
+        f'--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
         '--Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 --Mask-Auto 1 --Mask-SigTh 4 '
         '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
     )
@@ -527,7 +556,7 @@ def dynspec(exo_dir: str):
     plot_target_distribution(postprocess_dir, exo_dir)
 
     cmd_dynspec = (
-        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
+        f'ms2dynspec.py --ms {postprocess_dir}/{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
         f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
