@@ -1,0 +1,309 @@
+[Data]
+MS = /data/xzhang/exo_img/20230921_194000_20230921_210000_HD_189733_TRACKING/MSB16.MS 
+ColName = DI_DATA 
+ChunkHours = 0.0 
+Sort = False 
+
+[Predict]
+ColName = None 
+MaskSquare = None 
+FromImage = None 
+InitDicoModel = None 
+Overwrite = True 
+
+[Selection]
+Field = 0 
+DDID = 0 
+TaQL =  
+ChanStart = 0 
+ChanEnd = -1 
+ChanStep = 1 
+FlagAnts =  
+UVRangeKm = [0.067, 1000] 
+TimeRange =  
+TimeRangeFromStartMin =  
+DistMaxToCore =  
+AutoFlagNyquist = 0 
+
+[Output]
+Mode = Clean 
+Name = /data/xzhang/exo_img//20230921_194000_20230921_210000_HD_189733_TRACKING/MSB08_Image_DI 
+ShiftFacetsFile = None 
+RestoringBeam = None 
+Also = all 
+Cubes =  
+Images = DdPAMRIikemz 
+StokesResidues = I 
+
+[SPIMaps]
+AlphaThreshold = 15 
+
+[Image]
+NPix = 2400 
+Cell = 60 
+PhaseCenterRADEC = None 
+SidelobeSearchWindow = 200 
+
+[Facets]
+NFacets = 5 
+CatNodes = None 
+DiamMax = 180.0 
+DiamMin = 0.0 
+MixingWidth = 10 
+PSFOversize = 1.0 
+PSFFacets = 0 
+Padding = 1.7 
+Circumcision = 0 
+FluxPaddingAppModel = None 
+FluxPaddingScale = 2.0 
+SkipTh = 0.001 
+
+[Weight]
+ColName = WEIGHT_SPECTRUM 
+Mode = Briggs 
+MFS = True 
+Robust = -0.5 
+SuperUniform = 1.0 
+OutColName = None 
+EnableSigmoidTaper = 0 
+SigmoidTaperInnerCutoff = 0.0 
+SigmoidTaperOuterCutoff = 0.0 
+SigmoidTaperInnerRolloffStrength = 0.5 
+SigmoidTaperOuterRolloffStrength = 0.5 
+
+[RIME]
+Precision = S 
+PolMode = I 
+FFTMachine = FFTW 
+ForwardMode = BDA-degrid 
+BackwardMode = BDA-grid 
+DecorrMode =  
+DecorrLocation = Edge 
+
+[CF]
+OverS = 11 
+Support = 7 
+Nw = 100 
+wmax = 0.0 
+
+[Comp]
+GridDecorr = 0.0001 
+GridFoV = Facet 
+DegridDecorr = 0.0001 
+DegridFoV = Facet 
+Sparsification = 0 
+BDAMode = 1 
+BDAJones = 0 
+
+[Parallel]
+NCPU = 96 
+Affinity = 1 
+MainProcessAffinity = 0 
+MotherNode = localhost 
+
+[Cache]
+Reset = False 
+Jones = auto 
+SmoothBeam = auto 
+Weight = auto 
+PSF = auto 
+Dirty = auto 
+VisData = auto 
+LastResidual = True 
+Dir =  
+DirWisdomFFTW = ~/.fftw_wisdom 
+ResetWisdom = False 
+CF = True 
+HMP = False 
+
+[Beam]
+Model = NENUFAR 
+At = facet 
+PhasedArrayMode = AE 
+NBand = 0 
+CenterNorm = False 
+Smooth = False 
+SmoothNPix = 11 
+SmoothInterpMode = Linear 
+FITSFile = beam_$(corr)_$(reim).fits 
+FITSFeed = None 
+FITSFeedSwap = False 
+DtBeamMin = 5.0 
+FITSParAngleIncDeg = 5.0 
+FITSLAxis = -X 
+FITSMAxis = Y 
+FITSVerbosity = 0 
+FITSFrame = altaz 
+FeedAngle = 0.0 
+ApplyPJones = 0 
+FlipVisibilityHands = 0 
+
+[Freq]
+BandMHz = 0.0 
+FMinMHz = 0.0 
+FMaxMHz = 0.0 
+DegridBandMHz = 0.0 
+NBand = 12 
+NDegridBand = 0 
+
+[DDESolutions]
+DDSols =  
+SolsDir = None 
+GlobalNorm = None 
+JonesNormList = AP 
+JonesMode = Full 
+DDModeGrid = AP 
+DDModeDeGrid = AP 
+ScaleAmpGrid = 0 
+ScaleAmpDeGrid = 0 
+CalibErr = 10.0 
+Type = Nearest 
+Scale = 1.0 
+gamma = 4.0 
+RestoreSub = False 
+ReWeightSNR = 0.0 
+
+[PointingSolutions]
+PointingSolsCSV = None 
+InterpolationMode = LERP 
+
+[Deconv]
+Mode = HMP 
+MaxMajorIter = 20 
+MaxMinorIter = 20000 
+AllowNegative = False 
+Gain = 0.1 
+FluxThreshold = 0.0 
+CycleFactor = 0.0 
+RMSFactor = 4.0 
+PeakFactor = 0.15 
+PrevPeakFactor = 0.0 
+NumRMSSamples = 10000 
+ApproximatePSF = 0 
+PSFBox = auto 
+
+[Mask]
+External = None 
+Auto = 1 
+AutoRMSFactor = 3 
+SigTh = 4 
+FluxImageType = ModelConv 
+
+[Noise]
+MinStats = [60, 2] 
+BrutalHMP = True 
+
+[HMP]
+Alpha = [-1.0, 1.0, 11] 
+Scales = [0] 
+Ratios = [''] 
+NTheta = 6 
+SolverMode = PI 
+AllowResidIncrease = 0.1 
+MajorStallThreshold = 0.8 
+Taper = 0 
+Support = 0 
+PeakWeightImage = None 
+Kappa = 0.0 
+OuterSpaceTh = 2.0 
+FractionRandomPeak = None 
+
+[Hogbom]
+PolyFitOrder = 4 
+LinearPeakfinding = Joint 
+
+[WSCMS]
+NumFreqBasisFuncs = 4 
+MultiScale = True 
+MultiScaleBias = 0.55 
+ScaleBasis = Gauss 
+Scales = None 
+MaxScale = 250 
+NSubMinorIter = 250 
+SubMinorPeakFact = 0.85 
+MinorStallThreshold = 1e-07 
+MinorDivergenceFactor = 1.3 
+AutoMask = True 
+AutoMaskThreshold = None 
+AutoMaskRMSFactor = 3 
+CacheSize = 3 
+Padding = 1.2 
+
+[Montblanc]
+TensorflowServerTarget =  
+LogFile = None 
+MemoryBudget = 4.0 
+LogLevel = WARNING 
+SolverDType = double 
+DriverVersion = tf 
+
+[SSDClean]
+Parallel = True 
+IslandDeconvMode = GA 
+SSDSolvePars = ['S', 'Alpha'] 
+SSDCostFunc = ['Chi2', 'MinFlux'] 
+BICFactor = 0.0 
+ArtifactRobust = False 
+ConvFFTSwitch = 1000 
+NEnlargePars = 0 
+NEnlargeData = 2 
+RestoreMetroSwitch = 0 
+MinMaxGroupDistance = [10, 50] 
+MaxIslandSize = 0 
+InitType = HMP 
+
+[SSD2]
+PolyFreqOrder = 2 
+SolvePars = ['Poly'] 
+InitType = ['HMP', 'MultiSlice:Orieux'] 
+ConvexifyIslands = 1 
+NLastCyclesDeconvAll = 1 
+
+[MultiSliceDeconv]
+Type = MORESANE 
+PolyFitOrder = 2 
+
+[GAClean]
+NSourceKin = 50 
+NMaxGen = 50 
+MinSizeInit = 10 
+AlphaInitHMP = [-4.0, 1.0, 6] 
+ScalesInitHMP = [0, 1, 2, 4, 8, 16, 24, 32] 
+GainInitHMP = 0.1 
+RatiosInitHMP = [''] 
+NThetaInitHMP = 4 
+MaxMinorIterInitHMP = 10000 
+AllowNegativeInitHMP = False 
+RMSFactorInitHMP = 3.0 
+ParallelInitHMP = True 
+NCPU = 0 
+
+[MORESANE]
+NMajorIter = 200 
+NMinorIter = 200 
+Gain = 0.1 
+ForcePositive = True 
+SigmaCutLevel = 1 
+
+[Log]
+Memory = False 
+Boring = False 
+Append = False 
+
+[Debug]
+PauseWorkers = False 
+FacetPhaseShift = [0.0, 0.0] 
+PrintMinorCycleRMS = False 
+DumpCleanSolutions = 0 
+DumpCleanPostageStamps =  
+CleanStallThreshold = 0.0 
+MemoryGreedy = True 
+APPVerbose = 0 
+Pdb = auto 
+
+[Misc]
+RandomSeed = None 
+ParsetVersion = 0.2 
+ConserveMemory = 0 
+IgnoreDeprecationMarking = False 
+

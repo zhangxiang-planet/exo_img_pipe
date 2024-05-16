@@ -48,6 +48,9 @@ chan_per_SB = 12
 # the lowest SB we use
 SB_min = 92
 
+# The region file we use for A-team removal
+region_file = "/home/xzhang/software/exo_img_pipe/regions/CasA.reg"
+
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
 direction_threshold_target = 5
@@ -498,68 +501,68 @@ def subtract_Ateam(exo_dir: str):
     # Step 1: Set the environment
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
-    # Modify the code to use GSB.MS, rather than multiple MSB???.MS files
-    # exo_MSB = glob.glob(postprocess_dir + exo_dir + '/MSB*.MS')
-    # exo_MSB.sort()
-    # num_MSB = len(exo_MSB)
+    # we need the number of exo_SB for the following steps
+    exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+    num_SB = len(exo_SB)
 
-    # for i in range(num_MSB):
+    # modify the code to use GSB.MS, rather than multiple MSB???.MS files
     cmd_ddf = (
-        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName DI_DATA --Output-Name {postprocess_dir}/{exo_dir}/GSB_Image_DI '
-        f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 '
-        '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-        '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Beam-Model NENUFAR'
+        f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName DATA --Output-Name {postprocess_dir}/{exo_dir}/Image_DI_Bis '
+        f'--Cache-Reset 1 --Cache-Dir . --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 5 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
+        f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model NENUFAR --Beam-NBand {num_SB} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
+        f'--Freq-NBand {num_SB} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 800 --Image-Cell 180 --Data-ChunkHours 0.5'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
 
-        # if i < 2:
-        #     cmd_kms = (
-        #         f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-        #         f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-        #         '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
-        #     )
-        #     combined_kms = f"{singularity_command} {cmd_kms}"
-        #     subprocess.run(combined_kms, shell=True, check=True)
-        # else:
-        #     cmd_kms = (
-        #         f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_DI '
-        #         f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-        #         '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
-        #     )
-        #     combined_kms = f"{singularity_command} {cmd_kms}"
-        #     subprocess.run(combined_kms, shell=True, check=True)
+    # create a mask for SSD2 to deconvolve every source (because --Mask-Auto=1 is not as good)
+    cmd_mask = (
+        f'MakeMask.py --RestoredIm {postprocess_dir}/{exo_dir}/Image_DI_Bis.app.restored.fits --Box 100,2 --Th 7'
+    )
+    combined_mask = f"{singularity_command} {cmd_mask}"
+    subprocess.run(combined_mask, shell=True, check=True)
+
+    # Continue with deconvolution, starting from the last residual (initialising model with the DicoModel generated in the previous step
+    cmd_ddf = (
+        f'DDF.py {postprocess_dir}/{exo_dir}/Image_DI_Bis.parset --Output-Name {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper --Cache-Reset 0 --Mask-Auto 0 --Mask-External {postprocess_dir}/{exo_dir}/Image_DI_Bis.app.restored.fits.mask.fits '
+        f'--Cache-Dirty ForceResidual --Cache-PSF Force --Predict-InitDicoModel {postprocess_dir}/{exo_dir}/Image_DI_Bis.DicoModel'
+    )
+    combined_ddf = f"{singularity_command} {cmd_ddf}"
+    subprocess.run(combined_ddf, shell=True, check=True)
+
+    # Create a mask to remove the ATeam from the DicoModel
+    cmd_mask = (
+        f'MakeMask.py --RestoredIm {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper.app.restored.fits --Box 100,2 --Th 10000 --ds9Mask {region_file}'
+    )
+    combined_mask = f"{singularity_command} {cmd_mask}"
+    subprocess.run(combined_mask, shell=True, check=True)
+    
+    # Remove ATeam from DicoModel
+    cmd_maskdico = (
+        f'MaskDicoModel.py --InDicoModel {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper.DicoModel --OutDicoModel {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper.filterATeam.DicoModel --MaskName {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper.app.restored.fits.mask.fits --InvertMask 1'
+    )
+    combined_maskdico = f"{singularity_command} {cmd_maskdico}"
+    subprocess.run(combined_maskdico, shell=True, check=True)
 
     cmd_kms = (
-        f'kMS.py --MSName {postprocess_dir}/{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/GSB_Image_DI '
-        f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 45 --NChanSols 45 '
-        '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
+        f'kMS.py --MSName {postprocess_dir}/{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper --dt 0.5 --InCol DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ '
+        f'--NChanPredictPerMS {num_SB} --NChanSols {num_SB} --NChanBeamPerMS {num_SB} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
+        f'--BeamModel NENUFAR --DicoModel {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --PhasedArrayMode AE'
     )
+    combined_kms = f"{singularity_command} {cmd_kms}"
+    subprocess.run(combined_kms, shell=True, check=True)
 
-        # another round of ddf and kms (Removed. Selfcal not working well. Just make images for scientific analysis)
-    # cmd_ddf = (
-    #     f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/GSB_Image_SUB '
-    #     f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Dirty --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 '
-    #     '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-    #     '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --RIME-PolMode=IV --Beam-Model NENUFAR'
+
+
+
+    # cmd_kms = (
+    #     f'kMS.py --MSName {postprocess_dir}/{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/GSB_Image_DI '
+    #     f'--dt 6 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS 45 --NChanSols 45 '
+    #     '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --BeamModel NENUFAR'
     # )
-    # combined_ddf = f"{singularity_command} {cmd_ddf}"
-    # subprocess.run(combined_ddf, shell=True, check=True)
 
-        # # # make model
-        # # cmd_mkmodel = (
-        # #     f'MakeModel.py --BaseImageName={postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB --NCluster=1 --OutSkyModel={postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_SUB.npy'
-        # # )
-        # # combined_mkmodel = f"{singularity_command} {cmd_mkmodel}"
-        # # subprocess.run(combined_mkmodel, shell=True, check=True)
 
-        # cmd_kms = (
-        #     f'kMS.py --MSName {exo_MSB[i]} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}/{exo_dir}/MSB{str(i).zfill(2)}_Image_SUB '
-        #     f'--dt 2 --InCol KMS_SUB --OutCol SELFCAL_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR2 --NodesFile Single --DDFCacheDir={postprocess_dir}/{exo_dir}/ --NChanPredictPerMS {chunk_num} --NChanSols {chunk_num} '
-        #     '--OutSolsName DD2 --UVMinMax 0.067,1000 --WeightInCol=BRIGGS_WEIGHT0 --ApplyMode P --ApplyToDir 0'
-        # )
-        # combined_kms = f"{singularity_command} {cmd_kms}"
-        # subprocess.run(combined_kms, shell=True, check=True)
 
 # Task 6. DynspecMS
 
@@ -574,14 +577,20 @@ def dynspec(exo_dir: str):
     # num_MSB = len(exo_MSB)
 
     cmd_ddf = (
-        f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
-        f'--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
-        '--Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 --Mask-Auto 1 --Mask-SigTh 4 '
-        '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
+        f'DDF.py {postprocess_dir}/{exo_dir}/Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}/{exo_dir}/Image_DI_Bis.subtract --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB '
+        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Predict-ColName DDF_PREDICT'
     )
-
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
+
+    # cmd_ddf = (
+    #     f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
+    #     f'--Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand 45 --Freq-NDegridBand 0 --Selection-UVRangeKm [0.067,1000] '
+    #     '--Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 --Mask-Auto 1 --Mask-SigTh 4 '
+    #     '--Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all --Weight-OutColName BRIGGS_WEIGHT --Output-Also all --Predict-ColName DDF_PREDICT'
+    # )
+
+
 
     target_str = exo_dir.split("_")[4:-1]
     if len(target_str) > 1:
@@ -594,7 +603,7 @@ def dynspec(exo_dir: str):
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}/{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol BRIGGS_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
+        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
