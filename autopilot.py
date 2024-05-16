@@ -288,15 +288,25 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     with open(f'{postprocess_dir}/{cal_dir}/All_MAs.txt', 'w') as f:
         f.write(','.join(antennas))
 
-    # Flag the bad MAs
-    with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
-        flag_content = template_flag.read()
+    # # Flag the bad MAs
+    # with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
+    #     flag_content = template_flag.read()
 
-    modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
+    # modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
+
+    # # Write the modified content to a new file
+    # with open(f'{postprocess_dir}/{cal_dir}/DPPP-flagant.parset', 'w') as flag_file:
+    #     flag_file.write(modified_flag_content)
+
+    # remove the bad MAs rather than flagging them
+    with open(f'{pipe_dir}/templates/DPPP-removeant.parset', 'r') as template_remove:
+        remove_content = template_remove.read()
+
+    modified_remove_content = remove_content.replace('MA_TO_REMOVE', bad_MAs)
 
     # Write the modified content to a new file
-    with open(f'{postprocess_dir}/{cal_dir}/DPPP-flagant.parset', 'w') as flag_file:
-        flag_file.write(modified_flag_content)
+    with open(f'{postprocess_dir}/{cal_dir}/DPPP-removeant.parset', 'w') as remove_file:
+        remove_file.write(modified_remove_content)
 
     # Stack the GSB.MS
     msb_files = glob.glob(f"{postprocess_dir}/{cal_dir}/MSB*.MS")
@@ -305,8 +315,18 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     cmd_stack = f"DP3 {pipe_dir}/templates/DPPP-stack.parset msin=[{msb_files_str}] msout={postprocess_dir}/{cal_dir}/GSB.MS"
     subprocess.run(cmd_stack, shell=True, check=True)
 
-    cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={postprocess_dir}/{cal_dir}/GSB.MS"
-    subprocess.run(cmd_flagMA, shell=True, check=True)
+    # cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={postprocess_dir}/{cal_dir}/GSB.MS"
+    # subprocess.run(cmd_flagMA, shell=True, check=True)
+
+    # remove the bad MAs rather than flagging them, notice that we need to generate a new GSB.MSB file
+    cmd_removeMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-removeant.parset msin={postprocess_dir}/{cal_dir}/GSB.MS msout={postprocess_dir}/{cal_dir}/GSB.MSB"
+    subprocess.run(cmd_removeMA, shell=True, check=True)
+    # remove original MSB
+    cmd_remo_GSB = f"rm -rf {postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_remo_GSB, shell=True, check=True)
+    # rename the new MSB
+    cmd_rename_GSB = f"mv {postprocess_dir}/{cal_dir}/GSB.MSB {postprocess_dir}/{cal_dir}/GSB.MS"
+    subprocess.run(cmd_rename_GSB, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
     cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{cal_dir}/GSB.MS flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
@@ -368,6 +388,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     # find the antennas that are not in calibration
     remove_antennas = [ant for ant in exo_antennas if ant not in cal_antennas]
 
+    # since we remove bad MAs rather than flag them, we need to combine the bad MAs and the antennas to be removed
+    remove_antennas = list(set(remove_antennas + bad_MAs.split(',')))
+    remove_antennas.sort()
+
     # only write the file when there are antennas to be removed
     if len(remove_antennas) > 0:
         remove_MA_names = ','.join(remove_antennas)
@@ -381,15 +405,15 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         with open(f'{postprocess_dir}/{exo_dir}/DPPP-removeant.parset', 'w') as remove_file:
             remove_file.write(modified_remove_content)
 
-    # Flag the bad MAs
-    with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
-        flag_content = template_flag.read()
+    # # Flag the bad MAs
+    # with open(f'{pipe_dir}/templates/DPPP-flagant.parset', 'r') as template_flag:
+    #     flag_content = template_flag.read()
 
-    modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
+    # modified_flag_content = flag_content.replace('MA_TO_FLAG', bad_MAs)
 
-    # Write the modified content to a new file
-    with open(f'{postprocess_dir}/{exo_dir}/DPPP-flagant.parset', 'w') as flag_file:
-        flag_file.write(modified_flag_content)
+    # # Write the modified content to a new file
+    # with open(f'{postprocess_dir}/{exo_dir}/DPPP-flagant.parset', 'w') as flag_file:
+    #     flag_file.write(modified_flag_content)
 
     # Determine the number of full chunks of chunk_num we can form
     # num_chunks = len(exo_SB) // chunk_num
@@ -435,8 +459,8 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         cmd_rename_GSB = f"mv {postprocess_dir}/{exo_dir}/GSB.MSB {postprocess_dir}/{exo_dir}/GSB.MS"
         subprocess.run(cmd_rename_GSB, shell=True, check=True)
 
-    cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={postprocess_dir}/{exo_dir}/GSB.MS"
-    subprocess.run(cmd_flagMA, shell=True, check=True)
+    # cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={postprocess_dir}/{exo_dir}/GSB.MS"
+    # subprocess.run(cmd_flagMA, shell=True, check=True)
 
     # Construct the command string with the msin argument and the msout argument
     cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{exo_dir}/GSB.MS flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
