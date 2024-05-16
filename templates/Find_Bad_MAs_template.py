@@ -200,16 +200,18 @@ def find_bad_MAs(path_to_base_dir):
 
     # Flag MR102NEN for quality reason, MR103NEN for UV distribution reasons
 
-    always_bad_antennas = [b'MR102NEN', b'MR103NEN']
+    # Try keeping MR102NEN and MR103NEN for now
 
-    # Iterate over each always_bad_antenna
-    for always_bad_antenna in always_bad_antennas:
-        # Find the index of always_bad_antenna in the ant array
-        index_always_bad = np.where(ant == always_bad_antenna)[0]
+    # always_bad_antennas = [b'MR102NEN', b'MR103NEN']
 
-        # If always_bad_antenna is found in ant, add its index to bad_antennas
-        if index_always_bad.size > 0:
-            bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
+    # # Iterate over each always_bad_antenna
+    # for always_bad_antenna in always_bad_antennas:
+    #     # Find the index of always_bad_antenna in the ant array
+    #     index_always_bad = np.where(ant == always_bad_antenna)[0]
+
+    #     # If always_bad_antenna is found in ant, add its index to bad_antennas
+    #     if index_always_bad.size > 0:
+    #         bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
 
 
     # print(bad_antennas)
