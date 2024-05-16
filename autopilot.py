@@ -36,9 +36,11 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 # How many channels per SB
-chan_per_SB_origin = 12
-ave_chan = 4
-chan_per_SB = int(chan_per_SB_origin/ave_chan)
+# chan_per_SB_origin = 12
+# ave_chan = 4
+# chan_per_SB = int(chan_per_SB_origin/ave_chan)
+
+chan_per_SB = 12
 
 # Avoid bad channel making KMS hang
 # bin_per_MSB = chunk_num // 3
@@ -233,7 +235,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
@@ -438,7 +440,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
@@ -477,6 +479,17 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     # second round of aoflagger
     cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
     subprocess.run(cmd_aoflagger, shell=True, check=True)
+
+    # Now we average the GSB.MS into a smaller size
+    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
+    subprocess.run(cmd_avg, shell=True, check=True)
+
+    # replace the GSB.MS with the averaged one
+    cmd_repl = f"rm -rf {postprocess_dir}/{exo_dir}/GSB.MS"
+    subprocess.run(cmd_repl, shell=True, check=True)
+
+    cmd_repl = f"mv {postprocess_dir}/{exo_dir}/GSB_avg.MS {postprocess_dir}/{exo_dir}/GSB.MS"
+    subprocess.run(cmd_repl, shell=True, check=True)
 
 # Task 5. Subtract A-team from field
 
