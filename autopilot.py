@@ -59,7 +59,7 @@ dynamic_threshold_target = 5
 # snr_threshold = 7
 # snr_threshold_target = 6
 time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
-freq_windows = [12, 24, 48, 96, 192, 384, 768]
+freq_windows = [6, 12, 24, 48, 96, 192, 384]
 # 30 sec (5 min) 
 # 600 kHz (6 MHz)
 

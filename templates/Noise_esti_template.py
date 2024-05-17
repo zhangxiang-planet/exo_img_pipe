@@ -125,21 +125,29 @@ def generate_and_save_weight_map_v(dynspec_directory, snr_fits_directory):
                 # replace with mean and std
                 snr_map = (stokes_v_data - mean_map) / std_map
 
-                # Initialize a list to hold good chunks
-                good_chunks = []
-                i = 0
-                while i < snr_map.shape[0]:
-                    # Take a chunk of 36 rows
-                    good_chunk = snr_map[i:i + 36]
-                    good_chunks.append(good_chunk)
-                    i += 36
+                # # Initialize a list to hold good chunks
+                # good_chunks = []
+                # i = 0
+                # while i < snr_map.shape[0]:
+                #     # Take a chunk of 36 rows
+                #     good_chunk = snr_map[i:i + 36]
+                #     good_chunks.append(good_chunk)
+                #     i += 36
 
-                    # Skip bad channels (short, entirely zero chunks)
-                    while i < snr_map.shape[0] and np.all(np.isnan(snr_map[i])):
-                        i += 1
+                #     # Skip bad channels (short, entirely zero chunks)
+                #     while i < snr_map.shape[0] and np.all(np.isnan(snr_map[i])):
+                #         i += 1
 
-                # Concatenate all good chunks to form the new snr_map
-                snr_map_good = np.concatenate(good_chunks, axis=0)
+                # # Concatenate all good chunks to form the new snr_map
+                # snr_map_good = np.concatenate(good_chunks, axis=0)
+
+                # removing Nan rows at the end of the snr_map
+                i = snr_map.shape[0] - 1
+                while i >= 0:
+                    if np.all(np.isnan(snr_map[i])):
+                        i -= 1
+
+                snr_map_good = snr_map[:i+1]
                 
                 # Prepare the HDU for the SNR map
                 snr_hdu = fits.PrimaryHDU(snr_map_good)
@@ -200,20 +208,28 @@ def generate_and_save_weight_map_i(dynspec_directory, snr_fits_directory):
                 snr_map = (stokes_i_data - mean_map) / std_map
 
                 # Initialize a list to hold good chunks
-                good_chunks = []
-                i = 0
-                while i < snr_map.shape[0]:
-                    # Take a chunk of 36 rows
-                    good_chunk = snr_map[i:i + 36]
-                    good_chunks.append(good_chunk)
-                    i += 36
+                # good_chunks = []
+                # i = 0
+                # while i < snr_map.shape[0]:
+                #     # Take a chunk of 36 rows
+                #     good_chunk = snr_map[i:i + 36]
+                #     good_chunks.append(good_chunk)
+                #     i += 36
 
-                    # Skip bad channels (short, entirely zero chunks)
-                    while i < snr_map.shape[0] and np.all(np.isnan(snr_map[i])):
-                        i += 1
+                #     # Skip bad channels (short, entirely zero chunks)
+                #     while i < snr_map.shape[0] and np.all(np.isnan(snr_map[i])):
+                #         i += 1
 
-                # Concatenate all good chunks to form the new snr_map
-                snr_map_good = np.concatenate(good_chunks, axis=0)
+                # # Concatenate all good chunks to form the new snr_map
+                # snr_map_good = np.concatenate(good_chunks, axis=0)
+
+                # removing Nan rows at the end of the snr_map
+                i = snr_map.shape[0] - 1
+                while i >= 0:
+                    if np.all(np.isnan(snr_map[i])):
+                        i -= 1
+
+                snr_map_good = snr_map[:i+1]
                 
                 # Prepare the HDU for the SNR map
                 snr_hdu = fits.PrimaryHDU(snr_map_good)
@@ -344,7 +360,7 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
     t_window_sec = t_window * 8
 
     # for f_window in freq_windows:
-    f_window_khz = f_window * 60
+    f_window_khz = f_window * 195
 
     # Loop through each FITS file in the directory
     for filepath in glob.glob(f'{convol_directory}/convol_{t_window_sec}s_{f_window_khz}kHz*.fits'):
@@ -390,7 +406,7 @@ def calculate_noise_for_window(convol_directory, noise_directory, t_window, f_wi
 def source_detection(convol_directory, noise_directory, t_window, f_window, detection_directory, direction_threshold, direction_threshold_target, dynamic_threshold, dynamic_threshold_target):
 
     t_window_sec = t_window * 8
-    f_window_khz = f_window * 60
+    f_window_khz = f_window * 195
 
     # with fits.open(f'{noise_directory}/median_{t_window_sec}s_{f_window_khz}kHz.fits') as hdul:
     #     median_map = hdul[0].data
