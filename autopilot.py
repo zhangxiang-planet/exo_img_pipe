@@ -36,11 +36,11 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 # How many channels per SB
-# chan_per_SB_origin = 12
-# ave_chan = 4
-# chan_per_SB = int(chan_per_SB_origin/ave_chan)
+chan_per_SB_origin = 12
+ave_chan = 4
+chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
-chan_per_SB = 12
+# chan_per_SB = 12
 
 # Avoid bad channel making KMS hang
 # bin_per_MSB = chunk_num // 3
@@ -58,8 +58,8 @@ dynamic_threshold = 6
 dynamic_threshold_target = 5
 # snr_threshold = 7
 # snr_threshold_target = 6
-time_windows = [6, 12, 24, 48, 96, 192, 384, 768, 1536]
-freq_windows = [6, 12, 24, 48, 96, 192, 384]
+time_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
+freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 # 30 sec (5 min) 
 # 600 kHz (6 MHz)
 
@@ -206,7 +206,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
     # Replace placeholders in the template content
     modified_content = template_content.replace('CALI_MODEL', cali_model)
-    modified_content = modified_content.replace('CHAN_PER_SB', chan_per_SB)
+    modified_content = modified_content.replace('CHAN_PER_SB', str(chan_per_SB))
 
     # Write the modified content to a new file
     with open(f'{postprocess_dir}/{cal_dir}/cali.toml', 'w') as cali_file:
@@ -215,8 +215,8 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     # Determine the number of full chunks of chunk_num we can form
     # num_chunks = len(cali_SB) // chunk_num
 
-    cmd_sky_dir = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/"
-    subprocess.run(cmd_sky_dir, shell=True, check=True)
+    # cmd_sky_dir = f"mkdir {postprocess_dir}/{cal_dir}/sky_models/"
+    # subprocess.run(cmd_sky_dir, shell=True, check=True)
 
     # Group files by their tens place
     groups = {}
@@ -238,7 +238,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
@@ -443,7 +443,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS

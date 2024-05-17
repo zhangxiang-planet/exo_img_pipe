@@ -282,8 +282,8 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
         for t_window in time_windows:
             for f_window in freq_windows:
                 # # Apply Gaussian filter
-                sigma_t = t_window / 6  # Standard deviation for time
-                sigma_f = f_window / 6  # Standard deviation for frequency
+                sigma_t = t_window * 1 # Standard deviation for time
+                sigma_f = f_window * 1 # Standard deviation for frequency
                 # filtered_snr = gaussian_filter(snr_data, sigma=[sigma_f, sigma_t])
 
                 sigma = [sigma_f, sigma_t]
@@ -292,6 +292,12 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
 
                 kernel_t = int(sigma_t * 3)
                 kernel_f = int(sigma_f * 3)
+
+                # make suree that kernel_t and kernel_f > 0
+                if kernel_t == 0:
+                    kernel_t = 1
+                if kernel_f == 0:
+                    kernel_f = 1
 
                 convol_data[:kernel_f, :] = np.nan
                 convol_data[-kernel_f:, :] = np.nan
@@ -316,7 +322,7 @@ def apply_gaussian_filter(filename, dynamic_directory, time_windows, freq_window
                 #     transient_detected_files.append(filename)
 
                 t_window_sec = t_window * 8
-                f_window_khz = f_window * 60
+                f_window_khz = f_window * 195
                 
                 # Save the filtered SNR map based on conditions
                 prefix = "convol"
