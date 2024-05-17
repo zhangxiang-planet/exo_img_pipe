@@ -46,7 +46,7 @@ chan_per_SB = 12
 # bin_per_MSB = chunk_num // 3
 
 # the lowest SB we use
-SB_min = 92
+SB_min = 260 # 92
 
 # The region file we use for A-team removal
 region_file = "/home/xzhang/software/exo_img_pipe/regions/CasA.reg"
