@@ -505,12 +505,13 @@ def subtract_Ateam(exo_dir: str):
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
     exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     num_SB = len(exo_SB)
+    num_beam = int(num_SB / 5)
 
     # modify the code to use GSB.MS, rather than multiple MSB???.MS files
     cmd_ddf = (
         f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Data-ColName DATA --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis '
         f'--Cache-Reset 1 --Cache-Dir . --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 5 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
-        f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model NENUFAR --Beam-NBand {num_SB} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
+        f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
         f'--Freq-NBand {num_SB} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 800 --Image-Cell 180 --Data-ChunkHours 0.5'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
@@ -547,7 +548,7 @@ def subtract_Ateam(exo_dir: str):
 
     cmd_kms = (
         f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper --dt 0.5 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
-        f'--NChanPredictPerMS {num_SB} --NChanSols {num_SB} --NChanBeamPerMS {num_SB} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
+        f'--NChanPredictPerMS {num_SB} --NChanSols {num_SB} --NChanBeamPerMS {num_beam} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
         f'--BeamModel NENUFAR --DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --PhasedArrayMode AE'
     )
     combined_kms = f"{singularity_command} {cmd_kms}"
