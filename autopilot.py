@@ -981,20 +981,20 @@ def clearup(exo_dir: str):
     cmd_image_dir = f'mkdir {postprocess_dir}/{exo_dir}/archive_images/'
     subprocess.run(cmd_image_dir, shell=True, check=True)
 
-    # third, move the images to the directory
-    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/MSB??_Image_SUB.dirty*.fits {postprocess_dir}/{exo_dir}/archive_images/' 
-    subprocess.run(cmd_mv_image, shell=True, check=True)
+    # # third, move the images to the directory
+    # cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/MSB??_Image_SUB.dirty*.fits {postprocess_dir}/{exo_dir}/archive_images/' 
+    # subprocess.run(cmd_mv_image, shell=True, check=True)
 
     # fourth, move some other images to the directory
-    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/Image_SUB.app.*.fits {postprocess_dir}/{exo_dir}/archive_images/'
+    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/Image_DI_Bis.subtract.*.fits {postprocess_dir}/{exo_dir}/archive_images/'
     subprocess.run(cmd_mv_image, shell=True, check=True)
 
     # fifth, remove the MSB files and Image_SUB files
-    cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB* {postprocess_dir}/{exo_dir}/Image_SUB.*"
+    cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB* {postprocess_dir}/{exo_dir}/GSB* {postprocess_dir}/{exo_dir}/Image_SUB.*"
     subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
     # sixth, remove the other files
-    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_DynSpecs_*.tgz {postprocess_dir}/{exo_dir}/mslist.txt.ddfcache"
+    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_DynSpecs_*.tgz {postprocess_dir}/{exo_dir}/*.ddfcache"
     subprocess.run(cmd_remo_other, shell=True, check=True)
 
 ###### Here come the flows (functions calling the tasks) #######
