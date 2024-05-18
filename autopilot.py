@@ -505,7 +505,7 @@ def subtract_Ateam(exo_dir: str):
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
     exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     num_SB = len(exo_SB)
-    num_beam = int(num_SB / 5)
+    num_beam = int(num_SB / 10)
 
     # modify the code to use GSB.MS, rather than multiple MSB???.MS files
     cmd_ddf = (
