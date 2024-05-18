@@ -202,16 +202,16 @@ def find_bad_MAs(path_to_base_dir):
 
     # Try keeping MR102NEN and MR103NEN for now
 
-    always_bad_antennas = [b'MR102NEN', b'MR103NEN']
+    # always_bad_antennas = [b'MR102NEN', b'MR103NEN']
 
-    # Iterate over each always_bad_antenna
-    for always_bad_antenna in always_bad_antennas:
-        # Find the index of always_bad_antenna in the ant array
-        index_always_bad = np.where(ant == always_bad_antenna)[0]
+    # # Iterate over each always_bad_antenna
+    # for always_bad_antenna in always_bad_antennas:
+    #     # Find the index of always_bad_antenna in the ant array
+    #     index_always_bad = np.where(ant == always_bad_antenna)[0]
 
-        # If always_bad_antenna is found in ant, add its index to bad_antennas
-        if index_always_bad.size > 0:
-            bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
+    #     # If always_bad_antenna is found in ant, add its index to bad_antennas
+    #     if index_always_bad.size > 0:
+    #         bad_antennas = np.unique(np.append(bad_antennas, index_always_bad))
 
 
     # print(bad_antennas)
