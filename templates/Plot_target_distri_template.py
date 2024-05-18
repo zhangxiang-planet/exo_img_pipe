@@ -8,7 +8,7 @@ from astropy.io import fits
 def plot_target_distribution(postprocess_dir, exo_dir):
 
     target_list = np.genfromtxt(f'{postprocess_dir}/{exo_dir}/target.txt', dtype='str', delimiter=',')
-    sub_img = f'{postprocess_dir}/{exo_dir}/Image_SUB.app.restored.fits'
+    sub_img = f'{postprocess_dir}/{exo_dir}/Image_DI_Bis.subtract.app.restored.fits'
 
     data = fits.getdata(sub_img)
     wcs = WCS(fits.getheader(sub_img)).dropaxis(3).dropaxis(2)
