@@ -144,7 +144,9 @@ def generate_and_save_weight_map_v(dynspec_directory, snr_fits_directory):
                 # removing Nan rows at the end of the snr_map
                 i = snr_map.shape[0] - 1
                 while i >= 0:
-                    if np.all(np.isnan(snr_map[i])):
+                    # if np.all(np.isnan(snr_map[i])):
+                    # Find rows with zeros, not NaNs
+                    if np.all(snr_map[i] == 0):
                         i -= 1
 
                 snr_map_good = snr_map[:i+1]
@@ -226,7 +228,9 @@ def generate_and_save_weight_map_i(dynspec_directory, snr_fits_directory):
                 # removing Nan rows at the end of the snr_map
                 i = snr_map.shape[0] - 1
                 while i >= 0:
-                    if np.all(np.isnan(snr_map[i])):
+                    # if np.all(np.isnan(snr_map[i])):
+                    # Find rows with zeros, not NaNs
+                    if np.all(snr_map[i] == 0):
                         i -= 1
 
                 snr_map_good = snr_map[:i+1]

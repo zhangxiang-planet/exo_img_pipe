@@ -47,6 +47,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
 SB_min = 260 # 92
+SB_ave_kms = 5
 
 # The region file we use for A-team removal
 region_file = "/home/xzhang/software/exo_img_pipe/regions/CasA.reg"
@@ -197,6 +198,11 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
     cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     cali_SB.sort()
 
+    # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
+    num_SB = len(cali_SB)
+    num_remove = num_SB % SB_ave_kms
+    cali_SB = cali_SB[num_remove:]
+
     # Read the template file
     with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
         template_content = template_file.read()
@@ -282,6 +288,11 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
     cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     cali_SB.sort()
+
+    # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
+    num_SB = len(cali_SB)
+    num_remove = num_SB % SB_ave_kms
+    cali_SB = cali_SB[num_remove:]
 
     # Use casatools to get the list of antennas observed
     tb = table()
@@ -378,6 +389,11 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
     exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     exo_SB.sort()
+
+    # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
+    num_SB = len(exo_SB)
+    num_remove = num_SB % SB_ave_kms
+    exo_SB = exo_SB[num_remove:]
 
     # we need a list of antennas to be compared with the antennas in calibration
     # Use casatools to get the list of antennas observed
@@ -504,15 +520,22 @@ def subtract_Ateam(exo_dir: str):
     # we need the number of exo_SB for the following steps
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
     exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+
+    # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
     num_SB = len(exo_SB)
-    num_beam = int(num_SB / 2)
+    num_remove = num_SB % SB_ave_kms
+    exo_SB = exo_SB[num_remove:]
+
+    # we need the number of beams for the following steps
+    num_SB = len(exo_SB)
+    num_beam = int(num_SB / SB_ave_kms)
 
     # modify the code to use GSB.MS, rather than multiple MSB???.MS files
     cmd_ddf = (
         f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Data-ColName DATA --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis '
         f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 5 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
         f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
-        f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 800 --Image-Cell 180 --Data-ChunkHours 0.5'
+        f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120 --Data-ChunkHours 0.5'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
