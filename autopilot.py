@@ -20,7 +20,7 @@ matplotlib.use('Agg')
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/2023/03/*B2217+47_IMAGE"
+watch_dir = "/databf/nenufar-nri/LT02/202?/??/*HD_189733*"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
@@ -46,11 +46,11 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 # bin_per_MSB = chunk_num // 3
 
 # the lowest SB we use
-SB_min = 260 # 92
+SB_min = 92 # 92
 SB_ave_kms = 5
 
 # The region file we use for A-team removal
-region_file = "/home/xzhang/software/exo_img_pipe/regions/CasA.reg"
+region_file = "/home/xzhang/software/exo_img_pipe/regions/CygA.reg"
 
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
@@ -570,7 +570,7 @@ def subtract_Ateam(exo_dir: str):
     subprocess.run(combined_maskdico, shell=True, check=True)
 
     cmd_kms = (
-        f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper --dt 0.5 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
+        f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper --dt 1 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
         f'--NChanPredictPerMS {num_beam} --NChanSols {num_beam} --NChanBeamPerMS {num_beam} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
         f'--BeamModel NENUFAR --DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --PhasedArrayMode AE'
     )
@@ -1010,23 +1010,23 @@ def clearup(exo_dir: str):
     # subprocess.run(cmd_mv_image, shell=True, check=True)
 
     # fourth, move some other images to the directory
-    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/Image_DI_Bis.subtract.*.fits {postprocess_dir}/{exo_dir}/archive_images/'
+    cmd_mv_image = f'mv {postprocess_dir}/{exo_dir}/Image_DI_Bis.subtract.app.*.fits {postprocess_dir}/{exo_dir}/archive_images/'
     subprocess.run(cmd_mv_image, shell=True, check=True)
 
     # fifth, remove the MSB files and Image_SUB files
-    cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB* {postprocess_dir}/{exo_dir}/GSB* {postprocess_dir}/{exo_dir}/Image.*"
+    cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB* {postprocess_dir}/{exo_dir}/GSB* {postprocess_dir}/{exo_dir}/Image*"
     subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
     # sixth, remove the other files
-    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_DynSpecs_*.tgz {postprocess_dir}/{exo_dir}/*.ddfcache"
+    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_DynSpecs_*.tgz"
     subprocess.run(cmd_remo_other, shell=True, check=True)
 
 ###### Here come the flows (functions calling the tasks) #######
 
 @flow(name="EXO_IMG PIPELINE", log_prints=True)
 def exo_pipe(exo_dir):
-    # with open(lockfile, "w") as f:
-    #     f.write("Processing ongoing")
+    with open(lockfile, "w") as f:
+        f.write("Processing ongoing")
 
     task_copy_calibrator = copy_calibrator_data.submit(exo_dir)
 
@@ -1053,24 +1053,24 @@ def exo_pipe(exo_dir):
 
     source_find_i(exo_dir, time_windows, freq_windows)
 
-    # clearup(exo_dir)
+    clearup(exo_dir)
 
-    # os.remove(lockfile)
+    os.remove(lockfile)
 
 @flow(name='Check Flow', log_prints=True)
 def check_flow():
-    # if os.path.exists(lockfile):
-    #     print("Exiting due to existence of lockfile")
-    #     return Completed(message="Lockfile exists, skipping run.")
+    if os.path.exists(lockfile):
+        print("Exiting due to existence of lockfile")
+        return Completed(message="Lockfile exists, skipping run.")
 
     new_data = check_new_data(watch_dir, postprocess_dir)
 
     if len(new_data) > 0:
         # Trigger the main flow
-        # for unprocessed_data in new_data:
-        #     exo_pipe(unprocessed_data)
+        for unprocessed_data in new_data:
+            exo_pipe(unprocessed_data)
 
-        exo_pipe(new_data[0])
+        # exo_pipe(new_data[0])
 
     return Completed(message="Run completed without issues.")
 
