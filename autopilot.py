@@ -533,7 +533,7 @@ def subtract_Ateam(exo_dir: str):
     # modify the code to use GSB.MS, rather than multiple MSB???.MS files
     cmd_ddf = (
         f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Data-ColName DATA --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis '
-        f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 1 --Deconv-RMSFactor 5 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
+        f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 5 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
         f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
         f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120 --Data-ChunkHours 0.5'
     )
