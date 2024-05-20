@@ -719,8 +719,8 @@ def source_find_v(exo_dir: str, time_windows, freq_windows):
             filename = source.split('/')[-1]
             
             # Extract time and frequency from filename
-            time = int(filename.split('_')[2].replace('s', ''))
-            freq = int(filename.split('_')[3].replace('kHz', ''))
+            time = float(filename.split('_')[2].replace('s', ''))
+            freq = float(filename.split('_')[3].replace('kHz', ''))
             
             # Open FITS file to get SNR
             with fits.open(source) as hdu:
@@ -745,7 +745,7 @@ def source_find_v(exo_dir: str, time_windows, freq_windows):
         time_with_highest_snr = highest_snr_record['time']
         freq_with_highest_snr = highest_snr_record['freq']
 
-        if freq_with_highest_snr > 60 * freq_windows[0]: # and time_with_highest_snr > 8 * time_windows[0]:
+        if freq_with_highest_snr > 195 * freq_windows[0]: # and time_with_highest_snr > 8 * time_windows[0]:
 
             with fits.open(source_with_highest_snr) as hdu:
                 snr_map = hdu[0].data
@@ -897,8 +897,8 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
             filename = source.split('/')[-1]
             
             # Extract time and frequency from filename
-            time = int(filename.split('_')[2].replace('s', ''))
-            freq = int(filename.split('_')[3].replace('kHz', ''))
+            time = float(filename.split('_')[2].replace('s', ''))
+            freq = float(filename.split('_')[3].replace('kHz', ''))
             
             # Open FITS file to get SNR
             with fits.open(source) as hdu:
@@ -923,7 +923,7 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
         time_with_highest_snr = highest_snr_record['time']
         freq_with_highest_snr = highest_snr_record['freq']
 
-        if freq_with_highest_snr > 60 * freq_windows[0]: # and time_with_highest_snr > 8 * time_windows[0]:
+        if freq_with_highest_snr > 195 * freq_windows[0]: # and time_with_highest_snr > 8 * time_windows[0]:
 
             with fits.open(source_with_highest_snr) as hdu:
                 snr_map = hdu[0].data
