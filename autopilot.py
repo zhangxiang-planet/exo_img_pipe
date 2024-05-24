@@ -46,8 +46,8 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 # bin_per_MSB = chunk_num // 3
 
 # the lowest SB we use
-SB_min = 92 # 92
-SB_ave_kms = 5
+SB_min = 106 # 92
+SB_ave_kms = 2
 
 # The region file we use for A-team removal
 region_file = "/home/xzhang/software/exo_img_pipe/regions/CygA.reg"
