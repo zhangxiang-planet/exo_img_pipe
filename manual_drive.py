@@ -256,8 +256,8 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
     subprocess.run(cmd_remo_table, shell=True, check=True)
 
     # remove the SB*.MS files
-    cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS {postprocess_dir}/{cal_dir}/MSB*.MS"
-    subprocess.run(cmd_remo_SB, shell=True, check=True)
+    # cmd_remo_SB = f"rm -rf {postprocess_dir}/{cal_dir}/SB*.MS {postprocess_dir}/{cal_dir}/MSB*.MS"
+    # subprocess.run(cmd_remo_SB, shell=True, check=True)
 
 # Task 4. Apply A-team calibration solution to target
 
