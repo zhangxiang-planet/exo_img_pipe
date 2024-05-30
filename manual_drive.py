@@ -53,7 +53,7 @@ SB_min = 106 # 92
 SB_ave_kms = 5
 
 # The region file we use for A-team removal
-region_file = "/home/xzhang/software/exo_img_pipe/regions/CygA.reg"
+region_file = "/home/xzhang/software/exo_img_pipe/regions/CasA.reg"
 
 # Window and SNR threshold for matched filtering
 direction_threshold = 6
