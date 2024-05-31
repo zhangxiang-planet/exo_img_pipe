@@ -34,13 +34,13 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 cal = 'CAS_A'
-cal_dir = '20230710_040000_20230710_041700_CAS_A_TRACKING'
-exo_dir = '20230710_030000_20230710_040000_HIP111944'
-target_name = 'HIP_111944'
+cal_dir = '20230717_095800_20230717_101100_TAU_A_TRACKING'
+exo_dir = '20230717_101100_20230717_103500_J2000_TRACKING'
+target_name = 'HD_237414'
 
 # How many channels per SB
-chan_per_SB_origin = 12
-ave_chan = 4
+chan_per_SB_origin = 3
+ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # chan_per_SB = 12
