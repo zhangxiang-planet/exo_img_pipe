@@ -33,14 +33,14 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CAS_A'
-cal_dir = '20230717_095800_20230717_101100_TAU_A_TRACKING'
-exo_dir = '20230717_101100_20230717_103500_J2000_TRACKING'
-target_name = 'HD_237414'
+cal = 'VIR_A'
+cal_dir = '20240603_210000_20240603_211600_VIR_A_TRACKING/L1'
+exo_dir = '20240603_170000_20240603_210000_FRB20200120E/L1'
+target_name = 'FRB20200120E'
 
 # How many channels per SB
-chan_per_SB_origin = 3
-ave_chan = 1
+chan_per_SB_origin = 6
+ave_chan = 3
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # chan_per_SB = 12
@@ -381,7 +381,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     subprocess.run(cmd_aoflagger, shell=True, check=True)
 
     # Now we average the GSB.MS into a smaller size
-    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
+    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep=1"
     subprocess.run(cmd_avg, shell=True, check=True)
 
     # replace the GSB.MS with the averaged one
