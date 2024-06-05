@@ -265,3 +265,56 @@ def find_bad_MAs(path_to_base_dir):
     bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
 
     return bad_MA_names
+
+def find_bad_MAs_multi(path_to_base_dir):
+    # Replace 'path_to_base_dir' with the path to the base directory containing the SBxxx.MS folders
+    # path_to_base_dir = './'
+    # amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
+    amplitude_val, phase_val, ant, freq, pol = read_multiple_h5_files(path_to_base_dir)
+    ratio_val = calculate_ratio(amplitude_val, pol)
+
+    # take phase into consideration
+    diff_val_phase = calculate_diff(phase_val, pol)
+
+    # We need to put ratio_val on log scale, because 2 and 0.5 are equally bad
+    ratio_val = np.log10(ratio_val)
+    # ratio_val_phase = np.log10(ratio_val_phase)
+
+    # Change the method. A bad antenna has big deviation from a flat ratio_val spectrum
+    variance = np.var(np.diff(ratio_val[0, :, :, 0], axis=0), axis=0)
+    var_median = np.nanmedian(variance)
+    var_mad = np.nanmedian(np.abs(variance - var_median))
+    modified_z_scores = 0.6745 * (variance - var_median)/var_mad
+
+    # find bad antennas with phase as well
+    variance_phase = np.var(np.diff(diff_val_phase[0, :, :, 0], axis=0), axis=0)
+    var_median_phase = np.nanmedian(variance_phase)
+    var_mad_phase = np.nanmedian(np.abs(variance_phase - var_median_phase))
+    modified_z_scores_phase = 0.6745 * (variance_phase - var_median_phase)/var_mad_phase
+    modified_z_scores_phase_noremote = modified_z_scores_phase.copy()
+
+    # however, we cannot use phase to judge if a remote antenna is bad. A remote antenna has ant_name matching 'MR1??NEN'
+    # so we need to find the index of these antennas
+    remote_antennas = np.where(np.char.find(ant, b'MR1') == 0)[0]
+    modified_z_scores_phase_noremote[remote_antennas] = 0
+
+    # replace the thresholds with 10 sigma
+    amp_threshold = np.nanmedian(np.abs(modified_z_scores)) * 14.826   # equivalent to 10 sigma
+    phase_threshold = np.nanmedian(np.abs(modified_z_scores_phase_noremote)) * 14.826   # equivalent to 10 sigma
+
+    bad_antennas = np.where(np.logical_or(modified_z_scores > amp_threshold, modified_z_scores_phase_noremote > phase_threshold))[0]
+
+    with open(f'{path_to_base_dir}/bad_MA.txt', 'w') as file:
+        print(','.join([ant_name.decode() for ant_name in ant[bad_antennas]]), file=file)
+
+    plot_sol(amplitude_val, ant, freq, pol, 'AMPLITUDE', f'{path_to_base_dir}/amp_sol_highlighted.png', show_legend=True, highlight_antennas=bad_antennas)
+    plot_sol(phase_val, ant, freq, pol, 'PHASE', f'{path_to_base_dir}/phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+    plot_sol(ratio_val, ant, freq, pol[:1], 'AMPLITUDE RATIO (XX/YY)', f'{path_to_base_dir}/ratio_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+
+    # add a plot for the phase ratio
+    plot_sol(diff_val_phase, ant, freq, pol[:1], 'PHASE DIFF (XX-YY)', f'{path_to_base_dir}/diff_phase_sol_highlighted.png', show_legend=False, highlight_antennas=bad_antennas)
+
+    bad_MA_names = ','.join([ant_name.decode() for ant_name in ant[bad_antennas]])
+
+    return bad_MA_names
+
