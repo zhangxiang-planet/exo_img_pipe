@@ -31,7 +31,7 @@ singularity_file = "/home/cyril.tasse/DDFSingularity/ddf_dev2.sif"
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 # How many SB per processing chunk
-chunk_num = 12
+chunk_num = 30
 
 cal = 'VIR_A'
 cal_dir = '20240603_210000_20240603_211600_VIR_A_TRACKING/L1'
@@ -50,7 +50,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
 SB_min = 106 # 92
-SB_ave_kms = 2
+SB_ave_kms = 5
 
 # The region file we use for A-team removal
 region_file = "/home/xzhang/software/exo_img_pipe/regions/Ateam.reg"
@@ -350,7 +350,7 @@ def subtract_Ateam(exo_dir: str):
             f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB{str(i).zfill(2)}_Image_DI_Bis '
             f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 1 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
             f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model None '
-            f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120 --Data-ChunkHours 0.5'
+            f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 2 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120 --Data-ChunkHours 0.5'
         )
         combined_ddf = f"{singularity_command} {cmd_ddf}"
         subprocess.run(combined_ddf, shell=True, check=True)
@@ -406,7 +406,7 @@ def dynspec(exo_dir: str):
 
     cmd_ddf = (
         f'DDF.py {postprocess_dir}{exo_dir}/MSB00_Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.subtract --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB --Freq-NBand {num_MSB} '
-        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/mslist.txt --Predict-ColName DDF_PREDICT'
+        f'--Weight-ColName IMAGING_WEIGHT --SSD2-PolyFreqOrder 3 --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/mslist.txt --Predict-ColName DDF_PREDICT'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
