@@ -124,7 +124,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S_FRB.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
 
         cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali.toml {MSB_filename}"
@@ -210,7 +210,7 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
         subprocess.run(cmd_rename_MSB, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S_FRB.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
         
         # Read the template file
@@ -315,7 +315,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
             subprocess.run(cmd_rename_MSB, shell=True, check=True)
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} flag.strategy={pipe_dir}/templates/Nenufar64C1S_FRB.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
 
         # Copy calibration solution
@@ -327,7 +327,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         subprocess.run(cmd_apply_solution, shell=True, check=True)
 
         # second round of aoflagger
-        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+        cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S_FRB.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
 
 
@@ -348,7 +348,7 @@ def subtract_Ateam(exo_dir: str):
         # create a ddf command without beam model for a test
         cmd_ddf = (
             f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {exo_MSB[i]} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB{str(i).zfill(2)}_Image_DI_Bis '
-            f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 3 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
+            f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 1 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
             f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model None '
             f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120 --Data-ChunkHours 0.5'
         )
