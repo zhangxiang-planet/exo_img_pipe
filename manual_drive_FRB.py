@@ -414,9 +414,19 @@ def dynspec(exo_dir: str):
     make_target_list(target_name, postprocess_dir, exo_dir)
     plot_target_distribution(postprocess_dir, exo_dir)
 
+    target_file = f'{postprocess_dir}{exo_dir}/target.txt'
+
+    with open(target_file, 'r') as file:
+        lines = file.readlines()
+
+    first_line = lines[0]
+
+    with open(target_file, 'w') as file:
+        file.write(first_line)
+
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
+        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 0.5 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
@@ -834,9 +844,9 @@ def exo_pipe(exo_dir, cal_dir, cal):
 
     dynspec(exo_dir)
 
-    source_find_v(exo_dir, time_windows, freq_windows)
+    # source_find_v(exo_dir, time_windows, freq_windows)
 
-    source_find_i(exo_dir, time_windows, freq_windows)
+    # source_find_i(exo_dir, time_windows, freq_windows)
 
     # clearup(exo_dir)
 
