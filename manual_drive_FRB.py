@@ -34,6 +34,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chunk_num = 30
 
 cal = 'VIR_A'
+cali_check = False
 cal_dir = '20240603_210000_20240603_211600_VIR_A_TRACKING/L1'
 exo_dir = '20240603_170000_20240603_210000_FRB20200120E/L1'
 target_name = 'FRB20200120E'
@@ -830,12 +831,12 @@ def exo_pipe(exo_dir, cal_dir, cal):
     # Has calibrator been processed already? If not, find bad MA and do A-team calibration
     # cal, cal_dir, cali_check = task_copy_calibrator.result()
 
-    # if cali_check == False:
-    bad_MAs = identify_bad_mini_arrays(cal, cal_dir)
-    calibration_Ateam(cal, cal_dir, bad_MAs)
-    # else:
-    #     with open(f'{postprocess_dir}/{cal_dir}/bad_MA.txt', 'r') as bad_MA_text:
-    #         bad_MAs = bad_MA_text.read().strip()
+    if cali_check == False:
+        bad_MAs = identify_bad_mini_arrays(cal, cal_dir)
+        calibration_Ateam(cal, cal_dir, bad_MAs)
+    else:
+        with open(f'{postprocess_dir}/{cal_dir}/bad_MA.txt', 'r') as bad_MA_text:
+            bad_MAs = bad_MA_text.read().strip()
         # No need to do Ateam calibration if it's done previously
 
     apply_Ateam_solution(cal_dir, exo_dir, bad_MAs)
