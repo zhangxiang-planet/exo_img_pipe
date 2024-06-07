@@ -686,13 +686,13 @@ def source_find_v(exo_dir: str, time_windows, freq_windows):
                 plt.close()
 
     # Make a directory
-    cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+    cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/v_png/'
     subprocess.run(cmd_png_dir, shell=True, check=True)
 
     png_files = glob.glob(f'{detection_directory}/*.png')
     if png_files:
         # Only run the command if there are .png files
-        cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+        cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/v_png/'
         subprocess.run(cmd_mv_png, shell=True, check=True)
     else:
         print("No .png files found in the directory.")
@@ -711,8 +711,8 @@ def source_find_v(exo_dir: str, time_windows, freq_windows):
     cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec {postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec_v"
     subprocess.run(cmd_rename, shell=True, check=True)
 
-    cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png_v"
-    subprocess.run(cmd_rename, shell=True, check=True)
+    # cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png_v"
+    # subprocess.run(cmd_rename, shell=True, check=True)
 
 def source_find_i(exo_dir: str, time_windows, freq_windows):
 
@@ -863,13 +863,13 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
                 plt.close()
 
     # Make a directory
-    cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+    cmd_png_dir = f'mkdir {postprocess_dir}{exo_dir}/{dynspec_folder}/i_png/'
     subprocess.run(cmd_png_dir, shell=True, check=True)
 
     png_files = glob.glob(f'{detection_directory}/*.png')
     if png_files:
         # Only run the command if there are .png files
-        cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/{exo_dir}_png/'
+        cmd_mv_png = f'mv {detection_directory}/*.png {postprocess_dir}{exo_dir}/{dynspec_folder}/i_png/'
         subprocess.run(cmd_mv_png, shell=True, check=True)
     else:
         print("No .png files found in the directory.")
@@ -888,8 +888,8 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
     cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec {postprocess_dir}/{exo_dir}/{dynspec_folder}/weighted_dynamic_spec_i"
     subprocess.run(cmd_rename, shell=True, check=True)
 
-    cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png_i"
-    subprocess.run(cmd_rename, shell=True, check=True)
+    # cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png_i"
+    # subprocess.run(cmd_rename, shell=True, check=True)
 
 
 # Task 8. Clear up the directory
