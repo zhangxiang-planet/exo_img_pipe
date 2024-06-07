@@ -426,7 +426,7 @@ def dynspec(exo_dir: str):
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 50 --TChunkHours 0.5 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
+        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 0.5 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
