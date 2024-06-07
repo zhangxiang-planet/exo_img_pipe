@@ -7,8 +7,8 @@ import numpy as np
 from dask import delayed, compute
 from casatools import table
 from templates.Find_Bad_MAs_template import find_bad_MAs_multi
-from templates.Make_Target_List_template import make_target_list
-from templates.Plot_target_distri_template import plot_target_distribution
+from templates.Make_Target_List_template import make_target_list_FRB
+from templates.Plot_target_distri_template import plot_target_distribution_FRB
 from templates.Noise_esti_template import generate_noise_map_v, calculate_noise_for_window, apply_gaussian_filter
 from templates.Noise_esti_template import generate_and_save_weight_map_v, source_detection, generate_noise_map_i, generate_and_save_weight_map_i
 import matplotlib.pyplot as plt
@@ -411,18 +411,18 @@ def dynspec(exo_dir: str):
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
 
-    make_target_list(target_name, postprocess_dir, exo_dir)
-    plot_target_distribution(postprocess_dir, exo_dir)
+    make_target_list_FRB(target_name, postprocess_dir, exo_dir)
+    plot_target_distribution_FRB(postprocess_dir, exo_dir)
 
-    target_file = f'{postprocess_dir}{exo_dir}/target.txt'
+    # target_file = f'{postprocess_dir}{exo_dir}/target.txt'
 
-    with open(target_file, 'r') as file:
-        lines = file.readlines()
+    # with open(target_file, 'r') as file:
+    #     lines = file.readlines()
 
-    first_line = lines[0]
+    # first_line = lines[0]
 
-    with open(target_file, 'w') as file:
-        file.write(first_line)
+    # with open(target_file, 'w') as file:
+    #     file.write(first_line)
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
