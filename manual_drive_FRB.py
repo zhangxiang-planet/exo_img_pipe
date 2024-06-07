@@ -845,9 +845,9 @@ def exo_pipe(exo_dir, cal_dir, cal):
 
     dynspec(exo_dir)
 
-    # source_find_v(exo_dir, time_windows, freq_windows)
+    source_find_v(exo_dir, time_windows, freq_windows)
 
-    # source_find_i(exo_dir, time_windows, freq_windows)
+    source_find_i(exo_dir, time_windows, freq_windows)
 
     # clearup(exo_dir)
 
