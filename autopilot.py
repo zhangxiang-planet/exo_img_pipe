@@ -773,7 +773,7 @@ def source_find_v(exo_dir: str, time_windows, freq_windows, origin: bool = False
         # Get the record with the highest SNR
         highest_snr_record = sorted_records[0]
 
-        for record in records[1:]:
+        for record in sorted_records[1:]:
             os.remove(record['source'])
 
         # Extract the time and frequency corresponding to the highest SNR
@@ -954,7 +954,7 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
         # Get the record with the highest SNR
         highest_snr_record = sorted_records[0]
         
-        for record in records[1:]:
+        for record in sorted_records[1:]:
             os.remove(record['source'])
 
         # Extract the time and frequency corresponding to the highest SNR
