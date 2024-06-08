@@ -453,8 +453,8 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
 
             if source_detected:
                 # replace snr_median and snr_mad with mean and std
-                snr_mean = np.nanmean(snr_map)
-                snr_std = np.nanstd(snr_map)
+                # snr_mean = np.nanmean(snr_map)
+                # snr_std = np.nanstd(snr_map)
                 # snr_median = np.nanmedian(snr_map)
                 # snr_mad = np.nanmedian(np.abs(snr_map - snr_median))
 
@@ -463,22 +463,24 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
                 # else:
                 #     transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= dynamic_threshold)
 
-                if is_target:
-                    transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold_target)
-                    transient_snr = np.max(np.abs(source_region - snr_mean)/snr_std)
-                else:
-                    transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold)
-                    transient_snr = np.max(np.abs(source_region - snr_mean)/snr_std)
+                # if is_target:
+                #     transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold_target)
+                #     transient_snr = np.max(np.abs(source_region - snr_mean)/snr_std)
+                # else:
+                #     transient_detected = np.any(np.abs(source_region - snr_mean)/snr_std >= dynamic_threshold)
+                #     transient_snr = np.max(np.abs(source_region - snr_mean)/snr_std)
+
+                transient_snr = np.max(np.abs(source_region))
                 # transient_detected = np.any(np.abs(source_region - snr_median)/snr_mad >= snr_threshold_target)
-                if transient_detected:
+                # if transient_detected:
 
-                    snr_hdu = fits.PrimaryHDU(snr_map)
-                    snr_hdu.header = hdul[0].header.copy()
-                    snr_hdu.header['SNR'] = transient_snr
+                snr_hdu = fits.PrimaryHDU(snr_map)
+                snr_hdu.header = hdul[0].header.copy()
+                snr_hdu.header['SNR'] = transient_snr
 
-                    output_filename = f"{source_type}_{filename}"
-                    output_filepath = os.path.join(detection_directory, output_filename)
-                    snr_hdu.writeto(output_filepath, overwrite=True)
+                output_filename = f"{source_type}_{filename}"
+                output_filepath = os.path.join(detection_directory, output_filename)
+                snr_hdu.writeto(output_filepath, overwrite=True)
 
                 # make a plot for the snr map
                 # snr_map_no_nan = np.nan_to_num(snr_map, nan=0.0)

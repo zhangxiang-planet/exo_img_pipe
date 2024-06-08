@@ -655,13 +655,24 @@ def dynspec(exo_dir: str):
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
     subprocess.run(combined_dynspec, shell=True, check=True)
 
+    cmd_dynspec = (
+        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --rad 11 --LogBoring 1 --uv 0.067,1000 '
+        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec_origins'
+    )
+
+    combined_dynspec = f"{singularity_command} {cmd_dynspec}"
+    subprocess.run(combined_dynspec, shell=True, check=True)
+
 # Task 7. Source-finding
 
 @task(log_prints=True)
-def source_find_v(exo_dir: str, time_windows, freq_windows):
+def source_find_v(exo_dir: str, time_windows, freq_windows, origin: bool = False):
 
-    # get the folder name of the dynamic spectrum
-    dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_*.MS')[0].split('/')[-1]
+    if origin:
+        dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_origins_*.MS')[0].split('/')[-1]
+    else:
+        # get the folder name of the dynamic spectrum
+        dynspec_folder = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_Dyn*.MS')[0].split('/')[-1]
 
     # generate a MAD map to be used as a weight map in convolution
     # median_map, mad_map = generate_noise_map(f'{postprocess_dir}{exo_dir}/{dynspec_folder}/')
@@ -761,6 +772,9 @@ def source_find_v(exo_dir: str, time_windows, freq_windows):
 
         # Get the record with the highest SNR
         highest_snr_record = sorted_records[0]
+
+        for record in records[1:]:
+            os.remove(record['source'])
 
         # Extract the time and frequency corresponding to the highest SNR
         source_with_highest_snr = highest_snr_record['source']
@@ -939,6 +953,9 @@ def source_find_i(exo_dir: str, time_windows, freq_windows):
 
         # Get the record with the highest SNR
         highest_snr_record = sorted_records[0]
+        
+        for record in records[1:]:
+            os.remove(record['source'])
 
         # Extract the time and frequency corresponding to the highest SNR
         source_with_highest_snr = highest_snr_record['source']
@@ -1071,9 +1088,11 @@ def exo_pipe(exo_dir):
 
     dynspec(exo_dir)
 
-    source_find_v(exo_dir, time_windows, freq_windows)
+    source_find_v(exo_dir, time_windows, freq_windows, origin=False)
 
     source_find_i(exo_dir, time_windows, freq_windows)
+
+    source_find_v(exo_dir, time_windows, freq_windows, origin=True)
 
     clearup(exo_dir)
 
