@@ -34,10 +34,10 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 cal = 'VIR_A'
-cali_check = False
+cali_check = True
 cal_dir = '20240606_164800_20240606_170600_VIR_A_TRACKING/L1'
-exo_dir = '20240606_160900_20240606_163100_UCAC4_689-050825_TRACKING/L1'
-target_name = 'UCAC4_689-050825'
+exo_dir = '20240606_163100_20240606_164800_SDSSCGB_25510_TRACKING/L1'
+target_name = 'SDSSCGB_25510'
 
 # How many channels per SB
 chan_per_SB_origin = 2
