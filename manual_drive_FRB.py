@@ -331,6 +331,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_filename} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S_FRB.lua"
         subprocess.run(cmd_aoflagger, shell=True, check=True)
 
+    # remove the SB files
+    cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
+    subprocess.run(cmd_remo_SB, shell=True, check=True)
+
 
 # Task 5. Subtract A-team from field
 
@@ -393,6 +397,10 @@ def subtract_Ateam(exo_dir: str):
         )
         combined_kms = f"{singularity_command} {cmd_kms}"
         subprocess.run(combined_kms, shell=True, check=True)
+
+        # Remove the .ddfcache directory to save space
+        cmd_remo_cache = f"rm -rf {postprocess_dir}{exo_dir}/*.ddfcache"
+        subprocess.run(cmd_remo_cache, shell=True, check=True)
 
 # Task 6. DynspecMS
 
