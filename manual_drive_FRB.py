@@ -34,7 +34,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chunk_num = 30
 
 cal = 'CYG_A'
-cali_check = False
+cali_check = True
 cal_dir = '20240607_020000_20240607_022000_CYG_A_TRACKING/L1'
 exo_dir = '20240607_022000_20240607_050000_FRB20240114A_TRACKING/L1'
 target_name = 'FRB20240114A'
