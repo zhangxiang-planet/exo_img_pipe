@@ -31,7 +31,7 @@ singularity_file = "/home/xzhang/software/ddf_dev2_ateam.sif"
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 # How many SB per processing chunk
-chunk_num = 30
+chunk_num = 12
 
 cal = 'CYG_A'
 cali_check = True
@@ -51,7 +51,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
 SB_min = 106 # 92
-SB_ave_kms = 5
+SB_ave_kms = 2
 
 # The region file we use for A-team removal
 region_file = "/home/xzhang/software/exo_img_pipe/regions/Ateam.reg"
@@ -435,7 +435,7 @@ def dynspec(exo_dir: str):
 
     cmd_dynspec = (
         f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/mslist.txt --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 0.5 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
+        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 0.1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
