@@ -415,7 +415,7 @@ def dynspec(exo_dir: str):
 
     cmd_ddf = (
         f'DDF.py {postprocess_dir}{exo_dir}/MSB00_Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.subtract --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB --Freq-NBand {num_MSB} '
-        f'--Weight-ColName IMAGING_WEIGHT --SSD2-PolyFreqOrder 3 --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/mslist.txt --Predict-ColName DDF_PREDICT'
+        f'--Weight-ColName IMAGING_WEIGHT --SSD2-PolyFreqOrder 3 --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/mslist.txt --Data-ChunkHours 0.1 --Predict-ColName DDF_PREDICT'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
