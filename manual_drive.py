@@ -33,15 +33,15 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'VIR_A'
+cal = 'CAS_A'
 cali_check = True
-cal_dir = '20240606_164800_20240606_170600_VIR_A_TRACKING/L1'
-exo_dir = '20240606_163100_20240606_164800_SDSSCGB_25510_TRACKING/L1'
-target_name = 'SDSSCGB_25510'
+cal_dir = '20231215_200000_20231215_201000_CASA_RP3A/L1'
+exo_dir = '20231215_201000_20231216_040000_FIELD-B_RP3A/L1'
+target_name = 'TYC_4374-1240-1'
 
 # How many channels per SB
-chan_per_SB_origin = 2
-ave_chan = 1
+chan_per_SB_origin = 12
+ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # chan_per_SB = 12
@@ -51,7 +51,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
 SB_min = 106 # 92
-SB_ave_kms = 5
+SB_ave_kms = 4
 
 # The region file we use for A-team removal
 region_file = "/home/xzhang/software/exo_img_pipe/regions/Ateam.reg"
