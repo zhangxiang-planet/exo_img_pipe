@@ -35,13 +35,13 @@ chunk_num = 12
 
 cal = 'CYG_A'
 cali_check = False
-cal_dir = '20240607_020000_20240607_022000_CYG_A_TRACKING/L1'
-exo_dir = '20240607_022000_20240607_050000_FRB20240114A_TRACKING/L1'
-target_name = 'FRB20240114A'
+cal_dir = '20230724_214500_20230724_220000_CYG_A_TOO_2/L1'
+exo_dir = '20230724_220000_20230724_230000_J2000_TRACKING/L1'
+target_name = '2MASS_J18385921-1032443'
 
 # How many channels per SB
-chan_per_SB_origin = 6
-ave_chan = 1
+chan_per_SB_origin = 64
+ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # chan_per_SB = 12
