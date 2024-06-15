@@ -496,6 +496,19 @@ def subtract_Ateam(exo_dir: str):
 def dynspec(exo_dir: str):
     singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
+    # we need the number of exo_SB for the following steps
+    exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+
+    # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
+    num_SB = len(exo_SB)
+    num_remove = num_SB % SB_ave_kms
+    exo_SB = exo_SB[num_remove:]
+
+    # we need the number of beams for the following steps
+    num_SB = len(exo_SB)
+    num_beam = int(num_SB / SB_ave_kms)
+
     # cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
     # subprocess.run(cmd_list, shell=True, check=True)
 
@@ -504,7 +517,8 @@ def dynspec(exo_dir: str):
 
     cmd_ddf = (
         f'DDF.py {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.subtract --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB '
-        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Predict-ColName DDF_PREDICT'
+        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 3 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Predict-ColName DDF_PREDICT '
+        f'--Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
