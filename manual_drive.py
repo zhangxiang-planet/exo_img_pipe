@@ -34,7 +34,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 cal = 'CAS_A'
-cali_check = False
+cali_check = True
 cal_dir = '20231215_200000_20231215_201000_CASA_RP3A/L1'
 exo_dir = '20231215_201000_20231216_040000_FIELD-B_RP3A/L1'
 target_name = 'TYC_4374-1240-1'
@@ -382,7 +382,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     subprocess.run(cmd_aoflagger, shell=True, check=True)
 
     # Now we average the GSB.MS into a smaller size
-    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep=1"
+    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
     subprocess.run(cmd_avg, shell=True, check=True)
 
     # replace the GSB.MS with the averaged one
