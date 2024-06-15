@@ -34,7 +34,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 cal = 'CAS_A'
-cali_check = True
+cali_check = False
 cal_dir = '20231215_200000_20231215_201000_CASA_RP3A/L1'
 exo_dir = '20231215_201000_20231216_040000_FIELD-B_RP3A/L1'
 target_name = 'TYC_4374-1240-1'
