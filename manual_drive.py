@@ -523,14 +523,14 @@ def dynspec(exo_dir: str):
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
 
-    cmd_ddf = (
-        f'DDF.py {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.subtract.applysol --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB '
-        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 1 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Predict-ColName DDF_PREDICT '
-        f'--Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
-        f'--DDESolutions-DDSols DD1 --DDESolutions-SolsDir SOLSDIR'
-    )
-    combined_ddf = f"{singularity_command} {cmd_ddf}"
-    subprocess.run(combined_ddf, shell=True, check=True)
+    # cmd_ddf = (
+    #     f'DDF.py {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.subtract.applysol --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB '
+    #     f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 1 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/GSB.MS '
+    #     f'--Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE '
+    #     f'--DDESolutions-DDSols DD1 --DDESolutions-SolsDir {postprocess_dir}{exo_dir}/SOLSDIR'
+    # )
+    # combined_ddf = f"{singularity_command} {cmd_ddf}"
+    # subprocess.run(combined_ddf, shell=True, check=True)
 
     # cmd_ddf = (
     #     f'DDF.py --Data-MS {postprocess_dir}/{exo_dir}/GSB.MS --Data-ColName KMS_SUB --Output-Name {postprocess_dir}/{exo_dir}/Image_SUB --Image-Cell 60 --Image-NPix 2400 '
