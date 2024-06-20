@@ -33,15 +33,15 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CAS_A'
-cali_check = True
-cal_dir = '20231215_200000_20231215_201000_CASA_RP3A/L1'
-exo_dir = '20231215_201000_20231216_040000_FIELD-B_RP3A/L1'
-target_name = 'TYC_4374-1240-1'
+cal = 'CYG_A'
+cali_check = False
+cal_dir = '20240620_025100_20240620_030500_CYG_A_TRACKING/L1'
+exo_dir = '20240620_030500_20240620_050000_TYC_3609-119-1_TRACKING/L1'
+target_name = 'TYC_3609-119-1'
 
 # How many channels per SB
-chan_per_SB_origin = 12
-ave_chan = 4
+chan_per_SB_origin = 2
+ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # chan_per_SB = 12
