@@ -551,7 +551,7 @@ def dynspec(exo_dir: str):
     plot_target_distribution_FRB(postprocess_dir, exo_dir)
 
     cmd_dynspec = (
-        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
+        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 21 --LogBoring 1 --uv 0.067,1000 '
         f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
     )
 
