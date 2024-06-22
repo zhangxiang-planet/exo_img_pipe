@@ -258,7 +258,7 @@ def make_target_list_SL(target_name, postprocess_dir, exo_dir):
     ra_center, dec_center = simbad_coor(target_name)  # in degrees
 
     # Define the radius of the field of view
-    fov_radius = 40.0 / 2.0  # in degrees
+    fov_radius = 20.0 / 2.0  # in degrees
 
     # Define the maximum angular distance between points
     max_angular_distance = 1.0  # in degrees
