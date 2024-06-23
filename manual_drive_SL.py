@@ -434,31 +434,31 @@ def subtract_Ateam(exo_dir: str):
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
 
-    # create a mask for SSD2 to deconvolve every source (because --Mask-Auto=1 is not as good)
-    cmd_mask = (
-        f'MakeMask.py --RestoredIm {postprocess_dir}{exo_dir}/Image_DI_Bis.app.restored.fits --Box 100,2 --Th 7'
-    )
-    combined_mask = f"{singularity_command} {cmd_mask}"
-    subprocess.run(combined_mask, shell=True, check=True)
+    # # create a mask for SSD2 to deconvolve every source (because --Mask-Auto=1 is not as good)
+    # cmd_mask = (
+    #     f'MakeMask.py --RestoredIm {postprocess_dir}{exo_dir}/Image_DI_Bis.app.restored.fits --Box 100,2 --Th 7'
+    # )
+    # combined_mask = f"{singularity_command} {cmd_mask}"
+    # subprocess.run(combined_mask, shell=True, check=True)
 
-    # Continue with deconvolution, starting from the last residual (initialising model with the DicoModel generated in the previous step
-    cmd_ddf = (
-        f'DDF.py {postprocess_dir}{exo_dir}/Image_DI_Bis.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper --Cache-Reset 0 --Mask-Auto 0 --Mask-External {postprocess_dir}{exo_dir}/Image_DI_Bis.app.restored.fits.mask.fits '
-        f'--Cache-Dirty ForceResidual --Cache-PSF Force --Predict-InitDicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.DicoModel'
-    )
-    combined_ddf = f"{singularity_command} {cmd_ddf}"
-    subprocess.run(combined_ddf, shell=True, check=True)
+    # # Continue with deconvolution, starting from the last residual (initialising model with the DicoModel generated in the previous step
+    # cmd_ddf = (
+    #     f'DDF.py {postprocess_dir}{exo_dir}/Image_DI_Bis.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper --Cache-Reset 0 --Mask-Auto 0 --Mask-External {postprocess_dir}{exo_dir}/Image_DI_Bis.app.restored.fits.mask.fits '
+    #     f'--Cache-Dirty ForceResidual --Cache-PSF Force --Predict-InitDicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.DicoModel'
+    # )
+    # combined_ddf = f"{singularity_command} {cmd_ddf}"
+    # subprocess.run(combined_ddf, shell=True, check=True)
 
     # Create a mask to remove the ATeam from the DicoModel
     cmd_mask = (
-        f'MakeMask.py --RestoredIm {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.app.restored.fits --Box 100,2 --Th 10000 --ds9Mask {region_file}'
+        f'MakeMask.py --RestoredIm {postprocess_dir}{exo_dir}/Image_DI_Bis.app.restored.fits --Box 100,2 --Th 10000 --ds9Mask {region_file}'
     )
     combined_mask = f"{singularity_command} {cmd_mask}"
     subprocess.run(combined_mask, shell=True, check=True)
     
     # Remove ATeam from DicoModel
     cmd_maskdico = (
-        f'MaskDicoModel.py --InDicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.DicoModel --OutDicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.filterATeam.DicoModel --MaskName {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.app.restored.fits.mask.fits --InvertMask 1'
+        f'MaskDicoModel.py --InDicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.DicoModel --OutDicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.filterATeam.DicoModel --MaskName {postprocess_dir}{exo_dir}/Image_DI_Bis.app.restored.fits.mask.fits --InvertMask 1'
     )
     combined_maskdico = f"{singularity_command} {cmd_maskdico}"
     subprocess.run(combined_maskdico, shell=True, check=True)
@@ -476,7 +476,7 @@ def subtract_Ateam(exo_dir: str):
     cmd_kms = (
         f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper --dt 1 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
         f'--NChanPredictPerMS {num_beam} --NChanSols {num_beam} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
-        f'--DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --TChunk 1'
+        f'--DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --TChunk 1'
     )
     combined_kms = f"{singularity_command} {cmd_kms}"
     subprocess.run(combined_kms, shell=True, check=True)
