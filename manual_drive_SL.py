@@ -33,7 +33,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'VIR_A'
+cal = 'CYG_A'
 cali_check = False
 cal_dir = '20240624_030000_20240624_031200_CYG_A_TRACKING/L1'
 exo_dir = '20240624_031200_20240624_060000_UCAC4_644-123137_TRACKING/L1'
