@@ -47,6 +47,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
 SB_min = 106 # 92
+SB_max = 320
 SB_ave_kms = 2
 
 # The region file we use for A-team removal
@@ -122,8 +123,11 @@ def copy_calibrator_data(exo_dir: str):
         if dir_start_time == end_time or dir_end_time == start_time:
             exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
             cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
-            if exo_files_count == cal_files_count:
+            # replace this part: if the difference is less than 2, we consider them as the same
+            if np.abs(exo_files_count - cal_files_count) < 2:
                 valid_cal_dirs.append(dir)
+            # if exo_files_count == cal_files_count:
+            #     valid_cal_dirs.append(dir)
     
     # If no valid calibrator directory is found, get the calibrator directory with the same date
     if len(valid_cal_dirs) < 1: 
@@ -134,8 +138,11 @@ def copy_calibrator_data(exo_dir: str):
             if dir_start_date == start_date or dir_end_date == end_date:
                 exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
                 cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
-                if exo_files_count == cal_files_count:
+                # replace this part: if the difference is less than 2, we consider them as the same
+                if np.abs(exo_files_count - cal_files_count) < 2:
                     valid_cal_dirs.append(dir)
+                # if exo_files_count == cal_files_count:
+                #     valid_cal_dirs.append(dir)
 
     # No calibrator data found for that day, raise error
     if len(valid_cal_dirs) < 1:
@@ -195,7 +202,9 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
-    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+    # modify this part so the SBs are larger than SB_min and smaller than SB_max
+    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min and int(f.split('/SB')[1].split('.MS')[0]) < SB_max]
+    # cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     cali_SB.sort()
 
     # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
@@ -286,7 +295,9 @@ def calibration_Ateam(cal: str, cal_dir: str, bad_MAs: str):
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     cali_SB_0 = glob.glob(postprocess_dir + cal_dir + '/SB*.MS')
-    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+    # modify this part so the SBs are larger than SB_min and smaller than SB_max
+    cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min and int(f.split('/SB')[1].split('.MS')[0]) < SB_max]
+    # cali_SB = [f for f in cali_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     cali_SB.sort()
 
     # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
@@ -387,7 +398,9 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
 
     # Step 2: Run DP3 DPPP-aoflagger.parset command
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
-    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+    # modify this part so the SBs are larger than SB_min and smaller than SB_max
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min and int(f.split('/SB')[1].split('.MS')[0]) < SB_max]
+    # exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
     exo_SB.sort()
 
     # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
@@ -519,7 +532,9 @@ def subtract_Ateam(exo_dir: str):
 
     # we need the number of exo_SB for the following steps
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
-    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+    # modify this part so the SBs are larger than SB_min and smaller than SB_max
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min and int(f.split('/SB')[1].split('.MS')[0]) < SB_max]
+    # exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
 
     # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
     num_SB = len(exo_SB)
@@ -618,7 +633,9 @@ def dynspec(exo_dir: str):
 
     # we need the number of exo_SB for the following steps
     exo_SB_0 = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
-    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
+    # modify this part so the SBs are larger than SB_min and smaller than SB_max
+    exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min and int(f.split('/SB')[1].split('.MS')[0]) < SB_max]
+    # exo_SB = [f for f in exo_SB_0 if int(f.split('/SB')[1].split('.MS')[0]) > SB_min]
 
     # Now we need to make sure that the number of SB is a multiple of SB_ave_kms. We can remove the first few SBs if necessary
     num_SB = len(exo_SB)
