@@ -34,10 +34,10 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 cal = 'CYG_A'
-cali_check = True
-cal_dir = '20240620_025100_20240620_030500_CYG_A_TRACKING/L1'
-exo_dir = '20240620_030500_20240620_050000_TYC_3609-119-1_TRACKING/L1'
-target_name = 'TYC_3609-119-1'
+cali_check = False
+cal_dir = '20240218_054800_20240218_060000_CYG_A_TRACKING/L1'
+exo_dir = '20240218_012000_20240218_054800_TAU_BOO_TRACKING/L1'
+target_name = 'TAU_BOO'
 
 # How many channels per SB
 chan_per_SB_origin = 2
@@ -428,7 +428,7 @@ def subtract_Ateam(exo_dir: str):
         f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Data-ColName DATA --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis '
         f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 2 --Deconv-RMSFactor 3 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
         f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model None '
-        f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1600 --Image-Cell 120 --Data-ChunkHours 0.5'
+        f'--Freq-NBand {num_beam} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120 --Data-ChunkHours 0.5'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
