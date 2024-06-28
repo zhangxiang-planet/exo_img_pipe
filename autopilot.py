@@ -1088,7 +1088,7 @@ def clearup(exo_dir: str):
     subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
     # sixth, remove the other files
-    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_DynSpecs_*.tgz"
+    cmd_remo_other = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR {postprocess_dir}/{exo_dir}/dynamic_spec_*.tgz"
     subprocess.run(cmd_remo_other, shell=True, check=True)
 
 ###### Here come the flows (functions calling the tasks) #######
