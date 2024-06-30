@@ -35,9 +35,9 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CYG_A'
 cali_check = False
-cal_dir = '20240624_030000_20240624_031200_CYG_A_TRACKING/L1'
-exo_dir = '20240624_031200_20240624_060000_UCAC4_644-123137_TRACKING/L1'
-target_name = 'UCAC4_644-123137'
+cal_dir = '20240621_030000_20240621_031300_CYG_A_TRACKING/L1'
+exo_dir = '20240621_031300_20240621_060000_TYC_3609-119-1_TRACKING/L1'
+target_name = 'TYC_3609-119-1'
 
 # How many channels per SB
 chan_per_SB_origin = 2
@@ -64,7 +64,7 @@ dynamic_threshold_target = 5
 # snr_threshold = 7
 # snr_threshold_target = 6
 # time_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
-time_windows = [0.25, 0.5, 1]
+time_windows = [0.25, 0.5]
 freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 # 30 sec (5 min) 
 # 600 kHz (6 MHz)
