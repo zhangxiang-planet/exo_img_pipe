@@ -150,7 +150,7 @@ def copy_calibrator_data(exo_dir: str):
         subprocess.run(cmd, shell=True, check=True)
         raise FileNotFoundError(f"Calibrator data not found.")
 
-    cal_dir = valid_cal_dirs[0]
+    cal_dir = valid_cal_dirs[-1]
 
     # data after a specific date would have scp completion marker.
     # 2023-10-04: Cedric modified preprocessing code so this part is no longer necessary.
