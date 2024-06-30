@@ -686,13 +686,13 @@ def dynspec(exo_dir: str):
     combined_dynspec = f"{singularity_command} {cmd_dynspec}"
     subprocess.run(combined_dynspec, shell=True, check=True)
 
-    cmd_dynspec = (
-        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --rad 11 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec_origins'
-    )
+    # cmd_dynspec = (
+    #     f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --rad 11 --LogBoring 1 --uv 0.067,1000 '
+    #     f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec_origins'
+    # )
 
-    combined_dynspec = f"{singularity_command} {cmd_dynspec}"
-    subprocess.run(combined_dynspec, shell=True, check=True)
+    # combined_dynspec = f"{singularity_command} {cmd_dynspec}"
+    # subprocess.run(combined_dynspec, shell=True, check=True)
 
 # Task 7. Source-finding
 
@@ -1123,7 +1123,7 @@ def exo_pipe(exo_dir):
 
     source_find_i(exo_dir, time_windows, freq_windows)
 
-    source_find_v(exo_dir, time_windows, freq_windows, origin=True)
+    # source_find_v(exo_dir, time_windows, freq_windows, origin=True)
 
     clearup(exo_dir)
 
