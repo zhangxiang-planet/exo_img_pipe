@@ -33,11 +33,11 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CYG_A'
+cal = 'VIR_A'
 cali_check = False
-cal_dir = '20240621_030000_20240621_031300_CYG_A_TRACKING/L1'
-exo_dir = '20240621_031300_20240621_060000_TYC_3609-119-1_TRACKING/L1'
-target_name = 'TYC_3609-119-1'
+cal_dir = '20240621_165900_20240621_171300_VIR_A_TRACKING/L1'
+exo_dir = '20240621_171300_20240621_190000_LEDA_2298219_TRACKING/L1'
+target_name = 'LEDA_2298219'
 
 # How many channels per SB
 chan_per_SB_origin = 2
@@ -50,7 +50,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 # bin_per_MSB = chunk_num // 3
 
 # the lowest SB we use
-SB_min = 210 # 106
+SB_min = 106 # 106
 SB_ave_kms = 4
 
 # The region file we use for A-team removal
