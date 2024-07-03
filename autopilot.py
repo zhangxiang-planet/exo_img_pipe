@@ -20,7 +20,7 @@ matplotlib.use('Agg')
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/202?/??/*WASP-33*"
+watch_dir = "/databf/nenufar-nri/LT02/202?/??/20231208*XO-3*"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
