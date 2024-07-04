@@ -20,7 +20,7 @@ matplotlib.use('Agg')
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/202?/??/20231208*XO-3*"
+watch_dir = "/databf/nenufar-nri/LT02/202?/??/*XO-3*"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
@@ -36,8 +36,8 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 # How many channels per SB
-chan_per_SB_origin = 12
-ave_chan = 4
+chan_per_SB_origin = 2
+ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # chan_per_SB = 12
@@ -47,7 +47,7 @@ chan_per_SB = int(chan_per_SB_origin/ave_chan)
 
 # the lowest SB we use
 SB_min = 106 # 92
-SB_max = 320
+SB_max = 341
 SB_ave_kms = 2
 
 # The region file we use for A-team removal
@@ -60,7 +60,7 @@ dynamic_threshold = 6
 dynamic_threshold_target = 5
 # snr_threshold = 7
 # snr_threshold_target = 6
-time_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
+time_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
 freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 # 30 sec (5 min) 
 # 600 kHz (6 MHz)
