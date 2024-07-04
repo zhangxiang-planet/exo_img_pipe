@@ -39,6 +39,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chan_per_SB_origin = 2
 ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
+ave_time = 4
 
 # chan_per_SB = 12
 
@@ -253,7 +254,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan} avg.timestep={ave_time}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
@@ -472,7 +473,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan} avg.timestep={ave_time}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
