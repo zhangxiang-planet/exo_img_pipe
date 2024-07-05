@@ -35,9 +35,9 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CYG_A'
 cali_check = False
-cal_dir = '20240622_010000_20240622_011200_CYG_A_TRACKING/L1'
-exo_dir = '20240622_011200_20240622_040000_BD+46_3010_TRACKING/L1'
-target_name = 'BD+46_3010'
+cal_dir = '20240702_004700_20240702_010000_CYG_A_TRACKING/L1'
+exo_dir = '20240701_230000_20240702_004700_TYC_3524-548-1_TRACKING/L1'
+target_name = 'TYC_3524-548-1'
 
 # How many channels per SB
 chan_per_SB_origin = 2
