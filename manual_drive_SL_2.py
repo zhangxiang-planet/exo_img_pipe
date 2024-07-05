@@ -34,7 +34,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # chunk_num = 12
 
 cal = 'CYG_A'
-cali_check = False
+cali_check = True
 cal_dir = '20240702_004700_20240702_010000_CYG_A_TRACKING/L1'
 exo_dir = '20240701_230000_20240702_004700_TYC_3524-548-1_TRACKING/L1'
 target_name = 'TYC_3524-548-1'
@@ -474,7 +474,7 @@ def subtract_Ateam(exo_dir: str):
 
     # kms without beam model
     cmd_kms = (
-        f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis --dt 1 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
+        f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis --dt 6 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
         f'--NChanPredictPerMS {num_beam} --NChanSols {num_beam} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
         f'--DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --TChunk 1'
     )
