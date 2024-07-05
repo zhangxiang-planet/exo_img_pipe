@@ -39,7 +39,7 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 chan_per_SB_origin = 2
 ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 4
+ave_time = 8
 
 # chan_per_SB = 12
 
