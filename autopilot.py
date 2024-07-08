@@ -666,7 +666,7 @@ def dynspec(exo_dir: str):
 
     # we need the number of beams for the following steps
     num_SB = len(exo_SB)
-    num_beam = int(num_SB / SB_ave_kms / 2)
+    num_beam = int(num_SB / SB_ave_kms)
 
     # cmd_list = f'ls -d {postprocess_dir}{exo_dir}/MSB*.MS > {postprocess_dir}/{exo_dir}/mslist.txt'
     # subprocess.run(cmd_list, shell=True, check=True)
