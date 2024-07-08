@@ -122,13 +122,24 @@ def copy_calibrator_data(exo_dir: str):
         dir_start_time = parts[0] + "_" + parts[1]
         dir_end_time = parts[2] + "_" + parts[3]
         if dir_start_time == end_time or dir_end_time == start_time:
-            exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
-            cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
-            # replace this part: if the difference is less than 2, we consider them as the same
-            if np.abs(exo_files_count - cal_files_count) < 2:
-                valid_cal_dirs.append(dir)
+            # exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
+            # cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
+            # # replace this part: if the difference is less than 2, we consider them as the same
+            # if np.abs(exo_files_count - cal_files_count) < 2:
+            #     valid_cal_dirs.append(dir)
             # if exo_files_count == cal_files_count:
             #     valid_cal_dirs.append(dir)
+
+            # compare the names of the directories, rather than the number of files
+            exo_dirs = set(next(os.walk(os.path.join(pre_target_dir, "L1")))[1])
+            cal_dirs = set(next(os.walk(os.path.join(base_cal_dir, dir, "L1")))[1])
+            
+            # Find the number of matching directories
+            matching_dirs_count = len(exo_dirs.intersection(cal_dirs))
+            
+            # Allow one or two exceptions
+            if len(exo_dirs) - matching_dirs_count <= 2:
+                valid_cal_dirs.append(dir)
     
     # If no valid calibrator directory is found, get the calibrator directory with the same date
     if len(valid_cal_dirs) < 1: 
@@ -137,13 +148,23 @@ def copy_calibrator_data(exo_dir: str):
             dir_start_date = parts[0] 
             dir_end_date = parts[2]
             if dir_start_date == start_date or dir_end_date == end_date:
-                exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
-                cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
-                # replace this part: if the difference is less than 2, we consider them as the same
-                if np.abs(exo_files_count - cal_files_count) < 2:
-                    valid_cal_dirs.append(dir)
-                # if exo_files_count == cal_files_count:
+                # exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
+                # cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
+                # # replace this part: if the difference is less than 2, we consider them as the same
+                # if np.abs(exo_files_count - cal_files_count) < 2:
                 #     valid_cal_dirs.append(dir)
+                # # if exo_files_count == cal_files_count:
+                # #     valid_cal_dirs.append(dir)
+                exo_dirs = set(next(os.walk(os.path.join(pre_target_dir, "L1")))[1])
+                cal_dirs = set(next(os.walk(os.path.join(base_cal_dir, dir, "L1")))[1])
+                
+                # Find the number of matching directories
+                matching_dirs_count = len(exo_dirs.intersection(cal_dirs))
+                
+                # Allow one or two exceptions
+                if len(exo_dirs) - matching_dirs_count <= 2:
+                    valid_cal_dirs.append(dir)
+
 
     # No calibrator data found for that day, raise error
     if len(valid_cal_dirs) < 1:
