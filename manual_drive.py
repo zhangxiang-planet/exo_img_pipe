@@ -33,16 +33,17 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CYG_A'
+cal = 'CAS_A'
 cali_check = False
-cal_dir = '20240218_054800_20240218_060000_CYG_A_TRACKING/L1'
-exo_dir = '20240218_012000_20240218_054800_TAU_BOO_TRACKING/L1'
-target_name = 'TAU_BOO'
+cal_dir = '20240124_200000_20240124_201000_CASA_RP3A/L1'
+exo_dir = '20240124_201000_20240125_040000_FIELD-B_RP3A/L1'
+target_name = 'TYC_4374-1240-1'
 
 # How many channels per SB
-chan_per_SB_origin = 2
-ave_chan = 1
+chan_per_SB_origin = 12
+ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
+ave_time = 2
 
 # chan_per_SB = 12
 
@@ -128,7 +129,7 @@ def identify_bad_mini_arrays(cal: str, cal_dir: str) -> str:
         MSB_filename = f"{postprocess_dir}/{cal_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan} avg.timestep={ave_time}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
@@ -341,7 +342,7 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
         MSB_filename = f"{postprocess_dir}/{exo_dir}/MSB{str(tens_place).zfill(2)}.MS"
 
         # Construct the command string with the msin argument and the msout argument
-        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan}"
+        cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{SB_str}] msout={MSB_filename} avg.freqstep={ave_chan} avg.timestep={ave_time}"
         subprocess.run(cmd_flagchan, shell=True, check=True)
 
     # Stack the GSB.MS
@@ -547,16 +548,18 @@ def dynspec(exo_dir: str):
     # else:
     #     target_name = target_str[0]
 
-    make_target_list(target_name, postprocess_dir, exo_dir)
-    plot_target_distribution(postprocess_dir, exo_dir)
+    # Not generating dynamic spec for RP3A
 
-    cmd_dynspec = (
-        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
-        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
-    )
+    # make_target_list(target_name, postprocess_dir, exo_dir)
+    # plot_target_distribution(postprocess_dir, exo_dir)
 
-    combined_dynspec = f"{singularity_command} {cmd_dynspec}"
-    subprocess.run(combined_dynspec, shell=True, check=True)
+    # cmd_dynspec = (
+    #     f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
+    #     f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
+    # )
+
+    # combined_dynspec = f"{singularity_command} {cmd_dynspec}"
+    # subprocess.run(combined_dynspec, shell=True, check=True)
 
 # Task 7. Source-finding
 
@@ -976,9 +979,9 @@ def exo_pipe(exo_dir, cal_dir, cal):
 
     dynspec(exo_dir)
 
-    source_find_v(exo_dir, time_windows, freq_windows)
+    # source_find_v(exo_dir, time_windows, freq_windows)
 
-    source_find_i(exo_dir, time_windows, freq_windows)
+    # source_find_i(exo_dir, time_windows, freq_windows)
 
     # clearup(exo_dir)
 
