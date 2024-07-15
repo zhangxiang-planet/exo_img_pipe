@@ -20,7 +20,7 @@ matplotlib.use('Agg')
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/202?/??/*XO-3*"
+watch_dir = "/databf/nenufar-nri/LT02/2024/??/*"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
@@ -85,7 +85,7 @@ def check_new_data(watch_dir: str, postprocess_dir: str) -> list:
     skip_data = np.genfromtxt(skip_file, dtype='str')
 
     # Filtering out the data that's already processed and not in CALIBRATORS
-    unprocessed_data = [data for data in avai_data if data not in processed_data and not any(cal in data for cal in CALIBRATORS) and data not in skip_data]
+    unprocessed_data = [data for data in avai_data if data not in processed_data and not any(cal in data for cal in CALIBRATORS) and data not in skip_data and 'TAU_BOO' not in data]
 
     return unprocessed_data
 
