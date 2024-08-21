@@ -26,6 +26,8 @@ for obs in postprocess_list:
         continue
     else:
         # make the L2 folder
+        # print the name of the observation
+        print(obs)
         os.mkdir(os.path.join(pre_obs_dir, "L2"))
         # make a tarball of the postprocessing data
         subprocess.call(["tar", "-cvzf", os.path.join(pre_obs_dir, "L2", obs + ".tar.gz"), "-C", postprocess_dir, obs])
