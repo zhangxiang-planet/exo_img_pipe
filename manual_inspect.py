@@ -7,19 +7,31 @@ from nenupy.instru import freq2sb
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
-singularity_file = "/home/xzhang/software/ddf.sif"
+singularity_file = "/home/xzhang/software/ddf_dev2_ateam.sif"
 
 # Calibrators
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 # How many SB per processing chunk
-chunk_num = 12
+# chunk_num = 12
 
+# ave_chan = 4
+
+# chan_per_SB = 12
+
+# bin_per_SB = chan_per_SB // ave_chan
+
+# data before 9 Dec 2023
+chan_per_SB_origin = 12
 ave_chan = 4
+chan_per_SB = int(chan_per_SB_origin/ave_chan)
+ave_time = 1
 
-chan_per_SB = 12
-
-bin_per_SB = chan_per_SB // ave_chan
+# Data starting from 9 Dec 2023
+chan_per_SB_origin = 2
+ave_chan = 1
+chan_per_SB = int(chan_per_SB_origin/ave_chan)
+ave_time = 8
 
 # the lowest SB we use
 # SB_min = 92
@@ -28,10 +40,10 @@ singularity_command = f"singularity exec -B/data/$USER {singularity_file}"
 
 ######################
 
-def split_into_chunks(lst, chunk_size):
-    """Split a list into chunks of specified size."""
-    for i in range(0, len(lst), chunk_size):
-        yield lst[i:i + chunk_size]
+# def split_into_chunks(lst, chunk_size):
+#     """Split a list into chunks of specified size."""
+#     for i in range(0, len(lst), chunk_size):
+#         yield lst[i:i + chunk_size]
 
 
 # A region grow function here
@@ -121,7 +133,7 @@ for img in img_list:
         num_chan, num_ts = dyna_data.shape
         # Try only image the 5 sigma area
         four_sigma_mask = np.abs(dyna_data) > 4 
-        six_sigma_mask = np.abs(dyna_data) > 6
+        six_sigma_mask = np.abs(dyna_data) > 5 # we use 5 sigma as the threshold for the targets
 
         six_sigma_coords = np.argwhere(six_sigma_mask)
 
@@ -182,112 +194,104 @@ for img in img_list:
             target_SB = glob.glob(postprocess_dir + exo_dir + '/SB*.MS')
             target_SB.sort()
 
-            # Splitting cali_SB and target_SB into chunks
-            cali_SB_chunks = list(split_into_chunks(cali_SB, chunk_num))
-            target_SB_chunks = list(split_into_chunks(target_SB, chunk_num))
+            # # Splitting cali_SB and target_SB into chunks
+            # cali_SB_chunks = list(split_into_chunks(cali_SB, chunk_num))
+            # target_SB_chunks = list(split_into_chunks(target_SB, chunk_num))
 
             processed_cali_SBs = []
             processed_target_SBs = []
 
-            for chunk_idx, (cali_SB_chunk, target_SB_chunk) in enumerate(zip(cali_SB_chunks, target_SB_chunks)):
-                cali_SB_str = ",".join(cali_SB_chunk)
-                target_SB_str = ",".join(target_SB_chunk)
+            cali_SB_str = ",".join(cali_SB)
+            target_SB_str = ",".join(target_SB)
 
-                # Names for the Multi-Subband (MSB) data
-                MSB_cali = f"{postprocess_dir}/{cal_dir}/MSB_candidate_{i}_chunk_{chunk_idx}.MS"
-                MSB_target = f"{postprocess_dir}{exo_dir}/MSB_candidate_{i}_chunk_{chunk_idx}.MS"
+            # Names for the Multi-Subband (MSB) data
+            MSB_cali = f"{postprocess_dir}/{cal_dir}/MSB_candidate_{i}.MS"
+            MSB_target = f"{postprocess_dir}{exo_dir}/MSB_candidate_{i}.MS"
 
-                num_SB_chunk = len(cali_SB_chunk)
+            processed_cali_SBs.append(MSB_cali)
+            processed_target_SBs.append(MSB_target)
 
-                processed_cali_SBs.append(MSB_cali)
-                processed_target_SBs.append(MSB_target)
+            # Construct the command string with the msin argument and the msout argument
+            cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{cali_SB_str}] msout={MSB_cali} avg.freqstep={ave_chan} avg.timestep={ave_time}"
+            subprocess.run(cmd_flagchan, shell=True, check=True)
 
+            cmd_flagMA = f"DP3 {pipe_dir}/templates/DPPP-flagant.parset msin={MSB_cali}"
+            subprocess.run(cmd_flagMA, shell=True, check=True)
 
-                ############################
+            # Construct the command string with the msin argument and the msout argument
+            cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_cali} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+            subprocess.run(cmd_aoflagger, shell=True, check=True)
 
-                # Construct the command string with the msin argument and the msout argument
-                cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{cali_SB_str}] msout={MSB_cali} avg.freqstep={ave_chan}"
-                subprocess.run(cmd_flagchan, shell=True, check=True)
+            with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
+                template_content = template_file.read()
 
-                cmd_flagMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-flagant.parset msin={MSB_cali}"
-                subprocess.run(cmd_flagMA, shell=True, check=True)
+            cali_model = f'{pipe_dir}/cal_models/{calibrator}_lcs.skymodel'
 
-                # Construct the command string with the msin argument and the msout argument
-                cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_cali} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-                subprocess.run(cmd_aoflagger, shell=True, check=True)
+            modified_content = template_content.replace('CALI_MODEL', cali_model)
+            modified_content = modified_content.replace('CHAN_PER_SB', str(num_SB))
 
-                with open(f'{pipe_dir}/templates/bad_MA.toml', 'r') as template_file:
-                    template_content = template_file.read()
+            # Write the modified content to a new file
+            with open(f'{postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml', 'w') as cali_file:
+                cali_file.write(modified_content)
 
-                cali_model = f'{pipe_dir}/cal_models/{calibrator}_lcs.skymodel'
+            cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml {MSB_cali}"
+            subprocess.run(cmd_cali, shell=True, check=True)
 
-                modified_content = template_content.replace('CALI_MODEL', cali_model)
-                modified_content = modified_content.replace('CHAN_PER_SB', str(num_SB_chunk))
+            # Remove the table files so they don't take up too much space!
+            cmd_remo_table = f"rm -rf {MSB_cali}/table.* {MSB_cali}/pre_cal_flags.h5"
+            subprocess.run(cmd_remo_table, shell=True, check=True)
 
-                # Write the modified content to a new file
-                with open(f'{postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml', 'w') as cali_file:
-                    cali_file.write(modified_content)
+            ############################
 
-                cmd_cali = f"calpipe {postprocess_dir}/{cal_dir}/cali_candidate_{i}.toml {MSB_cali}"
-                subprocess.run(cmd_cali, shell=True, check=True)
+            cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{target_SB_str}] msout={MSB_target} avg.freqstep={ave_chan} avg.timestep={ave_time}"
+            subprocess.run(cmd_flagchan, shell=True, check=True)
 
-                # Remove the table files so they don't take up too much space!
-                cmd_remo_table = f"rm -rf {MSB_cali}/table.* {MSB_cali}/pre_cal_flags.h5"
-                subprocess.run(cmd_remo_table, shell=True, check=True)
+            if os.path.exists(f'{postprocess_dir}/{exo_dir}/DPPP-removeant.parset'):
+                cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_target} msout={MSB_target}B"
+                subprocess.run(cmd_removeMA, shell=True, check=True)
 
-                ############################
+                cmd_remo_MSB = f"rm -rf {MSB_target}"
+                subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
-                cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{target_SB_str}] msout={MSB_target} avg.freqstep={ave_chan}"
-                subprocess.run(cmd_flagchan, shell=True, check=True)
+                # rename the new MSB
+                cmd_rename_MSB = f"mv {MSB_target}B {MSB_target}"
+                subprocess.run(cmd_rename_MSB, shell=True, check=True)
 
-                if os.path.exists(f'{postprocess_dir}/{exo_dir}/DPPP-removeant.parset'):
-                    cmd_removeMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-removeant.parset msin={MSB_target} msout={MSB_target}B"
-                    subprocess.run(cmd_removeMA, shell=True, check=True)
+            cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_target}"
+            subprocess.run(cmd_flagMA, shell=True, check=True)
 
-                    cmd_remo_MSB = f"rm -rf {MSB_target}"
-                    subprocess.run(cmd_remo_MSB, shell=True, check=True)
-                    # rename the new MSB
-                    cmd_rename_MSB = f"mv {MSB_target}B {MSB_target}"
-                    subprocess.run(cmd_rename_MSB, shell=True, check=True)
+            cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+            subprocess.run(cmd_aoflagger, shell=True, check=True)
 
-                cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_target}"
-                subprocess.run(cmd_flagMA, shell=True, check=True)
+            cmd_copy_solution = f'cp {MSB_cali}/instrument_ddecal.h5 {MSB_target}/instrument_dical.h5'
+            subprocess.run(cmd_copy_solution, shell=True, check=True)
 
-                cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-                subprocess.run(cmd_aoflagger, shell=True, check=True)
+            cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_target}'
+            subprocess.run(cmd_apply_solution, shell=True, check=True)
 
-                cmd_copy_solution = f'cp {MSB_cali}/instrument_ddecal.h5 {MSB_target}/instrument_dical.h5'
-                subprocess.run(cmd_copy_solution, shell=True, check=True)
+            # second round of aoflagger
+            cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
+            subprocess.run(cmd_aoflagger, shell=True, check=True)
 
-                cmd_apply_solution = f'calpipe {pipe_dir}/templates/cali_tran.toml {MSB_target}'
-                subprocess.run(cmd_apply_solution, shell=True, check=True)
+            ############################
 
-                # second round of aoflagger
-                cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} msin.datacolumn=DI_DATA flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
-                subprocess.run(cmd_aoflagger, shell=True, check=True)
+            # Don't forget to remove the A team sources
+            cmd_ddf = (
+                f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
+                f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB} --Freq-NDegridBand 0 '
+                '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
+                '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
+            )
+            combined_ddf = f"{singularity_command} {cmd_ddf}"
+            subprocess.run(combined_ddf, shell=True, check=True)
 
-                ############################
-                # Don't forget to remove the A team sources
-                cmd_ddf = (
-                    f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_chunk_{chunk_idx}_Image_DI '
-                    f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB_chunk} --Freq-NDegridBand 0 '
-                    '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-                    '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
-                )
-                combined_ddf = f"{singularity_command} {cmd_ddf}"
-                subprocess.run(combined_ddf, shell=True, check=True)
-
-                cmd_kms = (
-                    f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_chunk_{chunk_idx}_Image_DI '
-                    f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB_chunk} --NChanSols {num_SB_chunk} '
-                    '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
-                )
-                combined_kms = f"{singularity_command} {cmd_kms}"
-                subprocess.run(combined_kms, shell=True, check=True)
-
-            processed_cali_SB_str = ",".join(processed_cali_SBs)
-            processed_target_SB_str = ",".join(processed_target_SBs)
-
+            cmd_kms = (
+                f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
+                f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB} --NChanSols {num_SB} '
+                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
+            )
+            combined_kms = f"{singularity_command} {cmd_kms}"
+            subprocess.run(combined_kms, shell=True, check=True)
 
             ###########################
 
@@ -298,7 +302,7 @@ for img in img_list:
             cmd_burst_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
                              f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                              f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
-                             f'-interval {min_time} {max_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time} {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_chunk_?.MS')
+                             f'-interval {min_time} {max_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time} {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
             subprocess.run(cmd_burst_img, shell=True, check=True)
 
             if min_time - num_time > 0:
@@ -306,7 +310,7 @@ for img in img_list:
                 cmd_pre_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
                                f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
-                               f'-interval {min_time-num_time} {min_time} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_pre {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_chunk_?.MS')
+                               f'-interval {min_time-num_time} {min_time} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_pre {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
                 subprocess.run(cmd_pre_img, shell=True, check=True)
 
             if max_time + num_time < num_ts:
@@ -314,7 +318,7 @@ for img in img_list:
                 cmd_post_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
                                 f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                 f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
-                                f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {postprocess_dir}/{exo_dir}/MSB_candidate_{i}_chunk_?.MS')
+                                f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
                 subprocess.run(cmd_post_img, shell=True, check=True)
 
         cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
