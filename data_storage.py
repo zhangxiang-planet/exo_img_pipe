@@ -3,8 +3,10 @@ import shutil
 import concurrent.futures
 import logging
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up logging to both console and file
+log_filename = "compression_log.log"
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s',
+                    handlers=[logging.FileHandler(log_filename), logging.StreamHandler()])
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
@@ -27,8 +29,11 @@ def process_observation(obs):
         
         if not os.path.exists(tar_gz_path):
             logging.info(f"Compressing {obs} to {tar_gz_path}...")
-            shutil.make_archive(os.path.join(pre_obs_dir, "L2", obs), 'gztar', postprocess_dir, obs)
-            logging.info(f"Finished compressing {obs}")
+            try:
+                shutil.make_archive(os.path.join(pre_obs_dir, "L2", obs), 'gztar', postprocess_dir, obs)
+                logging.info(f"Finished compressing {obs}")
+            except FileNotFoundError as fnf_error:
+                logging.error(f"File not found during compression: {fnf_error}")
         else:
             logging.info(f"{tar_gz_path} already exists, skipping compression.")
     
@@ -36,5 +41,5 @@ def process_observation(obs):
         logging.error(f"Error processing {obs}: {e}")
 
 # Increase the number of threads to 32
-with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
     executor.map(process_observation, postprocess_list)
