@@ -85,9 +85,11 @@ def check_new_data(watch_dir: str, postprocess_dir: str) -> list:
     skip_data = np.genfromtxt(skip_file, dtype='str')
 
     # Filtering out the data that's already processed and not in CALIBRATORS
-    unprocessed_data = [data for data in avai_data if data not in processed_data and not any(cal in data for cal in CALIBRATORS) and data not in skip_data and 'TAU_BOO' not in data]
+    unprocessed_data = [data for data in avai_data if data not in processed_data and not any(cal in data for cal in CALIBRATORS) and data not in skip_data]
 
-    return unprocessed_data
+    unprocessed_data_sorted = sorted(unprocessed_data)
+
+    return unprocessed_data_sorted
 
 # Task 1. Moving target and calibrator data from /databf to /data where we do the processing
 
