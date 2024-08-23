@@ -3,11 +3,14 @@ import os, glob
 from astropy.io import fits
 import numpy as np
 from nenupy.instru import freq2sb
+from datetime import datetime
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 singularity_file = "/home/xzhang/software/ddf_dev2_ateam.sif"
+# The region file we use for A-team removal
+region_file = "/home/xzhang/software/exo_img_pipe/regions/Ateam.reg"
 
 # Calibrators
 CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
@@ -21,17 +24,17 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 # bin_per_SB = chan_per_SB // ave_chan
 
-# data before 9 Dec 2023
-chan_per_SB_origin = 12
-ave_chan = 4
-chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 1
+# # data before 9 Dec 2023
+# chan_per_SB_origin = 12
+# ave_chan = 4
+# chan_per_SB = int(chan_per_SB_origin/ave_chan)
+# ave_time = 1
 
-# Data starting from 9 Dec 2023
-chan_per_SB_origin = 2
-ave_chan = 1
-chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 8
+# # Data starting from 9 Dec 2023
+# chan_per_SB_origin = 2
+# ave_chan = 1
+# chan_per_SB = int(chan_per_SB_origin/ave_chan)
+# ave_time = 8
 
 # the lowest SB we use
 # SB_min = 92
@@ -98,6 +101,22 @@ for img in img_list:
         end_time = parts[2] + "_" + parts[3]
         year = parts[0][:4]
         month = parts[0][4:6]
+
+        start_time_dt = datetime.strptime(start_time, "%Y%m%d_%H%M%S")
+        end_time_dt = datetime.strptime(end_time, "%Y%m%d_%H%M%S")
+
+        reference_date = datetime(2023, 12, 9)
+
+        if start_time_dt < reference_date:
+            chan_per_SB_origin = 12
+            ave_chan = 4
+            chan_per_SB = int(chan_per_SB_origin / ave_chan)
+            ave_time = 1
+        else:
+            chan_per_SB_origin = 2
+            ave_chan = 1
+            chan_per_SB = int(chan_per_SB_origin / ave_chan)
+            ave_time = 8
 
         base_cal_dir = os.path.join(preprocess_dir, year, month)
         pre_target_dir = os.path.join(preprocess_dir, year, month, exo_dir)
@@ -277,18 +296,30 @@ for img in img_list:
 
             # Don't forget to remove the A team sources
             cmd_ddf = (
-                f'DDF.py --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
-                f'--Image-Cell 60 --Image-NPix 2400 --Output-Mode Clean --Facets-NFacets 5 --Parallel-NCPU 96 --Freq-NBand {num_SB} --Freq-NDegridBand 0 '
-                '--Selection-UVRangeKm [0.067,1000] --Comp-GridDecorr 0.0001 --Comp-DegridDecorr 0.0001 --Deconv-Mode HMP --Deconv-MaxMajorIter 20 '
-                '--Mask-Auto 1 --Mask-SigTh 4 --Deconv-AllowNegative 0 --Deconv-RMSFactor 4 --Output-Also all'
+                f'DDF.py {pipe_dir}/templates/template_DI.parset --Data-MS {MSB_target} --Data-ColName DI_DATA --Output-Name {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis '
+                f'--Cache-Reset 1 --Cache-Dir {postprocess_dir}{exo_dir}/. --Deconv-Mode SSD2 --Mask-Auto 1 --Mask-SigTh 7 --Deconv-MaxMajorIter 3 --Deconv-RMSFactor 3 --Deconv-PeakFactor 0.1 --Facets-NFacet 1 --Facets-DiamMax 5 '
+                f'--Weight-OutColName DDF_WEIGHTS --GAClean-ScalesInitHMP [0] --Beam-Model None '
+                f'--Freq-NBand {num_SB} --SSD2-PolyFreqOrder 3 --Freq-NDegridBand 0 --Image-NPix 1200 --Image-Cell 120'
             )
             combined_ddf = f"{singularity_command} {cmd_ddf}"
             subprocess.run(combined_ddf, shell=True, check=True)
 
+            cmd_mask = (
+                f'MakeMask.py --RestoredIm {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis.app.restored.fits --Box 100,2 --Th 10000 --ds9Mask {region_file}'
+            )
+            combined_mask = f"{singularity_command} {cmd_mask}"
+            subprocess.run(combined_mask, shell=True, check=True)
+
+            cmd_maskdico = (
+                f'MaskDicoModel.py --InDicoModel {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis.DicoModel --OutDicoModel {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis.filterATeam.DicoModel --MaskName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis.app.restored.fits.mask.fits --InvertMask 1'
+            )
+            combined_maskdico = f"{singularity_command} {cmd_maskdico}"
+            subprocess.run(combined_maskdico, shell=True, check=True)
+
             cmd_kms = (
-                f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI '
-                f'--dt 2 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB} --NChanSols {num_SB} '
-                '--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam'
+                f'kMS.py --MSName {MSB_target} --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis '
+                f'--dt 0.5 --InCol DI_DATA --OutCol SUB_DATA --SolsDir={postprocess_dir}/{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ --NChanPredictPerMS {num_SB} --NChanSols {num_SB} '
+                f'--OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam --DicoModel {postprocess_dir}{exo_dir}/MSB_candidate_{i}_Image_DI_Bis.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS'
             )
             combined_kms = f"{singularity_command} {cmd_kms}"
             subprocess.run(combined_kms, shell=True, check=True)
@@ -300,7 +331,7 @@ for img in img_list:
 
             # first, we image the burst
             cmd_burst_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
-                             f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                             f'-scale 2amin -size 2000 2000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                              f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                              f'-interval {min_time} {max_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time} {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
             subprocess.run(cmd_burst_img, shell=True, check=True)
@@ -308,7 +339,7 @@ for img in img_list:
             if min_time - num_time > 0:
                 # we can image the time range before the burst
                 cmd_pre_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
-                               f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                               f'-scale 2amin -size 2000 2000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                                f'-interval {min_time-num_time} {min_time} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_pre {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
                 subprocess.run(cmd_pre_img, shell=True, check=True)
@@ -316,7 +347,7 @@ for img in img_list:
             if max_time + num_time < num_ts:
                 # we can image the time range after the burst
                 cmd_post_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
-                                f'-scale 1amin -size 4000 4000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
+                                f'-scale 2amin -size 2000 2000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                 f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
                                 f'-interval {max_time+1} {max_time+num_time+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
                 subprocess.run(cmd_post_img, shell=True, check=True)
