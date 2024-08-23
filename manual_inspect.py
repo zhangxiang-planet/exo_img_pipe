@@ -234,8 +234,19 @@ for img in img_list:
             cmd_flagchan = f"DP3 {pipe_dir}/templates/DPPP-flagchan.parset msin=[{cali_SB_str}] msout={MSB_cali} avg.freqstep={ave_chan} avg.timestep={ave_time}"
             subprocess.run(cmd_flagchan, shell=True, check=True)
 
-            cmd_flagMA = f"DP3 {pipe_dir}/templates/DPPP-flagant.parset msin={MSB_cali}"
-            subprocess.run(cmd_flagMA, shell=True, check=True)
+            # replace the flagma with removeant
+            cmd_removeMA = f"DP3 {postprocess_dir}/{cal_dir}/DPPP-removeant.parset msin={MSB_cali} msout={MSB_cali}B"
+            subprocess.run(cmd_removeMA, shell=True, check=True)
+
+            cmd_remo_MSB = f"rm -rf {MSB_cali}"
+            subprocess.run(cmd_remo_MSB, shell=True, check=True)
+
+            # rename the new MSB
+            cmd_rename_MSB = f"mv {MSB_cali}B {MSB_cali}"
+            subprocess.run(cmd_rename_MSB, shell=True, check=True)
+
+            # cmd_flagMA = f"DP3 {pipe_dir}/templates/DPPP-flagant.parset msin={MSB_cali}"
+            # subprocess.run(cmd_flagMA, shell=True, check=True)
 
             # Construct the command string with the msin argument and the msout argument
             cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_cali} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
@@ -276,8 +287,8 @@ for img in img_list:
                 cmd_rename_MSB = f"mv {MSB_target}B {MSB_target}"
                 subprocess.run(cmd_rename_MSB, shell=True, check=True)
 
-            cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_target}"
-            subprocess.run(cmd_flagMA, shell=True, check=True)
+            # cmd_flagMA = f"DP3 {postprocess_dir}/{exo_dir}/DPPP-flagant.parset msin={MSB_target}"
+            # subprocess.run(cmd_flagMA, shell=True, check=True)
 
             cmd_aoflagger = f"DP3 {pipe_dir}/templates/DPPP-aoflagger.parset msin={MSB_target} flag.strategy={pipe_dir}/templates/Nenufar64C1S.lua"
             subprocess.run(cmd_aoflagger, shell=True, check=True)
