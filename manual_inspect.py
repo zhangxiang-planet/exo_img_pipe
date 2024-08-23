@@ -140,7 +140,7 @@ for img in img_list:
 
                 
         img_name = img.split("/")[-1].replace(".png", "")
-        dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_MSB??.MS/detected_dynamic_spec_{suffix}/{img_name}')[0]
+        dyna_file = glob.glob(f'{postprocess_dir}{exo_dir}/dynamic_spec_DynSpecs_GSB.MS/detected_dynamic_spec_{suffix}/{img_name}')[0]
         dyna_data = fits.getdata(dyna_file)
         # we need to get the frequency range of the image
         with fits.open(dyna_file) as hdul:
