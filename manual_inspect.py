@@ -109,12 +109,12 @@ for img in img_list:
 
         if start_time_dt < reference_date:
             chan_per_SB_origin = 12
-            ave_chan = 4
+            ave_chan = 12
             chan_per_SB = int(chan_per_SB_origin / ave_chan)
             ave_time = 1
         else:
             chan_per_SB_origin = 2
-            ave_chan = 1
+            ave_chan = 2
             chan_per_SB = int(chan_per_SB_origin / ave_chan)
             ave_time = 8
 
