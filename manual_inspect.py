@@ -177,8 +177,8 @@ for img in img_list:
             max_time = unique_bounding_boxes[i][3]
 
             # we skip this bounding box if it is too narrow in time or frequency
-            if max_freq - min_freq < 3 or max_time - min_time < 3:
-                continue
+            # if max_freq - min_freq < 3 or max_time - min_time < 3:
+            #     continue
 
             # find the actual min SB, which is the bigger one in SB_min and the min of SBs within {base_cal_dir}/{cal_dir}/L1/
             cali_SBs = glob.glob(base_cal_dir + "/" + cal_dir + "/L1/SB*.MS")
