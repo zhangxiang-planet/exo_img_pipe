@@ -306,7 +306,7 @@ for img in img_list:
         cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
         subprocess.run(cmd_remo_SB, shell=True, check=True)
 
-        cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB_candidate_*"
+        cmd_remo_MSB = f"rm -rf {postprocess_dir}/{exo_dir}/MSB*.MS"
         subprocess.run(cmd_remo_MSB, shell=True, check=True)
 
         cmd_remo_soldir = f"rm -rf {postprocess_dir}/{exo_dir}/SOLSDIR"
