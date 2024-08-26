@@ -284,7 +284,7 @@ for img in img_list:
             cmd_burst_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
                              f'-scale 2amin -size 2000 2000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                              f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
-                             f'-interval {min_time} {max_time+1} -channel-range {min_freq} {max_freq+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time} {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
+                             f'-interval {min_time} {max_time+1} -channel-range {min_freq} {max_freq+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time} {postprocess_dir}/{exo_dir}/GSB.MS')
             subprocess.run(cmd_burst_img, shell=True, check=True)
 
             if min_time - num_time > 0:
@@ -292,7 +292,7 @@ for img in img_list:
                 cmd_pre_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
                                f'-scale 2amin -size 2000 2000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
-                               f'-interval {min_time-num_time} {min_time} -channel-range {min_freq} {max_freq+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_pre {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
+                               f'-interval {min_time-num_time} {min_time} -channel-range {min_freq} {max_freq+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_pre {postprocess_dir}/{exo_dir}/GSB.MS')
                 subprocess.run(cmd_pre_img, shell=True, check=True)
 
             if max_time + num_time < num_ts:
@@ -300,7 +300,7 @@ for img in img_list:
                 cmd_post_img = (f'wsclean -pol I,V -weight briggs 0 -data-column KMS_SUB -minuv-l 0 -maxuv-l 1000 ' 
                                 f'-scale 2amin -size 2000 2000 -make-psf -niter 0 -auto-mask 6 -auto-threshold 5 -mgain 0.6 '
                                 f'-local-rms -join-polarizations -multiscale -no-negative -no-update-model-required -no-dirty '
-                                f'-interval {max_time+1} {max_time+num_time+1} -channel-range {min_freq} {max_freq+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {postprocess_dir}/{exo_dir}/MSB_candidate_{i}.MS')
+                                f'-interval {max_time+1} {max_time+num_time+1} -channel-range {min_freq} {max_freq+1} -name {postprocess_dir}/{exo_dir}/MSB_{min_freq}_{max_freq}_{min_time}_{max_time}_post {postprocess_dir}/{exo_dir}/GSB.MS')
                 subprocess.run(cmd_post_img, shell=True, check=True)
 
         cmd_remo_SB = f"rm -rf {postprocess_dir}/{exo_dir}/SB*.MS"
