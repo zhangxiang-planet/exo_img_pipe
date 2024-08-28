@@ -15,6 +15,12 @@ period_dir = "/data/xzhang/exo_period/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 target_name = "HD_189733"
 
+freq_min = 21.09222412109375 # MHz
+delta_freq = 0.1953125 # MHz
+num_chan = 212
+
+delta_time = 8.053063089028 # seconds
+
 # snr_threshold = 7
 # snr_threshold_target = 6
 time_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
@@ -112,15 +118,13 @@ for t_window in time_windows:
         combined_time = []
         combined_data = []
 
-        # open one of the detection files to get the frequency list
-        with fits.open(detection_files[0]) as hdul:
-            freq_range = hdul[0].header['CRVAL2'], hdul[0].header['CRVAL2'] + hdul[0].header['CDELT2'] * hdul[0].header['NAXIS2']
-            freq_list = np.linspace(freq_range[0], freq_range[1], hdul[0].header['NAXIS2'])
-
         for detection_file in detection_files:
             with fits.open(detection_file) as hdul:
+                file_chan = hdul[0].header['NAXIS2']
                 data = hdul[0].data
-                combined_data.append(data)
+                resampled_data = np.full((num_chan, data.shape[1]), np.nan)
+                resampled_data[0:file_chan, :] = data
+                combined_data.append(resampled_data)
                 time_list = np.linspace(hdul[0].header['OBS-STAR'], hdul[0].header['OBS-STOP'], hdul[0].header['NAXIS1'])
                 combined_time.append(hdul[0].header['DATE-OBS'])
 
