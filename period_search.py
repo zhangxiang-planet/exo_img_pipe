@@ -3,6 +3,7 @@ import os, glob
 from astropy.io import fits
 import numpy as np
 from dask import delayed, compute
+from dask.distributed import Client, LocalCluster
 from templates.Noise_esti_template import calculate_noise_for_window, apply_gaussian_filter
 import matplotlib.pyplot as plt
 import matplotlib
@@ -38,6 +39,9 @@ freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 # list target observations
 target_dirs = glob.glob(postprocess_dir + "*" + target_name + "_TRACKING")
 target_dirs.sort()
+
+cluster = LocalCluster()
+client = Client(cluster)
 
 # # convolve the dynamic spectra within each observation
 # for target_dir in target_dirs:
@@ -114,14 +118,7 @@ target_dirs.sort()
 
 # make the period search directory
 period_search_dir = os.path.join(period_dir, target_name)
-
-if not os.path.exists(period_search_dir):
-    # Directory does not exist, so create it
-    cmd_period_dir = f'mkdir {period_search_dir}'
-    subprocess.run(cmd_period_dir, shell=True, check=True)
-    print(f"Directory '{period_search_dir}' created successfully.")
-else:
-    print(f"Directory '{period_search_dir}' already exists.")
+os.makedirs(period_search_dir, exist_ok=True)
 
 for t_window in time_windows:
     for f_window in freq_windows:
@@ -166,14 +163,33 @@ for t_window in time_windows:
         #     fap = LombScargle(combined_time, combined_data[i]).false_alarm_probability(power.max())
         #     fap_matrix[i] = fap
 
-        for freq_idx in range(num_chan):
-            ls = LombScargle(combined_time, combined_data[freq_idx, :])
-            power = ls.power(ls_freq)
-            lomb_scargle_matrix[freq_idx, :] = power
+        # for freq_idx in range(num_chan):
+        #     ls = LombScargle(combined_time, combined_data[freq_idx, :])
+        #     power = ls.power(ls_freq)
+        #     lomb_scargle_matrix[freq_idx, :] = power
             
-            # Calculate the FAP for the entire power spectrum
-            for i, p in enumerate(power):
-                fap_matrix[freq_idx, i] = ls.false_alarm_probability(p)
+        #     # Calculate the FAP for the entire power spectrum
+        #     for i, p in enumerate(power):
+        #         fap_matrix[freq_idx, i] = ls.false_alarm_probability(p)
+
+        @delayed
+        def process_channel(freq_idx):
+            """Function to process a single frequency channel with Lomb-Scargle."""
+            y_data = combined_data[freq_idx, :]  # Data for the current frequency channel
+            ls = LombScargle(combined_time, y_data)
+            power = ls.power(ls_freq)
+            # Calculate FAP for each power value
+            fap_values = [ls.false_alarm_probability(p) for p in power]
+            return power, fap_values
+
+        # Parallel processing using Dask Delayed
+        tasks = [process_channel(freq_idx) for freq_idx in range(num_chan)]
+        results = compute(*tasks)
+
+        # Unpack results into the matrices
+        for i, (power, fap_values) in enumerate(results):
+            lomb_scargle_matrix[i, :] = power
+            fap_matrix[i, :] = fap_values
 
         # save the Lomb-Scargle periodogram into fits files
         header = fits.Header()
