@@ -134,10 +134,11 @@ for t_window in time_windows:
                 ref_time = Time(obs_start_time).mjd
                 time_offset = np.arange(hdul[0].header['NAXIS1']) * hdul[0].header['CDELT1']
                 time = ref_time + time_offset / 86400.0
-                combined_time.append(time)
+                time_array = np.tile(time, (num_chan, 1))
+                combined_time.append(time_array)
 
-        combined_time = np.concatenate(combined_time)
-        combined_data = np.concatenate(combined_data, axis=1)
+        combined_time = np.hstack(combined_time) 
+        combined_data = np.hstack(combined_data)  
 
         ls = LombScargle(combined_time[0, :], combined_data[0, :])
         ls_freq, _ = ls.autopower()
