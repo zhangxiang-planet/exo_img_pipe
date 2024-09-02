@@ -7,6 +7,9 @@ from templates.Noise_esti_template import calculate_noise_for_window, apply_gaus
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
+from datetime import datetime, timedelta
+from astropy.time import Time
+from astropy.timeseries import LombScargle
 
 ###### Initial settings ######
 
@@ -125,6 +128,52 @@ for t_window in time_windows:
                 resampled_data = np.full((num_chan, data.shape[1]), np.nan)
                 resampled_data[0:file_chan, :] = data
                 combined_data.append(resampled_data)
-                time_list = np.linspace(hdul[0].header['OBS-STAR'], hdul[0].header['OBS-STOP'], hdul[0].header['NAXIS1'])
-                combined_time.append(hdul[0].header['DATE-OBS'])
+
+                obs_start_str = hdul[0].header['OBS-STAR']
+                obs_start_time = datetime.strptime(obs_start_str, '%Y-%m-%dT%H:%M:%S.%f')
+                ref_time = Time(obs_start_time).mjd
+                time_offset = np.arange(hdul[0].header['NAXIS1']) * hdul[0].header['CDELT1']
+                time = ref_time + time_offset / 86400.0
+                combined_time.append(time)
+
+        combined_time = np.concatenate(combined_time)
+        combined_data = np.concatenate(combined_data, axis=1)
+
+        ls = LombScargle(combined_time[0, :], combined_data[0, :])
+        ls_freq, _ = ls.autopower()
+
+        # set parameters for Lomb_Scargle periodogram
+        lomb_scargle_matrix = np.zeros((num_chan, len(ls_freq)))
+        # we need to get false alarm probability
+        fap_matrix = np.zeros((num_chan, len(ls_freq)))
+
+        # for i in range(num_chan):
+        #     freq, power = LombScargle(combined_time, combined_data[i]).autopower()
+        #     lomb_scargle_matrix[i] = power
+        #     fap = LombScargle(combined_time, combined_data[i]).false_alarm_probability(power.max())
+        #     fap_matrix[i] = fap
+
+        for freq_idx in range(num_chan):
+            ls = LombScargle(combined_time, combined_data[freq_idx, :])
+            power = ls.power(ls_freq)
+            lomb_scargle_matrix[freq_idx, :] = power
+            
+            # Calculate the FAP for the entire power spectrum
+            for i, p in enumerate(power):
+                fap_matrix[freq_idx, i] = ls.false_alarm_probability(p)
+
+        # save the Lomb-Scargle periodogram into fits files
+        header = fits.Header()
+        header['COMMENT'] = "Lomb-Scargle power matrix"
+        hdu_power = fits.PrimaryHDU(data=lomb_scargle_matrix, header=header)
+        hdu_power.writeto(f'{period_dir}{target_name}/power_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+
+        header = fits.Header()
+        header['COMMENT'] = "False alarm probability matrix"
+        hdu_fap = fits.PrimaryHDU(data=fap_matrix, header=header)
+        hdu_fap.writeto(f'{period_dir}{target_name}/fap_{t_window_sec}s_{f_window_khz}kHz.fits', overwrite=True)
+
+        # save the frequency list in a text file
+        np.savetxt(f'{period_dir}{target_name}/freq_{t_window_sec}s_{f_window_khz}kHz.txt', ls_freq)
+
 
