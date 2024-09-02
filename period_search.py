@@ -107,8 +107,15 @@ target_dirs.sort()
 #     subprocess.run(cmd_remo_dyna, shell=True, check=True)
 
 # make the period search directory
-cmd_period_dir = f'mkdir {period_dir}{target_name}'
-subprocess.run(cmd_period_dir, shell=True, check=True)
+period_search_dir = os.path.join(period_dir, target_name)
+
+if not os.path.exists(period_search_dir):
+    # Directory does not exist, so create it
+    cmd_period_dir = f'mkdir {period_search_dir}'
+    subprocess.run(cmd_period_dir, shell=True, check=True)
+    print(f"Directory '{period_search_dir}' created successfully.")
+else:
+    print(f"Directory '{period_search_dir}' already exists.")
 
 for t_window in time_windows:
     for f_window in freq_windows:
