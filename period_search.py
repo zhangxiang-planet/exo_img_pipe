@@ -146,7 +146,7 @@ for t_window in time_windows:
         combined_time = np.concatenate(combined_time) 
         combined_data = np.hstack(combined_data)  
 
-        ls = LombScargle(combined_time[0, :], combined_data[0, :])
+        ls = LombScargle(combined_time, combined_data[0, :])
         ls_freq, _ = ls.autopower()
 
         # set parameters for Lomb_Scargle periodogram
