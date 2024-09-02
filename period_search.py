@@ -207,7 +207,7 @@ for t_window in time_windows:
             ls = LombScargle(combined_time_clean, y_data)
             power = ls.power(ls_freq)
             # Calculate FAP for each power value
-            fap_values = [ls.false_alarm_probability(p, method='bootstrap', method_kwds={'n_bootstraps': 10}) for p in power]
+            fap_values = [ls.false_alarm_probability(p) for p in power]
             return power, fap_values
 
         # Parallel processing using Dask Delayed
