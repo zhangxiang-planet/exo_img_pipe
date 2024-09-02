@@ -3,7 +3,7 @@ import os, glob
 from astropy.io import fits
 import numpy as np
 from dask import delayed, compute
-from dask.distributed import Client, LocalCluster
+# from dask.distributed import Client, LocalCluster
 from templates.Noise_esti_template import calculate_noise_for_window, apply_gaussian_filter
 import matplotlib.pyplot as plt
 import matplotlib
@@ -40,8 +40,8 @@ freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 target_dirs = glob.glob(postprocess_dir + "*" + target_name + "_TRACKING")
 target_dirs.sort()
 
-cluster = LocalCluster()
-client = Client(cluster)
+# cluster = LocalCluster()
+# client = Client(cluster)
 
 # # convolve the dynamic spectra within each observation
 # for target_dir in target_dirs:
