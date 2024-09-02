@@ -18,6 +18,12 @@ period_dir = "/data/xzhang/exo_period/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 target_name = "HD_189733"
 
+# which bursting period to search
+period_star = 11.94 # days
+period_planet = 2.21857312 # days
+period_min = period_planet/10.
+period_max = period_planet*10.
+
 freq_min = 21.09222412109375 # MHz
 delta_freq = 0.1953125 # MHz
 num_chan = 212
@@ -147,7 +153,7 @@ for t_window in time_windows:
         combined_data = np.hstack(combined_data)  
 
         ls = LombScargle(combined_time, combined_data[0, :])
-        ls_freq, _ = ls.autopower()
+        ls_freq, _ = ls.autopower(minimum_frequency=1/period_max, maximum_frequency=1/period_min)
 
         # set parameters for Lomb_Scargle periodogram
         lomb_scargle_matrix = np.zeros((num_chan, len(ls_freq)))
