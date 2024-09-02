@@ -11,6 +11,7 @@ matplotlib.use('Agg')
 from datetime import datetime, timedelta
 from astropy.time import Time
 from astropy.timeseries import LombScargle
+from scipy.interpolate import griddata
 
 ###### Initial settings ######
 
@@ -39,6 +40,41 @@ freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 # list target observations
 target_dirs = glob.glob(postprocess_dir + "*" + target_name + "_TRACKING")
 target_dirs.sort()
+
+def remove_excessive_nans(data, time, threshold=0.3):
+    """Remove rows or columns with more than the threshold percentage of NaNs."""
+    # Identify rows and columns with more than the threshold percentage of NaNs
+    row_nan_fraction = np.mean(np.isnan(data), axis=1)  # Fraction of NaNs in each row
+    col_nan_fraction = np.mean(np.isnan(data), axis=0)  # Fraction of NaNs in each column
+
+    # Determine rows and columns to keep
+    rows_to_keep = row_nan_fraction <= threshold
+    cols_to_keep = col_nan_fraction <= threshold
+
+    # Filter the data and time arrays
+    data_clean = data[rows_to_keep, :]
+    data_clean = data_clean[:, cols_to_keep]
+    time_clean = time[cols_to_keep]  # Remove corresponding time points
+
+    return data_clean, time_clean, np.where(~rows_to_keep)[0], np.where(~cols_to_keep)[0]
+
+def interpolate_2d(data, x, y):
+    """Interpolate NaNs in 2D using griddata."""
+    # Create a grid of x and y indices
+    grid_x, grid_y = np.meshgrid(np.arange(data.shape[1]), np.arange(data.shape[0]))
+
+    # Flatten and filter valid points (non-NaN)
+    valid_mask = ~np.isnan(data)
+    points = np.array([grid_x[valid_mask], grid_y[valid_mask]]).T
+    values = data[valid_mask]
+
+    # Interpolate over the NaNs
+    data_interpolated = griddata(points, values, (grid_x, grid_y), method='linear')
+
+    # Fill any remaining NaNs (edges) with nearest neighbor interpolation
+    data_interpolated[np.isnan(data_interpolated)] = griddata(points, values, (grid_x, grid_y), method='nearest')[np.isnan(data_interpolated)]
+
+    return data_interpolated
 
 # cluster = LocalCluster()
 # client = Client(cluster)
@@ -149,41 +185,33 @@ for t_window in time_windows:
         combined_time = np.concatenate(combined_time) 
         combined_data = np.hstack(combined_data)  
 
-        ls = LombScargle(combined_time, combined_data[0, :])
+        combined_data_clean, combined_time_clean, rows_removed, cols_removed = remove_excessive_nans(combined_data, combined_time)
+        with open(f'{period_dir}{target_name}/removed_rows_cols_{t_window_sec}s_{f_window_khz}kHz.txt', 'w') as f:
+            f.write(f"Removed rows (frequency channels): {rows_removed}\n")
+            f.write(f"Removed columns (time points): {cols_removed}\n")
+
+        combined_data_interpolated = interpolate_2d(combined_data_clean, np.arange(combined_data_clean.shape[1]), np.arange(combined_data_clean.shape[0]))
+
+        ls = LombScargle(combined_time_clean, combined_data_interpolated[0, :])
         ls_freq, _ = ls.autopower(minimum_frequency=1/period_max, maximum_frequency=1/period_min)
 
         # set parameters for Lomb_Scargle periodogram
-        lomb_scargle_matrix = np.zeros((num_chan, len(ls_freq)))
+        lomb_scargle_matrix = np.zeros((combined_data_interpolated.shape[0], len(ls_freq)))
         # we need to get false alarm probability
-        fap_matrix = np.zeros((num_chan, len(ls_freq)))
-
-        # for i in range(num_chan):
-        #     freq, power = LombScargle(combined_time, combined_data[i]).autopower()
-        #     lomb_scargle_matrix[i] = power
-        #     fap = LombScargle(combined_time, combined_data[i]).false_alarm_probability(power.max())
-        #     fap_matrix[i] = fap
-
-        # for freq_idx in range(num_chan):
-        #     ls = LombScargle(combined_time, combined_data[freq_idx, :])
-        #     power = ls.power(ls_freq)
-        #     lomb_scargle_matrix[freq_idx, :] = power
-            
-        #     # Calculate the FAP for the entire power spectrum
-        #     for i, p in enumerate(power):
-        #         fap_matrix[freq_idx, i] = ls.false_alarm_probability(p)
+        fap_matrix = np.zeros((combined_data_interpolated.shape[0], len(ls_freq)))
 
         @delayed
         def process_channel(freq_idx):
             """Function to process a single frequency channel with Lomb-Scargle."""
-            y_data = combined_data[freq_idx, :]  # Data for the current frequency channel
-            ls = LombScargle(combined_time, y_data)
+            y_data = combined_data_interpolated[freq_idx, :]  # Data for the current frequency channel
+            ls = LombScargle(combined_time_clean, y_data)
             power = ls.power(ls_freq)
             # Calculate FAP for each power value
-            fap_values = [ls.false_alarm_probability(p) for p in power]
+            fap_values = [ls.false_alarm_probability(p, method='bootstrap', method_kwds={'n_bootstraps': 1000}) for p in power]
             return power, fap_values
 
         # Parallel processing using Dask Delayed
-        tasks = [process_channel(freq_idx) for freq_idx in range(num_chan)]
+        tasks = [process_channel(freq_idx) for freq_idx in range(combined_data_interpolated.shape[0])]
         results = compute(*tasks)
 
         # Unpack results into the matrices
