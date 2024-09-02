@@ -190,6 +190,10 @@ for t_window in time_windows:
             f.write(f"Removed rows (frequency channels): {rows_removed}\n")
             f.write(f"Removed columns (time points): {cols_removed}\n")
 
+        if combined_data_clean.size == 0:
+            print(f"Skipping {t_window_sec}s {f_window_khz}kHz due to insufficient data after NaN removal.")
+            continue
+
         combined_data_interpolated = interpolate_2d(combined_data_clean, np.arange(combined_data_clean.shape[1]), np.arange(combined_data_clean.shape[0]))
 
         ls = LombScargle(combined_time_clean, combined_data_interpolated[0, :])
