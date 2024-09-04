@@ -244,7 +244,7 @@ for t_window in time_windows:
         combined_data_interpolated = interpolate_2d(combined_data_clean, np.arange(combined_data_clean.shape[1]), np.arange(combined_data_clean.shape[0]))
 
         ls = LombScargle(combined_time_clean, combined_data_interpolated[0, :])
-        ls_freq, _ = ls.autopower(minimum_frequency=1/period_max, maximum_frequency=1/period_min, samples_per_peak=10)
+        ls_freq, _ = ls.autopower(minimum_frequency=1/period_max, maximum_frequency=1/period_min)
 
         # set parameters for Lomb_Scargle periodogram
         lomb_scargle_matrix = np.zeros((combined_data_interpolated.shape[0], len(ls_freq)))
