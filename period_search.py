@@ -244,7 +244,7 @@ for t_window in time_windows:
         combined_data_interpolated = interpolate_2d(combined_data_clean, np.arange(combined_data_clean.shape[1]), np.arange(combined_data_clean.shape[0]))
 
         ls = LombScargle(combined_time_clean, combined_data_interpolated[0, :])
-        ls_freq, _ = ls.autopower(minimum_frequency=1/period_max, maximum_frequency=1/period_min)
+        ls_freq, _ = ls.autopower(minimum_frequency=1/period_max, maximum_frequency=1/period_min, samples_per_peak=10)
 
         # set parameters for Lomb_Scargle periodogram
         lomb_scargle_matrix = np.zeros((combined_data_interpolated.shape[0], len(ls_freq)))
@@ -310,9 +310,9 @@ for t_window in time_windows:
         ax1.set_title(f'Lomb-Scargle Power\n{detection_text}')
 
         # Plot vertical lines for star and planet periods
-        ax1.axvline(star_period_freq, color='w', linestyle='--', label='Star Period')
-        ax1.axvline(planet_period_freq, color='w', linestyle='--', label='Planet Period')
-        ax1.axvline(beat_period_freq, color='w', linestyle='--', label='Beat Period')
+        ax1.axvline(star_period_freq, color='w', linestyle='--', alpha=0.5, label='Star Period')
+        ax1.axvline(planet_period_freq, color='w', linestyle='--', alpha=0.5, label='Planet Period')
+        ax1.axvline(beat_period_freq, color='w', linestyle='--', alpha=0.5, label='Beat Period')
 
         # Add labels for the star and planet periods
         ax1.text(star_period_freq, frequencies[-20], 'Star Period', color='w', fontsize=10, ha='right', va='top', rotation=90)
@@ -331,14 +331,9 @@ for t_window in time_windows:
         ax2.set_title('False Alarm Probability')
 
         # Plot vertical lines for star and planet periods
-        ax2.axvline(star_period_freq, color='w', linestyle='--')
-        ax2.axvline(planet_period_freq, color='w', linestyle='--')
-        ax2.axvline(beat_period_freq, color='w', linestyle='--')
-
-        # Add labels for the star and planet periods on FAP plot
-        ax2.text(star_period_freq, frequencies[-20], 'Star Period', color='w', fontsize=10, ha='right', va='top', rotation=90)
-        ax2.text(planet_period_freq, frequencies[-20], 'Planet Period', color='w', fontsize=10, ha='right', va='top', rotation=90)
-        ax2.text(beat_period_freq, frequencies[-20], 'Beat Period', color='w', fontsize=10, ha='right', va='top', rotation=90)
+        ax2.axvline(star_period_freq, color='w', linestyle='--', alpha=0.5)
+        ax2.axvline(planet_period_freq, color='w', linestyle='--', alpha=0.5)
+        ax2.axvline(beat_period_freq, color='w', linestyle='--', alpha=0.5)
 
         # Save the plot
         plt.tight_layout()
