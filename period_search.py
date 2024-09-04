@@ -51,8 +51,8 @@ def remove_excessive_nans(data, time):
     col_nan_fraction = np.mean(np.isnan(data), axis=0)  # Fraction of NaNs in each column
 
     # Determine rows and columns to keep
-    rows_to_keep = row_nan_fraction <= 0.7
-    cols_to_keep = col_nan_fraction <= 0.3
+    rows_to_keep = row_nan_fraction <= 0.2
+    cols_to_keep = col_nan_fraction <= 0.7
 
     # Filter the data and time arrays
     data_clean = data[rows_to_keep, :]
