@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from astropy.time import Time
 from astropy.timeseries import LombScargle
 from scipy.interpolate import griddata
+from matplotlib.colors import LogNorm
 
 ###### Initial settings ######
 
@@ -23,8 +24,9 @@ target_name = "HD_189733"
 # which bursting period to search
 period_star = 11.94 # days
 period_planet = 2.21857312 # days
-period_min = period_planet/10.
-period_max = period_planet*10.
+period_beat = 1/(1/period_planet - 1/period_star)
+period_min = period_planet/3.
+period_max = period_star*3.
 
 freq_min = 21.09222412109375 # MHz
 delta_freq = 0.1953125 # MHz
@@ -250,25 +252,28 @@ for t_window in time_windows:
                         cmap='viridis')
         fig.colorbar(c1, ax=ax1, label='Lomb-Scargle Power')
         ax1.set_ylabel('Radio Frequency (MHz)')
-        ax1.set_title(f'Power (t_window = {t_window_sec}s, f_window = {f_window_khz}kHz)')
+        ax1.set_title(f'Lomb-Scargle Power')
 
         # Plot vertical lines for star and planet periods
         star_period_freq = 1 / period_star
         planet_period_freq = 1 / period_planet
-        ax1.axvline(star_period_freq, color='tab:red', linestyle='--', label='Star Period')
-        ax1.axvline(planet_period_freq, color='tab:blue', linestyle='--', label='Planet Period')
+        beat_period_freq = 1 / period_beat
+        ax1.axvline(star_period_freq, color='red', linestyle='--', label='Star Period')
+        ax1.axvline(planet_period_freq, color='blue', linestyle='--', label='Planet Period')
+        ax1.axvline(beat_period_freq, color='green', linestyle='--', label='Beat Period')
 
         # Add labels for the star and planet periods
         ax1.text(star_period_freq, frequencies[-1], 'Star Period', color='red', fontsize=10, ha='right', va='top', rotation=90)
         ax1.text(planet_period_freq, frequencies[-1], 'Planet Period', color='blue', fontsize=10, ha='right', va='top', rotation=90)
+        ax1.text(beat_period_freq, frequencies[-1], 'Beat Period', color='green', fontsize=10, ha='right', va='top', rotation=90)
         
         ax1.legend()
 
         # Plot FAP (bottom panel)
         c2 = ax2.imshow(fap_matrix, aspect='auto', origin='lower',
                         extent=[ls_freq[0], ls_freq[-1], frequencies[0], frequencies[-1]],
-                        cmap='plasma', vmin=0, vmax=1)
-        fig.colorbar(c2, ax=ax2, label='False Alarm Probability')
+                        cmap='plasma', norm=LogNorm(vmin=np.nanmin(fap_matrix[fap_matrix > 0]), vmax=1))
+        fig.colorbar(c2, ax=ax2, label='False Alarm Probability (Log Scale)')
         ax2.set_xlabel('Lomb-Scargle Frequency (cycles/day)')
         ax2.set_ylabel('Radio Frequency (MHz)')
         ax2.set_title('False Alarm Probability')
@@ -276,10 +281,12 @@ for t_window in time_windows:
         # Plot vertical lines for star and planet periods
         ax2.axvline(star_period_freq, color='red', linestyle='--')
         ax2.axvline(planet_period_freq, color='blue', linestyle='--')
+        ax2.axvline(beat_period_freq, color='green', linestyle='--')
 
         # Add labels for the star and planet periods on FAP plot
         ax2.text(star_period_freq, frequencies[-1], 'Star Period', color='red', fontsize=10, ha='right', va='top', rotation=90)
         ax2.text(planet_period_freq, frequencies[-1], 'Planet Period', color='blue', fontsize=10, ha='right', va='top', rotation=90)
+        ax2.text(beat_period_freq, frequencies[-1], 'Beat Period', color='green', fontsize=10, ha='right', va='top', rotation=90)
 
         # Save the plot
         plt.tight_layout()
