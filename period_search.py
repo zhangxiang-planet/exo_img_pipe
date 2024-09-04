@@ -41,15 +41,15 @@ freq_windows = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 target_dirs = glob.glob(postprocess_dir + "*" + target_name + "_TRACKING")
 target_dirs.sort()
 
-def remove_excessive_nans(data, time, threshold=0.3):
+def remove_excessive_nans(data, time):
     """Remove rows or columns with more than the threshold percentage of NaNs."""
     # Identify rows and columns with more than the threshold percentage of NaNs
     row_nan_fraction = np.mean(np.isnan(data), axis=1)  # Fraction of NaNs in each row
     col_nan_fraction = np.mean(np.isnan(data), axis=0)  # Fraction of NaNs in each column
 
     # Determine rows and columns to keep
-    rows_to_keep = row_nan_fraction <= threshold
-    cols_to_keep = col_nan_fraction <= threshold
+    rows_to_keep = row_nan_fraction <= 0.7
+    cols_to_keep = col_nan_fraction <= 0.3
 
     # Filter the data and time arrays
     data_clean = data[rows_to_keep, :]
@@ -75,6 +75,7 @@ def interpolate_2d(data, x, y):
     data_interpolated[np.isnan(data_interpolated)] = griddata(points, values, (grid_x, grid_y), method='nearest')[np.isnan(data_interpolated)]
 
     return data_interpolated
+
 
 # cluster = LocalCluster()
 # client = Client(cluster)
@@ -186,9 +187,10 @@ for t_window in time_windows:
         combined_data = np.hstack(combined_data)  
 
         combined_data_clean, combined_time_clean, rows_removed, cols_removed = remove_excessive_nans(combined_data, combined_time)
+        # Save the indices of removed rows and columns as complete lists
         with open(f'{period_dir}{target_name}/removed_rows_cols_{t_window_sec}s_{f_window_khz}kHz.txt', 'w') as f:
-            f.write(f"Removed rows (frequency channels): {rows_removed}\n")
-            f.write(f"Removed columns (time points): {cols_removed}\n")
+            f.write(f"Removed rows (frequency channels): {list(rows_removed)}\n")
+            f.write(f"Removed columns (time points): {list(cols_removed)}\n")
 
         if combined_data_clean.size == 0:
             print(f"Skipping {t_window_sec}s {f_window_khz}kHz due to insufficient data after NaN removal.")
@@ -236,5 +238,55 @@ for t_window in time_windows:
 
         # save the frequency list in a text file
         np.savetxt(f'{period_dir}{target_name}/freq_{t_window_sec}s_{f_window_khz}kHz.txt', ls_freq)
+
+        # plot an image for the periodogram
+        all_frequencies = np.linspace(freq_min, freq_min + (num_chan - 1) * delta_freq, num_chan)
+        frequencies = np.delete(all_frequencies, rows_removed)
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+        # Plot Lomb-Scargle power (top panel)
+        c1 = ax1.imshow(lomb_scargle_matrix, aspect='auto', origin='lower', 
+                        extent=[ls_freq[0], ls_freq[-1], frequencies[0], frequencies[-1]],
+                        cmap='viridis')
+        fig.colorbar(c1, ax=ax1, label='Lomb-Scargle Power')
+        ax1.set_ylabel('Radio Frequency (MHz)')
+        ax1.set_title(f'Power (t_window = {t_window_sec}s, f_window = {f_window_khz}kHz)')
+
+        # Plot vertical lines for star and planet periods
+        star_period_freq = 1 / period_star
+        planet_period_freq = 1 / period_planet
+        ax1.axvline(star_period_freq, color='tab:red', linestyle='--', label='Star Period')
+        ax1.axvline(planet_period_freq, color='tab:blue', linestyle='--', label='Planet Period')
+
+        # Add labels for the star and planet periods
+        ax1.text(star_period_freq, frequencies[-1], 'Star Period', color='red', fontsize=10, ha='right', va='top', rotation=90)
+        ax1.text(planet_period_freq, frequencies[-1], 'Planet Period', color='blue', fontsize=10, ha='right', va='top', rotation=90)
+        
+        ax1.legend()
+
+        # Plot FAP (bottom panel)
+        c2 = ax2.imshow(fap_matrix, aspect='auto', origin='lower',
+                        extent=[ls_freq[0], ls_freq[-1], frequencies[0], frequencies[-1]],
+                        cmap='plasma', vmin=0, vmax=1)
+        fig.colorbar(c2, ax=ax2, label='False Alarm Probability')
+        ax2.set_xlabel('Lomb-Scargle Frequency (cycles/day)')
+        ax2.set_ylabel('Radio Frequency (MHz)')
+        ax2.set_title('False Alarm Probability')
+
+        # Plot vertical lines for star and planet periods
+        ax2.axvline(star_period_freq, color='red', linestyle='--')
+        ax2.axvline(planet_period_freq, color='blue', linestyle='--')
+
+        # Add labels for the star and planet periods on FAP plot
+        ax2.text(star_period_freq, frequencies[-1], 'Star Period', color='red', fontsize=10, ha='right', va='top', rotation=90)
+        ax2.text(planet_period_freq, frequencies[-1], 'Planet Period', color='blue', fontsize=10, ha='right', va='top', rotation=90)
+
+        # Save the plot
+        plt.tight_layout()
+        plt.savefig(f'{period_dir}{target_name}/lomb_scargle_plot_{t_window_sec}s_{f_window_khz}kHz.png', dpi=300, bbox_inches='tight', facecolor='w')
+        plt.close()
+        print(f"Saved plot for {t_window_sec}s_{f_window_khz}kHz")
+
+
 
 
