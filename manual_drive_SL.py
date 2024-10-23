@@ -33,11 +33,11 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CYG_A'
+cal = 'VIR_A'
 cali_check = False
-cal_dir = '20240704_035600_20240704_040900_CYG_A_TRACKING/L1'
-exo_dir = '20240704_040900_20240704_043100_HD_240484_TRACKING/L1'
-target_name = 'HD_240484'
+cal_dir = '20240606_164800_20240606_170600_VIR_A_TRACKING/L1'
+exo_dir = '20240606_160900_20240606_163100_UCAC4_689-050825_TRACKING/L1'
+target_name = 'UCAC4_689-050825'
 
 # How many channels per SB
 chan_per_SB_origin = 2
@@ -383,7 +383,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     subprocess.run(cmd_aoflagger, shell=True, check=True)
 
     # Now we average the GSB.MS into a smaller size
-    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
+    # cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
+    # special case for protected radio frequency test
+    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep=1"
+    
     subprocess.run(cmd_avg, shell=True, check=True)
 
     # replace the GSB.MS with the averaged one
