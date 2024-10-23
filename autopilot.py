@@ -20,7 +20,7 @@ matplotlib.use('Agg')
 ###### Initial settings ######
 
 # Set file locations
-watch_dir = "/databf/nenufar-nri/LT02/2024/??/*"
+watch_dir = "/databf/nenufar-nri/LT02/2024/??/*STKM*"
 
 preprocess_dir = "/databf/nenufar-nri/LT02/"
 postprocess_dir = "/data/xzhang/exo_img/"
@@ -48,7 +48,7 @@ ave_time = 8
 
 # the lowest SB we use
 SB_min = 106 # 92
-SB_max = 341
+SB_max = 401
 SB_ave_kms = 2
 
 # The region file we use for A-team removal
