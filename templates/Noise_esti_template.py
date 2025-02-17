@@ -728,7 +728,7 @@ def source_detection(convol_directory, noise_directory, t_window, f_window, dete
 
                 snr_hdu = fits.PrimaryHDU(snr_map)
                 snr_hdu.header = hdul[0].header.copy()
-                snr_hdu.header['SNR'] = transient_snr
+                snr_hdu.header['SNR'] = float(transient_snr)
 
                 output_filename = f"{source_type}_{filename}"
                 output_filepath = os.path.join(detection_directory, output_filename)
