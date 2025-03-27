@@ -21,7 +21,7 @@ matplotlib.use('Agg')
 # watch_dir = "/databf/nenufar-nri/LT02/202?/??/*HD_189733*"
 
 # preprocess_dir = "/databf/nenufar-nri/LT02/"
-postprocess_dir = "/data/xzhang/exo_img/"
+postprocess_dir = "/data/xzhang/beam_model/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 # lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
 singularity_file = "/home/xzhang/software/ddf_dev2_ateam.sif"
@@ -33,17 +33,17 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CAS_A'
+cal = 'VIR_A'
 cali_check = False
-cal_dir = '20240124_200000_20240124_201000_CASA_RP3A/L1'
-exo_dir = '20240124_201000_20240125_040000_FIELD-B_RP3A/L1'
-target_name = 'TYC_4374-1240-1'
+cal_dir = '20250326_004500_20250326_005800_VIR_A_TRACKING/L1'
+exo_dir = '20250326_040000_20250326_050000_3C286_TRACKING/L1'
+target_name = '3C286'
 
 # How many channels per SB
-chan_per_SB_origin = 12
+chan_per_SB_origin = 60
 ave_chan = 4
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 2
+ave_time = 1
 
 # chan_per_SB = 12
 
@@ -383,7 +383,10 @@ def apply_Ateam_solution(cal_dir: str, exo_dir: str, bad_MAs: str):
     subprocess.run(cmd_aoflagger, shell=True, check=True)
 
     # Now we average the GSB.MS into a smaller size
-    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
+    # cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep={chan_per_SB}"
+    # subprocess.run(cmd_avg, shell=True, check=True)
+
+    cmd_avg = f"DP3 {pipe_dir}/templates/DPPP-average.parset msin={postprocess_dir}/{exo_dir}/GSB.MS msout={postprocess_dir}/{exo_dir}/GSB_avg.MS msin.datacolumn=DI_DATA avg.freqstep=1"
     subprocess.run(cmd_avg, shell=True, check=True)
 
     # replace the GSB.MS with the averaged one
