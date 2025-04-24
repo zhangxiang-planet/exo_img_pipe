@@ -21,7 +21,7 @@ matplotlib.use('Agg')
 # watch_dir = "/databf/nenufar-nri/LT02/202?/??/*HD_189733*"
 
 # preprocess_dir = "/databf/nenufar-nri/LT02/"
-postprocess_dir = "/data/xzhang/beam_model/"
+postprocess_dir = "/data/xzhang/jupiter/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 # lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
 singularity_file = "/home/xzhang/software/ddf_dev2_ateam.sif"
@@ -35,15 +35,15 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CAS_A'
 cali_check = False
-cal_dir = '20250422_090000_20250422_092000_CAS_A_TRACKING/L1'
-exo_dir = '20250422_092000_20250422_100000_3C48_TRACKING/L1'
-target_name = '3C48'
+cal_dir = '20241025_000000_20241025_000900_CAS_A_TRACKING/L1'
+exo_dir = '20241025_000900_20241025_043700_JUPITER_TRACKING/L1'
+target_name = 'Jupiter'
 
 # How many channels per SB
-chan_per_SB_origin = 60
-ave_chan = 4
+chan_per_SB_origin = 6
+ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 1
+ave_time = 2
 
 # chan_per_SB = 12
 
