@@ -35,9 +35,9 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'VIR_A'
 cali_check = False
-cal_dir = '20250326_004500_20250326_005800_VIR_A_TRACKING/L1'
-exo_dir = '20250326_040000_20250326_050000_3C286_TRACKING/L1'
-target_name = '3C286'
+cal_dir = '20250422_090000_20250422_092000_CAS_A_TRACKING/L1'
+exo_dir = '20250422_092000_20250422_100000_3C48_TRACKING/L1'
+target_name = '3C48'
 
 # How many channels per SB
 chan_per_SB_origin = 60
