@@ -35,12 +35,12 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CAS_A'
 cali_check = False
-cal_dir = '20241025_000000_20241025_000900_CAS_A_TRACKING/L1'
-exo_dir = '20241025_000900_20241025_043700_JUPITER_TRACKING/L1'
+cal_dir = '20240208_223000_20240208_230000_TAU_A_TRACKING/L1'
+exo_dir = '20240208_152100_20240208_222900_JUPITER_TRACKING/L1'
 target_name = 'Jupiter'
 
 # How many channels per SB
-chan_per_SB_origin = 6
+chan_per_SB_origin = 2
 ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 ave_time = 2
