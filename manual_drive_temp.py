@@ -40,7 +40,7 @@ exo_dir = '20250429_110000_20250429_144500_JUPITER_TRACKING/L1'
 target_name = 'Jupiter'
 
 # How many channels per SB
-chan_per_SB_origin = 2
+chan_per_SB_origin = 6
 ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 ave_time = 2
