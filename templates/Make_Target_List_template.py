@@ -13,6 +13,9 @@ def simbad_coor(star_name):
     if star_name.startswith('B') and len(star_name) > 1 and star_name[1].isdigit():
         star_name = 'PSR ' + star_name
 
+    elif star_name == 'BDR_J1750+3809':
+        star_name = '2MASS_J17500008+3809276'
+
     # Query Simbad for the star
     result = simbad_query.query_object(star_name)
 
