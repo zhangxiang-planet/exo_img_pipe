@@ -100,29 +100,33 @@ def copy_calibrator_data(exo_dir: str):
     start_time = parts[0] + "_" + parts[1]
     end_time = parts[2] + "_" + parts[3]
 
-    year = parts[0][:4]
-    month = parts[0][4:6]
-    # day = parts[0][6:8]
-
     start_date = parts[0]
     end_date = parts[2]
-    
 
-    # data_date = datetime(int(year), int(month), int(day))
+    # Extract year/month pairs
+    ym_pairs = {
+        (start_date[:4], start_date[4:6]),
+        (end_date[:4],   end_date[4:6])
+    }
 
-    # Construct source and destination directory paths
-    pre_target_dir = os.path.join(preprocess_dir, year, month, exo_dir)
+    # Collect all potential calibrator directories
+    potential_dirs = []
+    for year, month in ym_pairs:
+        base_cal_dir = os.path.join(preprocess_dir, year, month)
+        if os.path.exists(base_cal_dir):
+            dirs = [d for d in os.listdir(base_cal_dir) if any(cal in d for cal in CALIBRATORS)]
+            potential_dirs.extend(dirs)
+
+    pre_target_dir = os.path.join(preprocess_dir, start_date[:4], start_date[4:6], exo_dir)
     post_target_dir = os.path.join(postprocess_dir, exo_dir)
-    
-    # Search for calibrator directory
-    base_cal_dir = os.path.join(preprocess_dir, year, month)
-    potential_dirs = [d for d in os.listdir(base_cal_dir) if any(cal in d for cal in CALIBRATORS)]
     
     valid_cal_dirs = []
     for dir in potential_dirs:
         parts = dir.split("_")
         dir_start_time = parts[0] + "_" + parts[1]
         dir_end_time = parts[2] + "_" + parts[3]
+        dir_start_year = parts[0][:4]
+        dir_start_month = parts[0][4:6]
         if dir_start_time == end_time or dir_end_time == start_time:
             # exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
             # cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
@@ -134,8 +138,8 @@ def copy_calibrator_data(exo_dir: str):
 
             # compare the names of the directories, rather than the number of files
             exo_dirs = set(next(os.walk(os.path.join(pre_target_dir, "L1")))[1])
-            cal_dirs = set(next(os.walk(os.path.join(base_cal_dir, dir, "L1")))[1])
-            
+            cal_dirs = set(next(os.walk(os.path.join(preprocess_dir, dir_start_year, dir_start_month, dir, "L1")))[1])
+
             # Find the number of matching directories
             matching_dirs_count = len(exo_dirs.intersection(cal_dirs))
             
@@ -149,6 +153,8 @@ def copy_calibrator_data(exo_dir: str):
             parts = dir.split("_")
             dir_start_date = parts[0] 
             dir_end_date = parts[2]
+            dir_start_year = parts[0][:4]
+            dir_start_month = parts[0][4:6]
             if dir_start_date == start_date or dir_end_date == end_date:
                 # exo_files_count = len(os.listdir(os.path.join(pre_target_dir, "L1")))
                 # cal_files_count = len(os.listdir(os.path.join(base_cal_dir, dir, "L1")))
@@ -158,8 +164,8 @@ def copy_calibrator_data(exo_dir: str):
                 # # if exo_files_count == cal_files_count:
                 # #     valid_cal_dirs.append(dir)
                 exo_dirs = set(next(os.walk(os.path.join(pre_target_dir, "L1")))[1])
-                cal_dirs = set(next(os.walk(os.path.join(base_cal_dir, dir, "L1")))[1])
-                
+                cal_dirs = set(next(os.walk(os.path.join(preprocess_dir, dir_start_year, dir_start_month, dir, "L1")))[1])
+
                 # Find the number of matching directories
                 matching_dirs_count = len(exo_dirs.intersection(cal_dirs))
                 
@@ -185,6 +191,12 @@ def copy_calibrator_data(exo_dir: str):
     # if data_date > comparison_date:
     #     if not os.path.exists(scp_marker_cali) or not os.path.exists(scp_marker_target):
     #         raise FileNotFoundError(f"SCP marker not found. COPPER scp ongoing. Please wait.")
+
+    # we need the year and month of the calibrator data
+    parts = cal_dir.split("_")
+    cal_year = parts[0][:4]
+    cal_month = parts[0][4:6]
+    base_cal_dir = os.path.join(preprocess_dir, cal_year, cal_month)
 
     if os.path.exists(f"{postprocess_dir}/{cal_dir}"):
         print("Calibrator data already processed. "+ postprocess_dir + '/' + cal_dir)
