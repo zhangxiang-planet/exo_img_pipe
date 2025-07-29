@@ -1,4 +1,8 @@
 # exo_img_pipe
 A pipeline to process NenuFAR exoplanet imaging data. 
 
-The developer was too lazy to write a proper description. (Guess why they wanted an automatic pipeline.)
+## 📄 Pipeline Technical Report
+
+The pipeline documentation is available here:
+
+📘 [Read the full technical report](docs/Nenufar_Pipeline_technical_report.pdf)
