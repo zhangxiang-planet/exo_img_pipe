@@ -9,7 +9,7 @@ import concurrent.futures
 from datetime import datetime
 
 # ROOT can be /databf/nenufar-nri/LT02/2023 or /2023/01, /2024/03, etc.
-ROOT = "/databf/nenufar-nri/LT02/2023/01"
+ROOT = "/databf/nenufar-nri/LT02/2023/03"
 PIPE_DIR = "/home/xzhang/software/exo_img_pipe/"
 DP3_PARSET = os.path.join(PIPE_DIR, "templates/DPPP-average.parset")
 CUTOFF = datetime.strptime("20231209", "%Y%m%d")
@@ -121,5 +121,5 @@ def compress_observation(obs_tuple):
 
 if __name__ == "__main__":
     obs_list = get_obs_dirs(ROOT)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
         executor.map(compress_observation, obs_list)
