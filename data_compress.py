@@ -21,13 +21,34 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def get_obs_dirs(root):
     obs_dirs = []
-    for dirpath, dirnames, _ in os.walk(root):
-        if os.path.basename(dirpath) == "L1":
-            obs_dir = os.path.dirname(dirpath)
-            obs_name = os.path.basename(obs_dir)
-            if len(obs_name) >= 8 and obs_name[:8].isdigit():
-                obs_dirs.append((obs_name, obs_dir))
-    return sorted(obs_dirs)
+    root_basename = os.path.basename(os.path.normpath(root))
+
+    if root_basename.isdigit():
+        if len(root_basename) == 4:
+            # ROOT is a year folder like .../2023
+            for month in sorted(os.listdir(root)):
+                month_path = os.path.join(root, month)
+                if not os.path.isdir(month_path):
+                    continue
+
+                for obs in sorted(os.listdir(month_path)):
+                    obs_path = os.path.join(month_path, obs)
+                    l1_path = os.path.join(obs_path, "L1")
+                    if os.path.isdir(l1_path):
+                        obs_dirs.append((obs, obs_path))
+
+        elif len(root_basename) == 2:
+            # ROOT is a month folder like .../2023/01
+            for obs in sorted(os.listdir(root)):
+                obs_path = os.path.join(root, obs)
+                l1_path = os.path.join(obs_path, "L1")
+                if os.path.isdir(l1_path):
+                    obs_dirs.append((obs, obs_path))
+
+    else:
+        logging.warning(f"Could not determine folder level from ROOT name: {root}")
+
+    return obs_dirs
 
 def compress_observation(obs_tuple):
     obs_name, obs_dir = obs_tuple
