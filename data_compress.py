@@ -9,7 +9,7 @@ import concurrent.futures
 from datetime import datetime
 
 # ROOT can be /databf/nenufar-nri/LT02/2023 or /2023/01, /2024/03, etc.
-ROOT = "/databf/nenufar-nri/LT02/2023/05"
+ROOT = "/databf/nenufar-nri/LT02/2023/06"
 PIPE_DIR = "/home/xzhang/software/exo_img_pipe/"
 DP3_PARSET = os.path.join(PIPE_DIR, "templates/DPPP-average.parset")
 CUTOFF = datetime.strptime("20231209", "%Y%m%d")
@@ -50,6 +50,17 @@ def get_obs_dirs(root):
 
     return obs_dirs
 
+def can_delete_folder(folder_path):
+    try:
+        test_path = os.path.join(folder_path, ".tmp_permission_check")
+        with open(test_path, "w") as f:
+            f.write("test")
+        os.remove(test_path)
+        return True
+    except Exception as e:
+        logging.warning(f"No permission to modify {folder_path}: {e}")
+        return False
+
 def compress_observation(obs_tuple):
     obs_name, obs_dir = obs_tuple
     try:
@@ -62,6 +73,10 @@ def compress_observation(obs_tuple):
     l1_dir = os.path.join(obs_dir, "L1")
     if not os.path.isdir(l1_dir):
         logging.info(f"No L1 folder in {obs_name}, skipping.")
+        return
+    
+    if not can_delete_folder(l1_dir):
+        logging.info(f"Skipping {obs_name}: no write/delete permission in L1 folder.")
         return
 
     out_dir = os.path.join(obs_dir, "L1_compressed")
