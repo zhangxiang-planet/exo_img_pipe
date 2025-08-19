@@ -9,7 +9,7 @@ import concurrent.futures
 from datetime import datetime
 
 # ROOT can be /databf/nenufar-nri/LT02/2023 or /2023/01, /2024/03, etc.
-ROOT = "/databf/nenufar-nri/LT02/2023/04"
+ROOT = "/databf/nenufar-nri/LT02/2023/05"
 PIPE_DIR = "/home/xzhang/software/exo_img_pipe/"
 DP3_PARSET = os.path.join(PIPE_DIR, "templates/DPPP-average.parset")
 CUTOFF = datetime.strptime("20231209", "%Y%m%d")
