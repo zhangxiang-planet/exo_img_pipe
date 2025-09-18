@@ -268,7 +268,7 @@ for img in img_list:
             cmd_kms = (
                 f'kMS.py --MSName {postprocess_dir}{exo_dir}/GSB.MS --SolverType CohJones --PolMode IFull --BaseImageName {postprocess_dir}{exo_dir}/Image_DI_Bis --dt 1 --InCol DATA --SolsDir={postprocess_dir}{exo_dir}/SOLSDIR --NodesFile Single --DDFCacheDir={postprocess_dir}{exo_dir}/ '
                 f'--NChanPredictPerMS {num_beam} --NChanSols {num_beam} --OutSolsName DD1 --UVMinMax 0.067,1000 --AppendCalSource All --FreePredictGainColName KMS_SUB:data-ATeam '
-                f'--DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS'
+                f'--DicoModel {postprocess_dir}{exo_dir}/Image_DI_Bis.filterATeam.DicoModel --WeightInCol DDF_WEIGHTS --TChunk 2'
             )
             combined_kms = f"{singularity_command} {cmd_kms}"
             subprocess.run(combined_kms, shell=True, check=True)
