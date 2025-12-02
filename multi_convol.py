@@ -55,8 +55,8 @@ SB_ave_kms = 2
 region_file = "/home/xzhang/software/exo_img_pipe/regions/Ateam.reg"
 
 # Window and SNR threshold for matched filtering
-direction_threshold = 6
-direction_threshold_target = 5
+direction_threshold = 4
+direction_threshold_target = 4
 dynamic_threshold = 6
 dynamic_threshold_target = 5
 # snr_threshold = 7
