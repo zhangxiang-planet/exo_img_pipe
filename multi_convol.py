@@ -260,3 +260,6 @@ def source_find_v(exo_dir: str, time_windows, freq_windows, origin: bool = False
 
     cmd_rename = f"mv {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png {postprocess_dir}/{exo_dir}/{dynspec_folder}/{exo_dir}_png_v"
     subprocess.run(cmd_rename, shell=True, check=True)
+
+if __name__ == "__main__":
+    source_find_v(exo_dir, time_windows, freq_windows, origin=False)
