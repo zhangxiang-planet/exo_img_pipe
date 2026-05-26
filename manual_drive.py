@@ -21,7 +21,7 @@ matplotlib.use('Agg')
 # watch_dir = "/databf/nenufar-nri/LT02/202?/??/*HD_189733*"
 
 # preprocess_dir = "/databf/nenufar-nri/LT02/"
-postprocess_dir = "/data/xzhang/beam_model/"
+postprocess_dir = "/data/xzhang/lpt/CHIME_J1634+4450/"
 pipe_dir = "/home/xzhang/software/exo_img_pipe/"
 # lockfile = "/home/xzhang/software/exo_img_pipe/lock.file"
 singularity_file = "/home/xzhang/software/ddf_dev2_ateam.sif"
@@ -33,15 +33,15 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 # How many SB per processing chunk
 # chunk_num = 12
 
-cal = 'CAS_A'
+cal = 'CYG_A'
 cali_check = False
-cal_dir = '20250422_090000_20250422_092000_CAS_A_TRACKING/L1'
-exo_dir = '20250422_092000_20250422_100000_3C48_TRACKING/L1'
-target_name = '3C48'
+cal_dir = '20260301_065000_20260301_070000_CYG_A_TRACKING/L1'
+exo_dir = '20260301_050000_20260301_065000_LTP/L1'
+target_name = 'NAME CHIME J1634+44'
 
 # How many channels per SB
-chan_per_SB_origin = 60
-ave_chan = 4
+chan_per_SB_origin = 2
+ave_chan = 1
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
 ave_time = 1
 
@@ -982,9 +982,9 @@ def exo_pipe(exo_dir, cal_dir, cal):
 
     dynspec(exo_dir)
 
-    # source_find_v(exo_dir, time_windows, freq_windows)
+    source_find_v(exo_dir, time_windows, freq_windows)
 
-    # source_find_i(exo_dir, time_windows, freq_windows)
+    source_find_i(exo_dir, time_windows, freq_windows)
 
     # clearup(exo_dir)
 
