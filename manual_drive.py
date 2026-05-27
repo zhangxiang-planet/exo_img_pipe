@@ -7,8 +7,8 @@ import numpy as np
 from dask import delayed, compute
 from casatools import table
 from templates.Find_Bad_MAs_template import find_bad_MAs
-from templates.Make_Target_List_template import make_target_list
-from templates.Plot_target_distri_template import plot_target_distribution
+from templates.Make_Target_List_template import make_target_list_FRB
+from templates.Plot_target_distri_template import plot_target_distribution_FRB
 from templates.Noise_esti_template import generate_noise_map_v, calculate_noise_for_window, apply_gaussian_filter
 from templates.Noise_esti_template import generate_and_save_weight_map_v, source_detection, generate_noise_map_i, generate_and_save_weight_map_i
 import matplotlib.pyplot as plt
@@ -521,8 +521,8 @@ def dynspec(exo_dir: str):
 
     cmd_ddf = (
         f'DDF.py {postprocess_dir}{exo_dir}/Image_DI_Bis.deeper.parset --Output-Name {postprocess_dir}{exo_dir}/Image_DI_Bis.subtract --Cache-Reset 1 --Cache-Dirty auto --Cache-PSF auto --Data-ColName KMS_SUB '
-        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 1 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Predict-ColName DDF_PREDICT '
-        f'--Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE'
+        f'--Weight-ColName IMAGING_WEIGHT --Predict-InitDicoModel None --Mask-External None --Mask-Auto 1 --Deconv-MaxMajorIter 1 --Output-Mode Clean --Data-MS {postprocess_dir}{exo_dir}/GSB.MS --Predict-ColName DDF_PREDICT'
+        # f'--Beam-Model NENUFAR --Beam-NBand {num_beam} --Beam-CenterNorm 1 --Beam-Smooth True  --Beam-PhasedArrayMode AE'
     )
     combined_ddf = f"{singularity_command} {cmd_ddf}"
     subprocess.run(combined_ddf, shell=True, check=True)
@@ -545,24 +545,24 @@ def dynspec(exo_dir: str):
 
 
 
-    # target_str = exo_dir.split("_")[4:-1]
-    # if len(target_str) > 1:
-    #     target_name = "_".join(target_str)
-    # else:
-    #     target_name = target_str[0]
+    target_str = exo_dir.split("_")[4:-1]
+    if len(target_str) > 1:
+        target_name = "_".join(target_str)
+    else:
+        target_name = target_str[0]
 
     # Not generating dynamic spec for RP3A
 
-    # make_target_list(target_name, postprocess_dir, exo_dir)
-    # plot_target_distribution(postprocess_dir, exo_dir)
+    make_target_list_FRB(target_name, postprocess_dir, exo_dir)
+    plot_target_distribution_FRB(postprocess_dir, exo_dir)
 
-    # cmd_dynspec = (
-    #     f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
-    #     f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
-    # )
+    cmd_dynspec = (
+        f'ms2dynspec.py --ms {postprocess_dir}{exo_dir}/GSB.MS --data KMS_SUB --model DDF_PREDICT --rad 11 --LogBoring 1 --uv 0.067,1000 '
+        f'--WeightCol IMAGING_WEIGHT --srclist {postprocess_dir}{exo_dir}/target.txt --noff 0 --NCPU 96 --TChunkHours 1 --OutDirName {postprocess_dir}{exo_dir}/dynamic_spec'
+    )
 
-    # combined_dynspec = f"{singularity_command} {cmd_dynspec}"
-    # subprocess.run(combined_dynspec, shell=True, check=True)
+    combined_dynspec = f"{singularity_command} {cmd_dynspec}"
+    subprocess.run(combined_dynspec, shell=True, check=True)
 
 # Task 7. Source-finding
 
