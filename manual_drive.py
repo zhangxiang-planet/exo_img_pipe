@@ -35,8 +35,8 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CYG_A'
 cali_check = False
-cal_dir = '20260301_065000_20260301_070000_CYG_A_TRACKING/L1'
-exo_dir = '20260301_050000_20260301_065000_LTP/L1'
+cal_dir = '20260328_025000_20260328_030000_CYG_A_TRACKING/L1'
+exo_dir = '20260328_010000_20260328_025000_LTP/L1'
 target_name = 'NAME CHIME J1634+44'
 
 # How many channels per SB
@@ -545,11 +545,11 @@ def dynspec(exo_dir: str):
 
 
 
-    target_str = exo_dir.split("_")[4:-1]
-    if len(target_str) > 1:
-        target_name = "_".join(target_str)
-    else:
-        target_name = target_str[0]
+    # target_str = exo_dir.split("_")[4:-1]
+    # if len(target_str) > 1:
+    #     target_name = "_".join(target_str)
+    # else:
+    #     target_name = target_str[0]
 
     # Not generating dynamic spec for RP3A
 
