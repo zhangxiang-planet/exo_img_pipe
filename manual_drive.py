@@ -35,8 +35,8 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CYG_A'
 cali_check = False
-cal_dir = '20260328_025000_20260328_030000_CYG_A_TRACKING/L1'
-exo_dir = '20260328_010000_20260328_025000_LTP/L1'
+cal_dir = '20260427_005000_20260427_010000_CYG_A_TRACKING/L1'
+exo_dir = '20260426_230000_20260427_005000_LTP/L1'
 target_name = 'NAME CHIME J1634+44'
 
 # How many channels per SB
@@ -986,7 +986,7 @@ def exo_pipe(exo_dir, cal_dir, cal):
 
     source_find_i(exo_dir, time_windows, freq_windows)
 
-    # clearup(exo_dir)
+    clearup(exo_dir)
 
     # os.remove(lockfile)
 
