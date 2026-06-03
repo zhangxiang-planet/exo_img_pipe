@@ -43,7 +43,7 @@ target_name = 'NAME CHIME J1634+44'
 chan_per_SB_origin = 2
 ave_chan = 2
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 2
+ave_time = 4
 
 # chan_per_SB = 12
 
