@@ -35,15 +35,15 @@ CALIBRATORS = ['CYG_A', 'CAS_A', 'TAU_A', 'VIR_A']
 
 cal = 'CYG_A'
 cali_check = False
-cal_dir = '20260427_005000_20260427_010000_CYG_A_TRACKING/L1'
-exo_dir = '20260426_230000_20260427_005000_LTP/L1'
+cal_dir = '20260524_011000_20260524_012000_CYG_A_TRACKING/L1'
+exo_dir = '20260523_232000_20260524_011000_LTP/L1'
 target_name = 'NAME CHIME J1634+44'
 
 # How many channels per SB
 chan_per_SB_origin = 2
 ave_chan = 2
 chan_per_SB = int(chan_per_SB_origin/ave_chan)
-ave_time = 4
+ave_time = 2
 
 # chan_per_SB = 12
 
